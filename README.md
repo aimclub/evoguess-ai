@@ -29,4 +29,4 @@ where **perhost** is MPI workers processes on one node, and **workers** is a tot
 
 ## Documentation
 
-Documentation is available [here](https://evoguess.readthedocs.io/) and includes installation instructions and base usage manual.
+Documentation is available [here](https://evoguess-ai.readthedocs.io/) and includes installation instructions and base usage manual.
