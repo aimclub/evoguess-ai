@@ -1,6 +1,6 @@
 # function submodule imports
 from function.module.solver import pysat
-from function.module.measure import Propagations
+from function.module.measure import SolvingTime
 
 # instance module imports
 from instance.impl import Instance
@@ -29,13 +29,13 @@ if __name__ == '__main__':
     root_path = WorkPath('examples')
     data_path = root_path.to_path('data')
     cnf_file = data_path.to_file('sgen_150.cnf')
-    logs_path = root_path.to_path('logs', 'sgen_150_100')
+    logs_path = root_path.to_path('logs', 'sgen_150')
     combine = Combine(
         instance=Instance(
             encoding=CNF(from_file=cnf_file)
         ),
-        measure=Propagations(),
-        solver=pysat.Glucose4(),
+        measure=SolvingTime(),
+        solver=pysat.Glucose3(),
         logger=OptimizeLogger(logs_path),
         executor=ProcessExecutor(max_workers=4)
     )

@@ -58,7 +58,7 @@ if __name__ == '__main__':
     sampling = Const(size=1024, split_into=256)
     limitation = WallTime(from_string='04:00:00')
     # log process to dir './examples/logs/<date_date>
-    logs_path = root_path.to_path('logs')
+    logs_path = root_path.to_path('logs', 'sgen_150')
     solution = Optimize(
         space=space,
         instance=instance,

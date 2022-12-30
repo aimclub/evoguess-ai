@@ -40,7 +40,7 @@ if __name__ == '__main__':
         min_update_size=6
     )
     function = RhoFunction(
-        penalty_power=2 ** 10,
+        penalty_power=2 ** 20,
         measure=Propagations(),
         solver=pysat.Glucose3()
     )
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     sampling = Const(size=1024, split_into=256)
     limitation = WallTime(from_string='04:00:00')
     # log process to dir './examples/logs/<date_date>
-    logs_path = root_path.to_path('logs')
+    logs_path = root_path.to_path('logs', 'pvs_4_7')
     solution = Optimize(
         space=space,
         instance=instance,
