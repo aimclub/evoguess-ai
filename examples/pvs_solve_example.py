@@ -20,6 +20,7 @@ if __name__ == '__main__':
         '118 155 164 176 177 204 230 348 470 684 1188',
         '348 470 682 683 684 686 687 688 689 694 698',
         '164 176 177 348 470 683 684 689 708 710 715',
+        '174 438 470 536 537 546 549 551 634 635 1046 1047'
     ]
     backdoors = [
         make_backdoor(Indexes(from_string=str_vars))
@@ -37,7 +38,7 @@ if __name__ == '__main__':
         measure=SolvingTime(),
         solver=pysat.Glucose3(),
         logger=OptimizeLogger(logs_path),
-        executor=ProcessExecutor(max_workers=4)
+        executor=ProcessExecutor(max_workers=16)
     ).launch(*backdoors)
 
     print(estimation)

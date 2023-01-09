@@ -29,7 +29,7 @@ if __name__ == '__main__':
     root_path = WorkPath('examples')
     data_path = root_path.to_path('data')
     cnf_file = data_path.to_file('sgen_150.cnf')
-    logs_path = root_path.to_path('logs', 'sgen_150')
+    logs_path = root_path.to_path('logs', 'sgen_150_comb')
     combine = Combine(
         instance=Instance(
             encoding=CNF(from_file=cnf_file)

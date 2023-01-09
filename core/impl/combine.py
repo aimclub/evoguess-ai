@@ -82,7 +82,7 @@ class Combine(Core):
                     concat(*parts) for parts in product(acc_hard_tasks, hard_tasks)
                     if solver.propagate(concat(*parts))[2] == Status.SOLVED
                 ]
-                ratio = round(hard_tasks_count / len(acc_hard_tasks), 2)
+                ratio = round(len(acc_hard_tasks) / hard_tasks_count, 2)
                 print(f'reduced: {hard_tasks_count} -> {len(acc_hard_tasks)} (x{ratio})')
 
         split_into = ceil(len(acc_hard_tasks) / self.executor.max_workers)
