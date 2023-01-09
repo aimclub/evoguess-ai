@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 from util.lazy_file import get_file_data
 
 
@@ -18,13 +20,14 @@ class Encoding:
         raise NotImplementedError
 
     def get_raw_data(self) -> str:
-        return get_file_data(self.filepath)
+        try:
+            return get_file_data(self.filepath)
+        except FileNotFoundError as exc:
+            msg = f'Encoding file {self.filepath} not found'
+            raise FileNotFoundError(msg) from exc
 
-    def __info__(self):
-        return {
-            'slug': self.slug,
-            'from_file': self.filepath,
-        }
+    def __config__(self) -> Dict[str, Any]:
+        raise NotImplementedError
 
 
 __all__ = [

@@ -32,12 +32,19 @@ class Variables:
         self._var_bases = None
         self._deps_bases = None
 
+    def get_raw_data(self):
+        try:
+            return get_file_data(self.filepath)
+        except FileNotFoundError as exc:
+            msg = f'Variables file {self.filepath} not found'
+            raise FileNotFoundError(msg) from exc
+
     def _process_vars_raw(self):
         with parse_lock:
             if self.filepath in vars_data:
                 return
 
-            vars_raw = get_file_data(self.filepath)
+            vars_raw = self.get_raw_data()
             vars_data[self.filepath] = parse_vars_raw(vars_raw)
 
     def variables(self) -> List[Var]:

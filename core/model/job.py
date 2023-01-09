@@ -93,7 +93,7 @@ class Job(Future):
                 for future in future_all.as_complete():
                     with self._condition:
                         if future._exception is not None:
-                            print(f'worker error ({future._exception})')
+                            print(f'Worker error: {future._exception}')
                             self._exceptions.append(future._exception)
                         elif future._result is not None:
                             index = self._results.index(None)

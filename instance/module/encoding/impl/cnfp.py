@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
 from .cnf import CNF, CNFData, Clause, Clauses
 
@@ -43,28 +43,34 @@ class CNFP(CNF):
         self.atmosts = from_atmosts
 
     def _parse_raw_data(self, raw_data: str):
-        lines, clauses, atmosts, max_lit = [], [], [], 0
-        for line in raw_data.splitlines(keepends=True):
-            if line[0] not in self.comment_lead:
-                if int(line.rsplit(' ', 1)[-1]) == 0:
-                    clause = [int(n) for n in line.split()[:-1]]
-                    max_lit = max(max_lit, *map(abs, clause))
-                    clauses.append(clause)
-                else:
-                    items = [i for i in line.split()]
-                    if items[-2][0] == '>':
-                        lits = [-int(n) for n in items[:-2]]
-                        rhs = len(lits) - int(items[-1])
+        process_line = 1
+        try:
+            lines, clauses, atmosts, max_lit = [], [], [], 0
+            for line in raw_data.splitlines(keepends=True):
+                if line[0] not in self.comment_lead:
+                    if int(line.rsplit(' ', 1)[-1]) == 0:
+                        clause = [int(n) for n in line.split()[:-1]]
+                        max_lit = max(max_lit, *map(abs, clause))
+                        clauses.append(clause)
                     else:
-                        rhs = int(items[-1])
-                        lits = [int(n) for n in items[:-2]]
-                    max_lit = max(max_lit, *map(abs, lits))
-                    atmosts.append((lits, rhs))
-                lines.append(line)
+                        items = [i for i in line.split()]
+                        if items[-2][0] == '>':
+                            lits = [-int(n) for n in items[:-2]]
+                            rhs = len(lits) - int(items[-1])
+                        else:
+                            rhs = int(items[-1])
+                            lits = [int(n) for n in items[:-2]]
+                        max_lit = max(max_lit, *map(abs, lits))
+                        atmosts.append((lits, rhs))
+                    lines.append(line)
+                process_line += 1
 
-        cnfp_data[self.filepath] = CNFPData(
-            clauses, atmosts, ''.join(lines), max_lit
-        )
+            cnfp_data[self.filepath] = CNFPData(
+                clauses, atmosts, ''.join(lines), max_lit
+            )
+        except Exception as exc:
+            msg = f'Error while parsing encoding file in line {process_line}'
+            raise ValueError(msg) from exc
 
     def get_data(self) -> CNFPData:
         if self.clauses:
@@ -82,9 +88,9 @@ class CNFP(CNF):
             from_atmosts=self.atmosts,
         )
 
-    def __info__(self):
+    def __config__(self) -> Dict[str, Any]:
         return {
-            **super().__info__(),
+            **super().__config__(),
             'from_atmosts': self.atmosts,
         }
 

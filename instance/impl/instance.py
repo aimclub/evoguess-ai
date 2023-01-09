@@ -62,7 +62,6 @@ class Instance:
     def __info__(self):
         return {
             'slug': self.slug,
-            'encoding': self.encoding.__info__(),
         }
 
 

@@ -1,5 +1,5 @@
 from threading import Lock
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
 from ..encoding import Encoding, EncodingData
 
@@ -58,17 +58,23 @@ class CNF(Encoding):
         self.clauses = from_clauses
 
     def _parse_raw_data(self, raw_data: str):
-        lines, clauses, max_lit = [], [], 0
-        for line in raw_data.splitlines(keepends=True):
-            if line[0] not in self.comment_lead:
-                clause = [int(n) for n in line.split()[:-1]]
-                max_lit = max(max_lit, *map(abs, clause))
-                clauses.append(clause)
-                lines.append(line)
+        process_line = 1
+        try:
+            lines, clauses, max_lit = [], [], 0
+            for line in raw_data.splitlines(keepends=True):
+                if line[0] not in self.comment_lead:
+                    clause = [int(n) for n in line.split()[:-1]]
+                    max_lit = max(max_lit, *map(abs, clause))
+                    clauses.append(clause)
+                    lines.append(line)
+                process_line += 1
 
-        cnf_data[self.filepath] = CNFData(
-            clauses, ''.join(lines), max_lit
-        )
+            cnf_data[self.filepath] = CNFData(
+                clauses, ''.join(lines), max_lit
+            )
+        except Exception as exc:
+            msg = f'Error while parsing encoding file in line {process_line}'
+            raise ValueError(msg) from exc
 
     def _process_raw_data(self):
         with parse_lock:
@@ -93,9 +99,10 @@ class CNF(Encoding):
             from_clauses=self.clauses
         )
 
-    def __info__(self):
+    def __config__(self) -> Dict[str, Any]:
         return {
-            **super().__info__(),
+            'slug': self.slug,
+            'from_file': self.filepath,
             'from_clauses': self.clauses,
         }
 

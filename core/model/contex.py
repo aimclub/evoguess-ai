@@ -44,7 +44,7 @@ class Context:
 
     def get_estimation(self, results: Optional[Results] = None) -> Estimation:
         del CORE_CACHE.estimating[self.backdoor]
-        if not len(results):
+        if results is None:
             # todo: add cancel info
             estimation = CORE_CACHE.canceled[self.backdoor] = {
                 'canceled': True,
@@ -53,6 +53,9 @@ class Context:
         else:
             # pick it's not a pick
             picked = pick_by(results)
+            if not len(picked):
+                raise Exception('all workers return an error')
+
             estimation = CORE_CACHE.estimated[self.backdoor] = {
                 'accuracy': len(picked) / len(results),
                 'sample_seed': self.sample_seed,
