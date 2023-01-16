@@ -89,7 +89,7 @@ class GuessAndDetermine(Function):
     def calculate(self, backdoor: Backdoor, results: Results) -> Estimation:
         times, values, statuses, count, ptime = aggregate_results(results)
         time_sum, value_sum = sum(times.values()), sum(values.values())
-        power, value = backdoor.power(), value_sum if count else None
+        power, value = backdoor.power(), value_sum if count else float('inf')
 
         if count > 0 and count != power:
             value = float(value_sum) / count * power
