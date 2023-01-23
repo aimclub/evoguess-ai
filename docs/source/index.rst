@@ -1,7 +1,7 @@
 .. EvoGuessAI documentation master file, created by sphinx-quickstart on Fri Dec  3 18:13:38 2021. You can adapt this file completely to your liking, but it should at least contain the root `toctree` directive.
 
 Welcome to EvoGuessAI's documentation!
-====================================
+======================================
 
 | Component for decomposition set (backdoor) searching and hardness estimating of SAT instances. Some Boolean formula is estimated in the following way:
 

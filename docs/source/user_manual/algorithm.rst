@@ -6,19 +6,17 @@ Algorithm
 Strategy (μ, λ) (Evolution Algorithm)
 --------------------------------------
 
-| Реализация эволюционной стратегии **(μ, λ)**.
+| Implementation of evolutionary strategy **(μ, λ)**. The behavior of this implementation is controlled by the following parameters:
 
-| Поведения реализуемой стратегии управляется следующими параметрами:
-
-* **mu_size** -- Size of the parent population.
-* **lambda_size** -- Size of the offspring population.
 * **mutation** -- Instance of `Mutation <algorithm_modules/mutation.module.html>`_ module.
 * **selection** -- Instance of `Selection <algorithm_modules/selection.module.html>`_ module.
-* **max_queue_size** -- Максимальное число особей, которые могут одновременно находиться в процессе вычисления значение фитнес-функции. По умолчанию значение не задано, то есть одновременно будет вычисления значение фитнес-функции столько особей очередь будет пополняться пока есть свободные вычислительные ресурсы.
+* **mu_size** -- The size of the parent population.
+* **lambda_size** -- The size of the offspring population.
+* **max_queue_size** -- The maximum number of processed individuals at the same time, for which the fitness function values is calculated. By default, the value is not set, that is, the number of  processed individuals at the same time will depend on the amount of allocated computing resources.
 
 .. note::
 
-    **min_update_size** всегда равно **lambda_size**.
+    **min_update_size** is always equal to **lambda_size**.
 
 .. code-block:: python
 
@@ -36,16 +34,14 @@ Strategy (μ, λ) (Evolution Algorithm)
 Strategy (μ + λ) (Evolution Algorithm)
 --------------------------------------
 
-| Реализация эволюционной стратегии **(μ + λ)**.
+| Implementation of evolutionary strategy **(μ + λ)**. The behavior of this implementation is controlled by the following parameters:
 
-| Поведения реализуемой стратегии управляется следующими параметрами:
-
-* **mu_size** -- Size of the parent population.
-* **lambda_size** -- Size of the offspring population.
 * **mutation** -- Instance of `Mutation <algorithm_modules/mutation.module.html>`_ module.
 * **selection** -- Instance of `Selection <algorithm_modules/selection.module.html>`_ module.
-* **min_update_size** -- Задает минимальное число новых особей, при котором происходит переход к следующей популяции. Значения от **1** до **lambda_size**. По умолчанию значение равно **1**, то есть переход происходит каждый раз, когда посчитано значение фитнес-функции хотя бы для одной новой особи.
-* **max_queue_size** -- Максимальное число особей, которые могут одновременно находиться в процессе вычисления значение фитнес-функции. По умолчанию значение не задано, то есть одновременно будет вычисления значение фитнес-функции столько особей очередь будет пополняться пока есть свободные вычислительные ресурсы.
+* **mu_size** -- The size of the parent population.
+* **lambda_size** -- The size of the offspring population.
+* **min_update_size** -- The minimum number of new individuals at which a transition to the next population occurs. Values from **1** to **population_size**. By default, the value is **1**, i.e. the transition occurs every time the fitness function value is calculated for at least one new individual.
+* **max_queue_size** -- The maximum number of processed individuals at the same time, for which the fitness function values is calculated. By default, the value is not set, that is, the number of  processed individuals at the same time will depend on the amount of allocated computing resources.
 
 .. code-block:: python
 
@@ -64,17 +60,16 @@ Strategy (μ + λ) (Evolution Algorithm)
 Elitism (Genetic Algorithm)
 ---------------------------
 
-| Реализация генетического алгоритма используя стратегию **Элитизм**. Основная особенность данной стратегии состоит в том, что при переходе от одной популяции к следующей, в следующей популяции обязательно будут сохранено заданное число лучших  особей (элит). Остальные особи постепенно заменяются более свежими.
+| Implementation of a genetic algorithm using the **Elitism** strategy. The main feature of this strategy is that the transition to the next population occurs while maintaining a given number of the best individuals (elites). The remaining individuals are gradually replaced by more recent ones.
+| The behavior of this implementation is controlled by the following parameters:
 
-| Поведения реализуемой стратегии управляется следующими параметрами:
-
-* **population_size** -- Размер популяции без учета элитарных особей.
-* **elites_count** - Число элитарных особей, которые всегда переходят в следующую популяцию.
 * **mutation** -- Instance of `Mutation <algorithm_modules/mutation.module.html>`_ module.
 * **crossover** -- Instance of `Crossover <algorithm_modules/crossover.module.html>`_ module.
 * **selection** - Instance of `Selection <algorithm_modules/selection.module.html>`_ module.
-* **min_update_size** -- Задает минимальное число новых особей, при котором происходит переход к следующей популяции. Значения от **1** до **population_size**. По умолчанию значение равно **1**, то есть переход происходит каждый раз, когда посчитано значение фитнес-функции хотя бы для одной новой особи.
-* **max_queue_size** - Максимальное число особей, которые могут одновременно находиться в процессе вычисления значение фитнес-функции. По умолчанию значение не задано, то есть одновременно будет вычисления значение фитнес-функции столько особей очередь будет пополняться пока есть свободные вычислительные ресурсы.
+* **population_size** -- The size of population excluding elite's individuals.
+* **elites_count** - The number of elite's individuals that always move to the next population.
+* **min_update_size** -- The minimum number of new individuals at which a transition to the next population occurs. Values from **1** to **population_size**. By default, the value is **1**, i.e. the transition occurs every time the fitness function value is calculated for at least one new individual.
+* **max_queue_size** - The maximum number of processed individuals at the same time, for which the fitness function values is calculated. By default, the value is not set, that is, the number of  processed individuals at the same time will depend on the amount of allocated computing resources.
 
 .. code-block:: python
 

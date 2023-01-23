@@ -6,9 +6,9 @@ Encoding
 .. code-block:: python
 
     class Encoding:
-        def get_data() -> EncodingDate:
+        def get_data() -> EncodingData:
 
-    class EncodingDate:
+    class EncodingData:
         def source() -> string:
 
 CNF

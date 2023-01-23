@@ -1,14 +1,12 @@
 Instance
 ========
 
-Данный пакет предназначен для представления модели решаемой проблемы.
+This package defines models to represent the researched problem under study.
 
 Instance
 --------
 
-Реализация для представления модели задачи только посредством кодировки задачи. Используется если внутренняя структура переменных либо не известна, либо не нужна для решения поставленной задачи.
-
-| Определяющие параметры:
+| An implementation to represent a problem model only through encoding of this problem. It is used if knowledge about the internal structure of the variables is not known or is not required to solve the problem. This implementation is defined by the following parameters:
 
 * **encoding** -- Instance of `Encoding <instance_modules/encoding.module.html>`_ module.
 
@@ -23,9 +21,8 @@ Instance
 Stream Cipher
 -------------
 
-Реализация для представления модели задачи, для которой известно множество входных или выходных переменных. Предполагается использование для работы с задачами обращения различных функций. Также можно указать дополнительное множество переменных для ослабления кодировки, означивание литералов для которых будет также выполнено в процессе построения задачи обращения.
-
-| Определяющие параметры:
+| An implementation to represent a problem model for which the input and output variable sets are known. Used to work with representations of inversion problems for various functions. You can also specify an additional set of variables to weaken the encoding. The values of weakening variables will also be substituted in the process of constructing the inversion problem.
+| This implementation is defined by the following parameters:
 
 * **encoding** -- Instance of `Encoding <instance_modules/encoding.module.html>`_ module.
 * **input_set** -- Instance of `Variables <instance_modules/variables.module.html>`_ module.

@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'EvoGuess'
+project = 'EvoGuessAI'
 year = datetime.date.today().year
 copyright = f'{year}, Artem Pavlenko'
 author = 'Artem Pavlenko'

@@ -1,15 +1,13 @@
 Function
 ========
 
-This package is used to evaluate fitness values for decomposition sets.
+This package is used to evaluate fitness values for backdoors.
 
 Guess-and-determine
 -------------------
 
-| Реализация оценочной функции из статьи (...) для поиска ослабляющих backdoor sets.
-| Оценка производится на случайной выборке задач, генерация которой управляется в `Sampling <function_modules/solver.module.html>`_ module. Для каждой задачи выбираются случайные значения для переменных входящих в оцениваемый backdoor. Так же генерируются дополнительные правильные значения переменных, если это необходимо (например при работе с криптографическими функциями).
-
-| Поведение реализуемой функции управляется следующими параметрами:
+| Implementation of the fitness function from (...) to find to find weakening sets of variables (aka backdoors). The fitness value is calculated on a random sample of tasks that is generated in `Sampling <core_modules/sampling.module.html>`_ module. For each task, random substitutions are selected for variables from the evaluated backdoor. If necessary, additional correct values of variables are also generated (for example, when processing cryptographic functions).
+| The behavior of this implementation is controlled by the following parameters:
 
 * **solver** -- Instance of `Solver <function_modules/solver.module.html>`_ module.
 * **measure** -- Instance of `Measure <function_modules/measure.module.html>`_ module.
@@ -26,16 +24,15 @@ Guess-and-determine
 Inverse Backdoor Sets
 ---------------------
 
-| Реализация оценочной функции из статьи (...) предназначенная для поиска inverse backdoor sets в криптографических функциях.
-| Оценка производится на случайной выборке задач, генерация которой управляется в `Sampling <function_modules/solver.module.html>`_ module. Для каждой задачи выбирается случайное соответствие (секретный ключ, ключевой поток), и выполняется подстановка правильных значений в исходную формулу с учетом оцениваемого backdoor.
+| Implementation of the fitness function from [AAAI2018]_ designed to search inverse backdoor sets in cryptographic functions. The fitness value is calculated on a random sample of tasks that is generated in `Sampling <core_modules/sampling.module.html>`_ module. Для каждой задачи выбирается случайное соответствие (секретный ключ, ключевой поток), и выполняется подстановка правильных значений в исходную формулу с учетом оцениваемого backdoor.
 
-| Поведение реализуемой функции управляется следующими параметрами:
+| The behavior of this implementation is controlled by the following parameters:
 
 * **solver** -- Instance of `Solver <function_modules/solver.module.html>`_ module.
 * **measure** -- Instance of `Measure <function_modules/measure.module.html>`_ module.
 
 .. note::
-    Для корректного работы данной оценочного функции необходимо указать  значение параметра **budget** для модуля `Measure <function_modules/measure.module.html>`_.
+    Для корректного работы данной оценочного функции необходимо указать значение параметра **budget** для модуля `Measure <function_modules/measure.module.html>`_.
 
 .. code-block:: python
 
@@ -49,12 +46,12 @@ Inverse Backdoor Sets
 Rho Function
 ------------
 
-| Реализация оценочной функции из статьи (...). Алгоритм работы схож с реализацией Guess-and-Determine, однако solver используется только в режиме Unit Propagation.
-
-| Поведение реализуемой функции управляется следующими параметрами:
+| Implementation of the fitness function from [AAAI2022]_. This implementation is based on **Guess-and-Determine** function, however, the solver is used only in Unit Propagation mode.
+| The behavior of this implementation is controlled by the following parameters:
 
 * **solver** -- Instance of `Solver <function_modules/solver.module.html>`_ module.
 * **measure** -- Instance of `Measure <function_modules/measure.module.html>`_ module.
+* **penalty_power** -- множитель для штрафной составляющей в оценочном значении.
 
 .. code-block:: python
 
@@ -62,7 +59,26 @@ Rho Function
 
     function = RhoFunction(
         solver: Solver
-        measure: Measure
+        measure: Measure,
+        penalty_power: float
+    )
+
+Inverse Polynomial Sets
+-----------------------
+This implementation is based on **Inverse Backdoor Sets** function, .... The behavior of this implementation is controlled by the following parameters:
+
+* **solver** -- Instance of `Solver <function_modules/solver.module.html>`_ module.
+* **measure** -- Instance of `Measure <function_modules/measure.module.html>`_ module.
+* **min_solved** -- Доля задач из оценочной выборки, для которых обязательно должно быть найден разрешающая подстановка значений. По умолчанию: 0.
+
+.. code-block:: python
+
+    from function.impl import InversePolynomialSets
+
+    function = InversePolynomialSets(
+        solver: Solver
+        measure: Measure,
+        min_solved: Optional[float]
     )
 
 Function modules
