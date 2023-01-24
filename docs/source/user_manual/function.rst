@@ -24,15 +24,14 @@ Guess-and-determine
 Inverse Backdoor Sets
 ---------------------
 
-| Implementation of the fitness function from [AAAI2018]_ designed to search inverse backdoor sets in cryptographic functions. The fitness value is calculated on a random sample of tasks that is generated in `Sampling <core_modules/sampling.module.html>`_ module. Для каждой задачи выбирается случайное соответствие (секретный ключ, ключевой поток), и выполняется подстановка правильных значений в исходную формулу с учетом оцениваемого backdoor.
-
+| Implementation of the fitness function from [AAAI2018]_ designed to search inverse backdoor sets in cryptographic functions. The fitness value is calculated on a random sample of tasks that is generated in `Sampling <core_modules/sampling.module.html>`_ module. For each task, a random correct substitution for the pair (input set, output set) is selected, and the generated values for the estimated backdoor and output set variables are substituted into the original formula.
 | The behavior of this implementation is controlled by the following parameters:
 
 * **solver** -- Instance of `Solver <function_modules/solver.module.html>`_ module.
 * **measure** -- Instance of `Measure <function_modules/measure.module.html>`_ module.
 
 .. note::
-    Для корректного работы данной оценочного функции необходимо указать значение параметра **budget** для модуля `Measure <function_modules/measure.module.html>`_.
+    For this evaluation function to work correctly, you must specify the value of the **budget** parameter for the `Measure <function_modules/measure.module.html>`_ module.
 
 .. code-block:: python
 
@@ -51,7 +50,7 @@ Rho Function
 
 * **solver** -- Instance of `Solver <function_modules/solver.module.html>`_ module.
 * **measure** -- Instance of `Measure <function_modules/measure.module.html>`_ module.
-* **penalty_power** -- множитель для штрафной составляющей в оценочном значении.
+* **penalty_power** -- The multiplier for the penalty component in fitness value.
 
 .. code-block:: python
 
@@ -69,7 +68,7 @@ This implementation is based on **Inverse Backdoor Sets** function, .... The beh
 
 * **solver** -- Instance of `Solver <function_modules/solver.module.html>`_ module.
 * **measure** -- Instance of `Measure <function_modules/measure.module.html>`_ module.
-* **min_solved** -- Доля задач из оценочной выборки, для которых обязательно должно быть найден разрешающая подстановка значений. По умолчанию: 0.
+* **min_solved** -- The proportion of tasks in from the random sample for which a resolving substitution of values must be found. Default: 0.
 
 .. code-block:: python
 
@@ -78,7 +77,7 @@ This implementation is based on **Inverse Backdoor Sets** function, .... The beh
     function = InversePolynomialSets(
         solver: Solver
         measure: Measure,
-        min_solved: Optional[float]
+        min_solved: float
     )
 
 Function modules

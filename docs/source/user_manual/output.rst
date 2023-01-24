@@ -18,7 +18,7 @@ OptimizeLogger
 
     logger = OptimizeLogger(
         out_path: WorkPath,
-        log_format: Optional[LogFormat]
+        log_format: LogFormat
     )
 
 OptimizeParser
@@ -36,7 +36,7 @@ OptimizeParser
 
     parser = OptimizeParser(
         out_path: WorkPath,
-        log_format: Optional[LogFormat]
+        log_format: LogFormat
     )
 
 Output models
