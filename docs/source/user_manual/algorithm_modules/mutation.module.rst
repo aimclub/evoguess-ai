@@ -1,12 +1,19 @@
 Mutation
 ========
 
-In evolution and genetic algorithms, оператор мутации определяет каким образом будут изменяться исходные особи. Особи определяются массивом бит равной длины. При мутации значения заданных битов инвертируются на противоположные.
+| In evolution and genetic algorithms, the mutation operator determines how the original individuals will be mutated. Each individual is an instance of `Backdoor <../instance_modules/variables.module.html#backdoor>`_, and contains a bit mask that defines it. When mutating, the values of the selected bits in the mask are flipped.
+
+.. code-block:: python
+
+    class Mutation:
+        def mutate(individual: Backdoor) -> Backdoor
+
+| The **mutate** method returns a new individual, which is the result of applying the mutation operator to the passed **individual**.
 
 Uniform mutation
 ----------------
 
-При мутации каждый бит с вероятностью равной **flip_scale/array_length** может изменить свое значение на противоположное, где **array_length** is a length of bit array.
+When mutating, the value of each bit with a probability equal to **flip_scale/mask_length**  flips to the opposite, where **mask_length** is a length of bit mask. The random number generator is initialized with the passed **random_seed**.
 
 .. code-block:: python
 

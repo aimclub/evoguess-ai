@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from ..selection import *
-
 from typings.optional import Int
 
 if TYPE_CHECKING:
@@ -15,10 +14,10 @@ class BestPoint(Selection):
         self.best_count = best_count
         super().__init__(random_seed)
 
-    def select(self, vector: 'Vector', size: int) -> 'Vector':
-        mx = min(self.best_count, len(vector))
+    def select(self, population: 'Vector', size: int) -> 'Vector':
+        mx = min(self.best_count, len(population))
         return [
-            sorted(vector)[i % mx] for i in
+            sorted(population)[i % mx] for i in
             self.random_state.permutation(size)
         ]
 

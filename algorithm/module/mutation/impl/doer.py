@@ -28,8 +28,8 @@ class Doer(Mutation):
 
         return bound - 1
 
-    def mutate(self, backdoor: Backdoor) -> Backdoor:
-        mask = backdoor.get_mask()
+    def mutate(self, individual: Backdoor) -> Backdoor:
+        mask = individual.get_mask()
         prob = self.__get_alpha(len(mask)) / len(mask)
 
         # todo: move _distribution to tool funcs
@@ -38,7 +38,7 @@ class Doer(Mutation):
             if prob > value:
                 mask[i] = not mask[i]
 
-        return backdoor.get_copy(mask)
+        return individual.get_copy(mask)
 
     def __info__(self):
         return {

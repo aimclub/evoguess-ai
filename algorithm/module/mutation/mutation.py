@@ -17,7 +17,7 @@ class Mutation:
             if min_prob <= 0 or min_prob > min(distribution):
                 return distribution
 
-    def mutate(self, ind: Backdoor) -> Backdoor:
+    def mutate(self, individual: Backdoor) -> Backdoor:
         raise NotImplementedError
 
     def __info__(self):

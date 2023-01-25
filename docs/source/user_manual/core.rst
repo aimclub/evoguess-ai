@@ -39,7 +39,7 @@ Optimize
 Combine
 -------
 
-| This implementation calculates the time or other measure that will be required to solve the original problem using the specified list of `backdoors <instance_modules/variables.module.html#backdoor>`_. The combine process depends on the following parameters:
+| This implementation calculates the time or other **measure** that will be required to solve the original problem using the specified list of `backdoors <instance_modules/variables.module.html#backdoor>`_. The combine process depends on the following parameters:
 
 * **logger** -- Instance of Logger in `Output <output.html>`_ package.
 * **solver** -- Instance of  `Solver <function_modules/solver.module.html>`_ module.
@@ -75,5 +75,5 @@ Core modules
 
     core_modules/space.module
     core_modules/sampling.module
-    core_modules/comparator.module
     core_modules/limitation.module
+    core_modules/comparator.module

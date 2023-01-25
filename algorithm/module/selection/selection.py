@@ -14,7 +14,7 @@ class Selection:
         self.random_seed = random_seed or randint(2 ** 32 - 1)
         self.random_state = RandomState(seed=self.random_seed)
 
-    def select(self, vector: 'Vector', size: int) -> 'Vector':
+    def select(self, population: 'Vector', size: int) -> 'Vector':
         raise NotImplementedError
 
     def __str__(self):

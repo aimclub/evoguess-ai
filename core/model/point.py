@@ -18,9 +18,6 @@ class Point(Ordered):
     def value(self) -> Optional[float]:
         return self.estimation.get('value')
 
-    def new(self, backdoor: Backdoor) -> 'Point':
-        return Point(backdoor, self.comparator)
-
     def set(self, **estimation: Primitive) -> 'Point':
         if 'value' in self.estimation:
             raise Exception('Estimation already set')

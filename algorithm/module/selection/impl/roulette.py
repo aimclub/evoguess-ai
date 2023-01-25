@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 class Roulette(Selection):
     slug = 'selection:roulette'
 
-    def select(self, vector: 'Vector', size: int) -> 'Vector':
-        ranges, rng, count = [], 0, len(vector)
-        for i, point1 in enumerate(vector):
+    def select(self, population: 'Vector', size: int) -> 'Vector':
+        ranges, rng, count = [], 0, len(population)
+        for i, point1 in enumerate(population):
             w = 0.
-            for point2 in vector:
+            for point2 in population:
                 w += point1.value() / point2.value()
             rng = rng + (1. / w) if (i != count - 1) else 1.
             ranges.append(rng)
@@ -21,8 +21,8 @@ class Roulette(Selection):
         def get(prob):
             for k in range(0, count):
                 if ranges[k] >= prob:
-                    return vector[k]
-            return vector[-1]
+                    return population[k]
+            return population[-1]
 
         return [get(p) for p in self.random_state.rand(size)]
 

@@ -1,32 +1,37 @@
 # EvoGuessAI
 
-Component for finding decomposition sets and estimating hardness of SAT instances. The search for decomposition sets is realized via the optimization of the special pseudo-Boolean black-box functions that estimate the hardness of the decomposition corresponding to the employed decomposition method and the considered set. To optimize the value of such functions the framework uses metaheuristic algorithms, in particular, the evolutionary ones.
+Компонент EvoGuessAI предназначен для поиска декомпозиционных множеств и оценки сложности для вариантов задач булевой выполнимости. Поиск декомпозиционных множеств осуществляется посредством оптимизации специальной псевдобулевой "black-box" функции, которая оценивает сложность декомпозиции в соответствии используемому методу декомпозиции и рассматриваемому множеству. Для оптимизации значения таких функций используются метаэвристические алгоритмы, в частности, эволюционные.
 
-## Installation
-
-At the moment, only manual installation is available.
+## Установка
 
 ```shell script
 git clone git@github.com:ctlab/evoguess-ai.git
 cd evoguess-ai
 pip install -r requirements.txt
 ```
-To use EvoGuessAI in MPI mode, you also need to install:
+
+Чтобы использовать EvoGuessAI в MPI режиме, также необходимо установить:
 
 ```shell script
 pip install -r requirements-mpi.txt
 ```
 
-### How to MPI use
+### Запуск в MPI режиме
 
-The EvoGuessAI can be run in MPI mode as follows:
+Компонент EvoGuessAI может быть запущен в MPI режиме следующим образом:
 
 ```shell script
 mpiexec -n <workers> -perhost <perhost> python3 -m mpi4py.futures main.py
 ```
 
-where **perhost** is MPI workers processes on one node, and **workers** is a total MPI workers processes on all dedicated nodes.
+где **perhost** - это число рабочих процессов MPI на одной ноде, и **workers** - это общее число рабочих процессов MPI на всех выделенных нодах.
 
-## Documentation
+## При поддержке
 
-Documentation is available [here](https://evoguess-ai.readthedocs.io/) and includes installation instructions and base usage manual.
+Разработка поддерживается исследовательским центром «Сильный искусственный интеллект в промышленности» Университета ИТМО.
+
+<img src='https://gitlab.actcognitive.org/itmo-sai-code/organ/-/raw/main/docs/AIM-Strong_Sign_Norm-01_Colors.svg' width='200'>
+
+## Документация
+
+Документация компонента доступна [здесь](https://evoguess-ai.readthedocs.io/) и включает в себя инструкцию по установке и руководство по использованию.

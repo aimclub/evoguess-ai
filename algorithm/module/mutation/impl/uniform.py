@@ -11,8 +11,8 @@ class Uniform(Mutation):
         self.flip_scale = flip_scale
         super().__init__(random_seed)
 
-    def mutate(self, backdoor: Backdoor) -> Backdoor:
-        mask = backdoor.get_mask()
+    def mutate(self, individual: Backdoor) -> Backdoor:
+        mask = individual.get_mask()
         prob = self.flip_scale / len(mask)
 
         # todo: move _distribution to tool funcs
@@ -21,7 +21,7 @@ class Uniform(Mutation):
             if prob > value:
                 mask[i] = not mask[i]
 
-        return backdoor.get_copy(mask)
+        return individual.get_copy(mask)
 
     def __info__(self):
         return {
