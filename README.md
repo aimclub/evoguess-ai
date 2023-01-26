@@ -5,7 +5,7 @@
 ## Установка
 
 ```shell script
-git clone git@github.com:ctlab/evoguess-ai.git
+git clone git@gitlab.actcognitive.org:itmo-sai-code/evoguess-ai.git
 cd evoguess-ai
 pip install -r requirements.txt
 ```
