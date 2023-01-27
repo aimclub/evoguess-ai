@@ -26,6 +26,65 @@ mpiexec -n <workers> -perhost <perhost> python3 -m mpi4py.futures main.py
 
 где **perhost** - это число рабочих процессов MPI на одной ноде, и **workers** - это общее число рабочих процессов MPI на всех выделенных нодах.
 
+## Примеры использования
+
+Пример [поиска вероятностных лазеек](https://gitlab.actcognitive.org/itmo-sai-code/evoguess-ai/-/blob/master/examples/pvs_search_example.py) для решения задачи проверки эквивалентности двух булевых схем, реализующих различные алгоритмы, на примере кодировки PvS 7x4 (Pancake vs Selection sort).
+
+```python
+root_path = WorkPath('examples')
+data_path = root_path.to_path('data')
+cnf_file = data_path.to_file('pvs_4_7.cnf', 'sort')
+logs_path = root_path.to_path('logs', 'pvs_4_7')
+solution = Optimize(
+    space=RhoSubset(
+        by_mask=[],
+        of_size=200,
+        variables=Interval(start=1, length=1213)
+    ),
+    instance=Instance(
+        encoding=CNF(from_file=cnf_file)
+    ),
+    executor=ProcessExecutor(max_workers=16),
+    sampling=Const(size=8192, split_into=2048),
+    function=RhoFunction(
+        penalty_power=2 ** 20,
+        measure=Propagations(),
+        solver=pysat.Glucose3()
+    ),
+    algorithm=Elitism(
+        elites_count=2,
+        population_size=6,
+        mutation=Doer(),
+        crossover=TwoPoint(),
+        selection=Roulette(),
+        min_update_size=6
+    ),
+    limitation=WallTime(from_string='02:00:00'),
+    comparator=MinValueMaxSize(),
+    logger=OptimizeLogger(logs_path),
+).launch()
+```
+
+Далее соответствующая задача проверки эквивалентности двух булевых схем на примере кодировки PvS 7x4 может быть [решена c использованием найденных лазеек](https://gitlab.actcognitive.org/itmo-sai-code/evoguess-ai/-/blob/master/examples/pvs_solve_example.py) следующим образом:
+
+```python
+root_path = WorkPath('examples')
+data_path = root_path.to_path('data')
+cnf_file = data_path.to_file('pvs_4_7.cnf', 'sort')
+logs_path = root_path.to_path('logs', 'pvs_4_7_comb')
+estimation = Combine(
+    instance=Instance(
+        encoding=CNF(from_file=cnf_file)
+    ),
+    measure=SolvingTime(),
+    solver=pysat.Glucose3(),
+    logger=OptimizeLogger(logs_path),
+    executor=ProcessExecutor(max_workers=16)
+).launch(*backdoors)
+```
+
+Другие примеры можно найти в директории [examples](https://gitlab.actcognitive.org/itmo-sai-code/evoguess-ai/-/tree/master/examples) проекта.
+
 ## При поддержке
 
 Разработка поддерживается исследовательским центром «Сильный искусственный интеллект в промышленности» Университета ИТМО.

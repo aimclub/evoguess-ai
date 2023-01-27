@@ -1,7 +1,9 @@
-Inverse polynomial backdoors search example for A5/1
-====================================================
+Inverse polynomial backdoors search example for Bivium
+======================================================
 
-.. literalinclude:: ../../../../examples/ips_func_example.py
+An example of inverse polynomial backdoors searching to assess the cryptographic security of cryptographic functions using the example of the Bivium key stream generator.
+
+.. literalinclude:: ../../../../examples/bivium_search_example.py
     :language: python
     :linenos:
 
