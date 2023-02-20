@@ -1,9 +1,11 @@
 from . import pysat
 from .pysat import *
 from .two_sat import *
+from .external import *
 
 solvers = {
     TwoSAT.slug: TwoSAT,
+    Kissat.slug: Kissat,
     Cadical.slug: Cadical,
     Glucose3.slug: Glucose3,
     Glucose4.slug: Glucose4,
@@ -19,4 +21,5 @@ solvers = {
 __all__ = [
     'pysat',
     'TwoSAT',
+    'Kissat'
 ]

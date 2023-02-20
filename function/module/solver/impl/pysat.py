@@ -63,7 +63,6 @@ def solve(solver: pysat.Solver, measure: Measure,
     with PySatTimer(solver, measure.get_budget()) as timer:
         status = solver.solve_limited(assumptions, expect_interrupt=True)
         stats = {**solver.accum_stats(), 'time': timer.get_time()}
-        print(len(assumptions), status, stats['time'])
 
     value, status = measure.check_and_get(stats, status)
     model = solver.get_model() if add_model and status else None
