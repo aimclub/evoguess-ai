@@ -30,6 +30,8 @@ class Measure:
         value = stats.get(self.key)
         if self.budget and status is None:
             return value, Status.EXHAUSTED
+        if self.budget and value > self.budget:
+            return value, Status.EXHAUSTED
         if self.at_least and value < self.at_least:
             return value, Status.NOT_REACHED
         return value, STATUS_MAP[status]

@@ -31,9 +31,11 @@ def ips_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
 class InversePolynomialSets(InverseBackdoorSets):
     slug = 'function:ips'
 
-    def __init__(self, solver: Solver, measure: Measure, min_solved: float = 0.):
+    def __init__(self, solver: Solver, measure: Measure,
+                 min_solved: float = 0., only_propagate: bool = False):
         super().__init__(solver, measure)
         self.min_solved = min_solved
+        self.only_propagate = only_propagate
 
     def get_worker_fn(self) -> WorkerCallable:
         return ips_worker_fn
@@ -43,7 +45,8 @@ class InversePolynomialSets(InverseBackdoorSets):
         time_sum, value_sum = sum(times.values()), sum(values.values())
         power, value = backdoor.power(), float('inf')
 
-        solved = statuses.get(Status.SOLVED, 0)
+        solved = 0 if self.only_propagate \
+            else statuses.get(Status.SOLVED, 0)
         resolved = statuses.get(Status.RESOLVED, 0)
         if solved + resolved > self.min_solved * count:
             value = power * (3. * count / (solved + resolved))
