@@ -74,14 +74,14 @@ class External(Solver):
                 result = pattern.search(output)
                 stats[key] = result and int(result.group(1))
 
+            status = STATUSES.get(process.returncode)
             solution = concat(*[
                 [int(var) for var in line.split()]
                 for line in self.solution.findall(output)
-            ])
-            status = STATUSES.get(process.returncode)
+            ]) if add_model and status else None
         except TimeoutExpired:
             process.terminate()
-            status, solution = None, []
+            status, solution = None, None
             stats = {'time': now() - timestamp}
         finally:
             [os.remove(file) for file in files]
@@ -92,11 +92,11 @@ class External(Solver):
 
     def propagate(self, encoding_data: EncodingData, measure: Measure,
                   supplements: Supplements, add_model: bool = True) -> Report:
-        raise NotImplementedError('External solvers supports only solve procedure')
+        raise RuntimeError('External solvers supports only solve procedure')
 
     def use_incremental(self, encoding_data: EncodingData, measure: Measure,
                         constraints: Constraints = ()) -> IncrSolver:
-        raise NotImplementedError('External solvers supports only solve procedure')
+        raise RuntimeError('External solvers supports only solve procedure')
 
 
 class Kissat(External):
