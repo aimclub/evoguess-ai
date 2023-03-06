@@ -14,8 +14,8 @@ class Report(NamedTuple):
 
 
 class IncrSolver:
-    def __init__(self, data: EncodingData, measure: Measure):
-        self.data, self.measure = data, measure
+    def __init__(self, encoding_data: EncodingData, measure: Measure, constraints: Constraints):
+        self.encoding_data, self.measure, self.constraints = encoding_data, measure, constraints
 
     def __enter__(self):
         raise NotImplementedError
@@ -33,15 +33,15 @@ class IncrSolver:
 class Solver:
     slug = 'solver'
 
-    def solve(self, data: EncodingData, measure: Measure,
+    def solve(self, encoding_data: EncodingData, measure: Measure,
               supplements: Supplements, add_model: bool) -> Report:
         raise NotImplementedError
 
-    def propagate(self, data: EncodingData, measure: Measure,
+    def propagate(self, encoding_data: EncodingData, measure: Measure,
                   supplements: Supplements, add_model: bool) -> Report:
         raise NotImplementedError
 
-    def use_incremental(self, data: EncodingData, measure: Measure,
+    def use_incremental(self, encoding_data: EncodingData, measure: Measure,
                         constraints: Constraints = ()) -> IncrSolver:
         raise NotImplementedError
 

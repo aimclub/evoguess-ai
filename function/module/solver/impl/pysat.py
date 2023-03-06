@@ -21,7 +21,8 @@ class PySatTimer:
         return now() - self._timestamp
 
     def interrupt(self):
-        self._solver and self._solver.interrupt()
+        if self._solver:
+            self._solver.interrupt()
 
     def __enter__(self):
         if self.value is not None:
@@ -44,12 +45,13 @@ class PySatTimer:
         self._solver = None
 
 
-def init(constructor: Type, data: EncodingData, constraints: Constraints) -> pysat.Solver:
-    if isinstance(data, CNFData):
-        clauses = data.clauses(constraints)
+def init(constructor: Type, encoding_data: EncodingData,
+         constraints: Constraints) -> pysat.Solver:
+    if isinstance(encoding_data, CNFData):
+        clauses = encoding_data.clauses(constraints)
         solver = constructor(clauses, True)
-        if isinstance(data, CNFPData):
-            for literals, rhs in data.atmosts():
+        if isinstance(encoding_data, CNFPData):
+            for literals, rhs in encoding_data.atmosts():
                 solver.add_atmost(literals, rhs)
     else:
         raise TypeError('PySat works only with CNF or CNF+ encodings')
@@ -88,11 +90,10 @@ class IncrPySAT(IncrSolver):
     solver = None
     last_fixed_value = None
 
-    def __init__(self, data: EncodingData, measure: Measure,
-                 constructor: Type, constraints: Constraints):
-        super().__init__(data, measure)
+    def __init__(self, encoding_data: EncodingData, measure: Measure,
+                 constraints: Constraints, constructor: Type):
+        super().__init__(encoding_data, measure, constraints)
         self.constructor = constructor
-        self.constraints = constraints
 
     def _fix(self, report: Report) -> Report:
         if self.measure.key == 'time':
@@ -104,7 +105,11 @@ class IncrPySAT(IncrSolver):
         return Report(time, value, status, model)
 
     def __enter__(self):
-        self.solver = init(self.constructor, self.data, self.constraints)
+        self.solver = init(
+            self.constructor,
+            self.encoding_data,
+            self.constraints,
+        )
         self.last_fixed_value = 0
         return self
 
@@ -117,30 +122,30 @@ class IncrPySAT(IncrSolver):
         return self._fix(solve(self.solver, self.measure, assumptions, add_model))
 
     def propagate(self, assumptions: Assumptions, add_model: bool = True) -> Report:
-        return self._fix(
-            propagate(self.solver, self.measure, self.data.max_literal, assumptions, add_model)
-        )
+        return self._fix(propagate(
+            self.solver, self.measure, self.encoding_data.max_literal, assumptions, add_model
+        ))
 
 
 class PySAT(Solver):
     def __init__(self, constructor: Type):
         self.constructor = constructor
 
-    def solve(self, data: EncodingData, measure: Measure,
+    def solve(self, encoding_data: EncodingData, measure: Measure,
               supplements: Supplements, add_model: bool = True) -> Report:
         assumptions, constraints = supplements
-        with init(self.constructor, data, constraints) as solver:
+        with init(self.constructor, encoding_data, constraints) as solver:
             return solve(solver, measure, assumptions, add_model)
 
-    def propagate(self, data: EncodingData, measure: Measure,
+    def propagate(self, encoding_data: EncodingData, measure: Measure,
                   supplements: Supplements, add_model: bool = True) -> Report:
-        assumptions, constraints = supplements
-        with init(self.constructor, data, constraints) as solver:
-            return propagate(solver, measure, data.max_literal, assumptions, add_model)
+        max_literal, (assumptions, constraints) = encoding_data.max_literal, supplements
+        with init(self.constructor, encoding_data, constraints) as solver:
+            return propagate(solver, measure, max_literal, assumptions, add_model)
 
-    def use_incremental(self, data: EncodingData, measure: Measure,
+    def use_incremental(self, encoding_data: EncodingData, measure: Measure,
                         constraints: Constraints = ()) -> IncrPySAT:
-        return IncrPySAT(data, measure, self.constructor, constraints)
+        return IncrPySAT(encoding_data, measure, constraints, self.constructor)
 
 
 class Cadical(PySAT):
