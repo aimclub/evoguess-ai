@@ -9,6 +9,8 @@ from ..models import WorkerArgs, WorkerResult, \
 from ..abc.function import Function, aggregate_results
 
 from instance import Instance
+from function.module.solver import Solver
+from function.module.measure import Measure
 from instance.module.variables import Backdoor
 from instance.module.variables.vars import Supplements
 
@@ -52,6 +54,10 @@ class InverseBackdoorSets(Function):
     slug = 'function:ibs'
     supbs_required = True
 
+    def __init__(self, solver: Solver, measure: Measure, min_solved: float = 0.):
+        super().__init__(solver, measure)
+        self.min_solved = min_solved
+
     def get_worker_fn(self) -> WorkerCallable:
         return ibs_worker_fn
 
@@ -60,7 +66,7 @@ class InverseBackdoorSets(Function):
         time_sum, value_sum = sum(times.values()), sum(values.values())
         power, budget, value = backdoor.power(), self.measure.budget, float('inf')
 
-        if statuses.get(Status.RESOLVED, 0) > 0:
+        if statuses.get(Status.RESOLVED, 0) > self.min_solved * count:
             value = power * budget * (3. * count / statuses[Status.RESOLVED])
 
         return {

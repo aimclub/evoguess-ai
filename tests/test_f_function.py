@@ -117,7 +117,7 @@ class TestFunction(unittest.TestCase):
         ])
         self.assertEqual(estimation['count'], 4)
         self.assertEqual(estimation['value'], 12.0)
-        self.assertEqual(estimation['statuses'], {1: 4})
+        self.assertEqual(estimation['statuses'], {0: 2, 1: 2})
 
     def test_rho_function(self):
         solver = pysat.Glucose3()

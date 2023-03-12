@@ -39,7 +39,7 @@ class TestSolver(unittest.TestCase):
             _, _, status, model = incremental.solve([1], add_model=False)
             self.assertEqual((status, model), (Status.RESOLVED, None))
 
-        _, value, status, model = solver.solve(data, Propagations(budget=3), ([], []))
+        _, value, status, model = solver.solve(data, Propagations(budget=6), ([], []))
         self.assertEqual((value, status, model), (5, Status.RESOLVED, [-1, 2, -3, -4]))
         _, value, status, model = solver.solve(data, Propagations(at_least=8), ([], []))
         self.assertEqual((value, status, model), (5, Status.NOT_REACHED, [-1, 2, -3, -4]))

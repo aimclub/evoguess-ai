@@ -33,8 +33,7 @@ class InversePolynomialSets(InverseBackdoorSets):
 
     def __init__(self, solver: Solver, measure: Measure,
                  min_solved: float = 0., only_propagate: bool = False):
-        super().__init__(solver, measure)
-        self.min_solved = min_solved
+        super().__init__(solver, measure, min_solved)
         self.only_propagate = only_propagate
 
     def get_worker_fn(self) -> WorkerCallable:
