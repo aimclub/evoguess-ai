@@ -93,9 +93,8 @@ Other [examples](https://github.com/aimclub/evoguess-ai/tree/master/examples) ca
 
 ## Supported by
 
-The study is supported by the Research Center Strong Artificial Intelligence in Industry of ITMO University.
-
-<img src='https://gitlab.actcognitive.org/itmo-sai-code/organ/-/raw/main/docs/AIM-Strong_Sign_Norm-01_Colors.svg' width='200'>
+The study is supported by the [Research Center Strong Artificial Intelligence in Industry](<https://sai.itmo.ru/>) 
+of [ITMO University](https://en.itmo.ru/) as part of the plan of the center's program: Development and testing of an experimental prototype of a library of strong AI algorithms in terms of the Boolean satisfiability problem solving through heuristics of working with constraints and variables, searching for probabilistic trapdoors and inverse polynomial trapdoors.
 
 ## Documentation
 
