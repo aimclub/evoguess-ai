@@ -10,7 +10,7 @@ Point
         def value() -> Optional[float]
         def set(**estimation: Primitive) -> Point
 
-| The **estimated** method method checks if a fitness value has been set and returns a boolean result.
+| The **estimated** method checks if a fitness value has been set and returns a boolean result.
 | The **value** method returns *fitness value* or *None* if it hasn't already been set.
 | The **set** method sets the fitness value and the information accompanying its calculation, and returns *self*.
 
@@ -24,7 +24,6 @@ The instance of **Point** class can be created like this:
         backdoor: Backdoor,
         comparator: Comparator
     )
-
 
 Vector
 ------

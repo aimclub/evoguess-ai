@@ -1,7 +1,7 @@
 Solver
 =======
 
-| This module defines the tools for task solving. Tasks are represented using the implementations of `Encoding <../instance_modules/encoding.module.html>`_ module.
+| This module defines the tools for task solving. Tasks are represented using `Encoding <../instance_modules/encoding.module.html>`_ implementations.
 
 .. code-block:: python
 

@@ -9,8 +9,8 @@ Measure
         def get_budget() -> Tuple[Optional[str], Optional[float]]:
         def check_and_get(stats: Dict[str, float], status: Optional[bool]) -> Tuple[Optional[float], Status]
 
-| The **get_budget** method returns passed when initializing the value of the **budget** argument with a string identifier of the selected measure, as a tuple.
-| The **check_and_get** selects the corresponding value of the selected measure from the passed **stats** dictionary and returns a tuple of this value and the option of **Status** enumerable type, which determines the resulting status of the processed task.
+| The **get_budget** method returns a string identifier of the selected measure with the value of **budget** argument passed during initialization, as a tuple.
+| The **check_and_get** method selects the corresponding value of the selected measure from the passed **stats** dictionary and returns a tuple of this value and the option of **Status** enumerable type, which determines the resulting status of the processed task.
 
 | You can also specify common arguments for all implementations:
 

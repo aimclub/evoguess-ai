@@ -8,7 +8,7 @@ OptimizeLogger
 
 | This implementation is defined by the following parameters:
 
-* **out_path** -- Instance of `WorkPath <output_models/path.model.html>`_ class with specified path.
+* **out_path** -- An instance of the `WorkPath <output_models/path.model.html>`_ model with specified path.
 * **log_format** -- The format in which the logs will be written. Default: **LogFormat.JSON_LINE**.
 
 .. code-block:: python
@@ -26,7 +26,7 @@ OptimizeParser
 
 | This implementation is defined by the following parameters:
 
-* **out_path** -- Instance of `WorkPath <output_models/path.model.html>`_ class with specified path.
+* **out_path** -- An instance of the `WorkPath <output_models/path.model.html>`_ model with specified path.
 * **log_format** -- The format in which the logs were written. Default: **LogFormat.JSON_LINE**.
 
 .. code-block:: python
