@@ -1,7 +1,7 @@
 Encoding
 ========
 
-| This module defines the encoding of the problem ....
+| This module defines the encoding of the problem under study.
 
 .. code-block:: python
 
@@ -11,17 +11,21 @@ Encoding
     class EncodingData:
         def source() -> string
 
-| The **get_data** method возвращает экземпляр класса, который расширяет абстрактный класс **EncodingData**.
-| The **source** method возвращает кодировку в соответствующем формате для записи в файл.
+| The **get_data** method returns a new class instance that extends the **EncodingData** abstract class.
+| The **source** method returns a encoding in the format to be written to the file.
 
 CNF
 ---
 
-| Реализация для кодировок в конъюнктивной нормальной форме (КНФ).
-| Кодировку можно считать из файла **или** задать с помощью списка **from_clauses**.
+| Implementation for encodings in conjunctive normal form (CNF).
+| The encoding can be read from a file **or** specified using the **Clauses** list.
 
-* **from_file** -- Путь до файла, который содержит кодировку в DIMACS формате.
-* **from_clauses** -- A list of the `Clauses <../instance_models/var.model.html#clauses>`_.
+.. code-block:: python
+
+    Clauses = List[List[int]]
+
+* **from_file** -- A Path to the file containing the encoding in DIMACS format.
+* **from_clauses** -- A list of **Clauses**.
 
 .. code-block:: python
 
@@ -32,7 +36,7 @@ CNF
         from_clauses: Optional[Clauses]
     )
 
-| The **get_data** method возвращает экземпляр класса **CNFData**, который расширяет абстрактный класс **EncodingData**.
+| The **get_data** method returns a new **CNFData** instance that extends the **EncodingData** abstract class.
 
 .. code-block:: python
 
@@ -41,19 +45,23 @@ CNF
         def source(supplements: Supplements) -> string
         def clauses(constraints: Constraints) -> Clauses
 
-| The **max_literal** method возвращает целочисленный номер максимального литерала в формуле.
-| The **source** method возвращает кодировку в DIMACS формате с подставленными в неё `Supplements <../instance_models/var.model.html#supplements>`_.
-| The **clauses** method возвращает список `Clauses <../instance_models/var.model.html#clauses>`_ с подставленными в неё `Constraints <../instance_models/var.model.html#constraints>`_.
+| The **max_literal** method returns the number of the maximum literal in the formula.
+| The **source** method returns the encoding in DIMACS format with `Supplements <../instance_models/var.model.html>`_ substituted into it.
+| The **clauses** method returns a list of **Clauses** with `Constraints <../instance_models/var.model.html>`_ substituted into it.
 
 CNF+
 ----
 
-| Реализация для кодировок CNF+, that extends CNF to include cardinality constraints.
-| Кодировку можно считать из файла **или** задать с помощью списка **from_clauses** и **from_atmosts**.
+| Implementation for CNF+ encodings, that extends CNF to include cardinality constraints.
+| The encoding can be read from a file **or** specified using the **Clauses** and **Atmosts** lists.
 
-* **from_file** -- Путь до файла, который содержит кодировку в DIMACS формате.
-* **from_clauses** -- Список `Clauses <../instance_models/var.model.html#clauses>`_.
-* **from_clauses** -- Список `Atmosts <../instance_models/var.model.html#atmosts>`_.
+.. code-block:: python
+
+    Atmosts = List[Tuple[List[int], int]]
+
+* **from_file** -- A Path to the file containing the encoding in DIMACS format.
+* **from_clauses** -- A list of **Clauses**.
+* **from_clauses** -- A list of **Atmosts**.
 
 .. code-block:: python
 
@@ -65,7 +73,7 @@ CNF+
         from_atmosts: Optional[Atmosts]
     )
 
-| The **get_data** method возвращает экземпляр класса **CNFPData**, который расширяет класс **CNFData**.
+| The **get_data** method returns a new **CNFPData** instance that extends the **CNFData** class.
 
 .. code-block:: python
 
@@ -75,8 +83,10 @@ CNF+
         def clauses(constraints: Constraints) -> Clauses
         def atmosts() -> Atmosts
 
-| The **max_literal**, **source** and **clauses** method работает аналогичным с **CNFData** образом.
-| The **atmosts** method возвращает список `Atmosts <../instance_models/var.model.html#atmosts>`_.
+| The **max_literal** method returns the number of the maximum literal in the formula.
+| The **source** method returns the encoding in DIMACS format with `Supplements <../instance_models/var.model.html>`_ substituted into it.
+| The **clauses** method returns a list of **Clauses** with `Constraints <../instance_models/var.model.html>`_ substituted into it.
+| The **atmosts** method returns a list of **Atmosts** in the given encoding.
 
 Other instance modules
 ----------------------

@@ -5,8 +5,8 @@ An interface for defining different types of variables and the logic to work wit
 
 .. code-block:: python
 
-    Assumptions = List[int]
-    Constraints = List[List[int]]
+    Assumptions = List[int] # same as one lit Clauses
+    Constraints = List[List[int]] # same as Clauses
     Supplements = Tuple[Assumptions, Constraints]
 
     AnyVar = Union[Var, int]
