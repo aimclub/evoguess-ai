@@ -90,9 +90,7 @@ Indexes examples
 ^^^^^^^^^^^^^^^^
 
 .. note::
-    If the list of variables contains only `Index <../instance_models/var.model.html#index>`_ boolean variables, then
-it is more convenient
-to define such sets using the **Indexes** implementation.
+    If the list of variables contains only `Index <../instance_models/var.model.html#index>`_ boolean variables, then it is more convenient to define such sets using the **Indexes** implementation.
 
 Various ways to define lists of boolean variables using only their numbers.
 
@@ -149,8 +147,9 @@ Various ways to define interval of boolean variables.
 Backdoor
 --------
 
-| Реализация для создания специального множества переменных, которое используется в качестве модели лазеек в алгоритмах оптимизации. Позволяет быстро определять подмножества исходного множества переменных посредством битовых масок. Каждая переменная в исходном множестве может быть одновременно либо "включена", либо "выключена". "Включенные" переменные образуют требуемое подмножество переменных.
-| Также, как и реализация **Variables**, может задаваться через аргументы **from_file** или **from_vars**.
+| An implementation to create a custom set of variables that is used as a backdoor model in optimization `algorithms <../algorithm.html>`_. This implementation can quickly define subsets of the original set of variables using bit masks. Each variable in the original set can be either "on" or "off" at the same time. The "on" variables form the required subset of variables.
+
+| The instance of **Backdoor** is specified via the **from_file** or **from_vars** arguments, similar to the **Variables** implementation.
 
 .. note::
     Backdoors automatically built in `Space <../core_modules/space.module.html>`_ module from user-selected variables.
