@@ -1,10 +1,10 @@
 from typing import List, Tuple, TYPE_CHECKING
 
 from typings.optional import Int
+from typings.searchable import Searchable
 
 if TYPE_CHECKING:
-    from core.model.point import Point, Vector
-    from instance.module.variables import Backdoor
+    from core.model.point import Point, PointSet
 
 
 # todo: move to a separate file
@@ -22,17 +22,17 @@ class PointManager:
         self._buffer = []
         return self
 
-    def solution(self) -> 'Vector':
+    def solution(self) -> 'PointSet':
         return sorted(self._vector)
 
-    def insert(self, *points: 'Point') -> Tuple[int, 'Vector']:
+    def insert(self, *points: 'Point') -> Tuple[int, 'PointSet']:
         self._buffer.extend(points)
         if len(self._buffer) >= self._algorithm.min_update_size:
             self._vector = self._algorithm.update(self._vector, *self._buffer)
             self._index, self._buffer = self._index + 1, []
             return self._index, self._vector
 
-    def collect(self, in_queue: int, available: int) -> List['Backdoor']:
+    def collect(self, in_queue: int, available: int) -> List[Searchable]:
         if self._algorithm.max_queue_size is not None:
             max_queue_size = self._algorithm.max_queue_size
             available = max(0, max_queue_size - in_queue)
@@ -53,10 +53,10 @@ class Algorithm:
     def start(self, point: 'Point') -> PointManager:
         return PointManager(self, point)
 
-    def update(self, vector: 'Vector', *points: 'Point') -> 'Vector':
+    def update(self, vector: 'PointSet', *points: 'Point') -> 'PointSet':
         raise NotImplementedError
 
-    def next(self, vector: 'Vector', count: int) -> List['Backdoor']:
+    def next(self, vector: 'PointSet', count: int) -> List[Searchable]:
         raise NotImplementedError
 
     def __str__(self):

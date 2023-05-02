@@ -4,7 +4,7 @@ from numpy.random import randint, RandomState
 from typings.optional import Int
 
 if TYPE_CHECKING:
-    from core.model.point import Vector
+    from core.model.point import PointSet
 
 
 class Selection:
@@ -14,7 +14,7 @@ class Selection:
         self.random_seed = random_seed or randint(2 ** 32 - 1)
         self.random_state = RandomState(seed=self.random_seed)
 
-    def select(self, population: 'Vector', size: int) -> 'Vector':
+    def select(self, population: 'PointSet', size: int) -> 'PointSet':
         raise NotImplementedError
 
     def __str__(self):

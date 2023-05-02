@@ -2,6 +2,7 @@ from math import ceil
 from time import time as now
 from typing import Tuple, List, Dict, Any
 
+from space import Space
 from output import Logger
 from executor import Executor
 from function import Function
@@ -10,10 +11,9 @@ from algorithm import Algorithm
 
 from ..abc import Estimate
 from ..static import CORE_CACHE
-from ..model.point import Vector
+from ..model.point import PointSet
 from ..model.handle import Handle, n_completed
 
-from ..module.space import Space
 from ..module.sampling import Sampling
 from ..module.comparator import Comparator
 from ..module.limitation import Limitation
@@ -21,7 +21,7 @@ from ..module.limitation import Limitation
 from typings.optional import Int
 from util.iterable import omit_by
 
-Await = Tuple[Vector, List[Handle]]
+Await = Tuple[PointSet, List[Handle]]
 
 
 class Optimize(Estimate):
@@ -46,7 +46,7 @@ class Optimize(Estimate):
         self.optimization_trace = []
         CORE_CACHE.best_point = None
 
-    def launch(self, *args, **kwargs) -> Vector:
+    def launch(self, *args, **kwargs) -> PointSet:
         start_stamp = now()
         with self.logger:
             initial = self.space.get_initial(self.instance)

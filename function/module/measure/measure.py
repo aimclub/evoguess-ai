@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from ...models import Status
+from function.model import Status
 from typings.optional import Float, Str, Bool
 
 STATUS_MAP = {

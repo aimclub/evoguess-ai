@@ -1,9 +1,8 @@
-import sys
-
 from math import ceil
-from typing import List, Dict, Any
 from time import time as now
+from typing import List, Dict, Any
 from itertools import chain, product
+from util.iterable import concat, slice_by
 
 from output import Logger
 from executor import Executor
@@ -11,24 +10,20 @@ from instance import Instance
 
 from ..abc import Core
 
-from instance.module.variables import Backdoor
-from instance.module.variables.vars import compress, Assumptions
-
 from function.module.measure import Measure
-from function.models import Status, Estimation
+from function.model import Status, Estimation
 from function.impl.function_gad import sequence_mapper
 from function.module.solver import Solver, Report, IncrSolver
 
 from typings.optional import Int
-from util.iterable import concat, slice_by
+from typings.searchable import Searchable, Assumptions
 
 
-def get_propagation(solver: IncrSolver, backdoor: Backdoor) -> Report:
-    var_bases = backdoor.get_var_bases()
+def get_propagation(solver: IncrSolver, searchable: Searchable) -> Report:
+    dimension = searchable.dimension()
     time_sum, value_sum, up_tasks, hard_tasks = 0, 0, [], []
-    for substitution in map(sequence_mapper(var_bases), range(backdoor.power())):
-        values = {var: value for var, value in zip(backdoor, substitution)}
-        assumptions, _ = compress(*(var.supplements(values) for var in backdoor))
+    for substitution in map(sequence_mapper(dimension), range(searchable.power())):
+        assumptions, _ = searchable.substitute(with_substitution=substitution)
         time, value, status, _ = solver.propagate(assumptions, add_model=False)
         (up_tasks if status == Status.RESOLVED else hard_tasks).append(assumptions)
         time_sum, value_sum = time_sum + time, value_sum + value
@@ -63,12 +58,13 @@ class Combine(Core):
         self.executor = executor
         super().__init__(logger, instance, random_seed)
 
-    def launch(self, *backdoors: Backdoor) -> Estimation:
+    def launch(self, *searchables: Searchable) -> Estimation:
         encoding_data = self.instance.encoding.get_data()
-        total_var_set, start_stamp = set(concat(*backdoors)), now()
+        total_var_set, start_stamp = set(concat(*searchables)), now()
         time_sum, value_sum, all_up_tasks, all_hard_tasks = 0, 0, [], []
         with self.solver.use_incremental(encoding_data, self.measure) as solver:
-            for report in [get_propagation(solver, backdoor) for backdoor in backdoors]:
+            for searchable in searchables:
+                report = get_propagation(solver, searchable)
                 time, value, status, (up_tasks, hard_tasks) = report
                 time_sum, value_sum = time_sum + time, value_sum + value
                 all_up_tasks.extend(up_tasks), all_hard_tasks.append(hard_tasks)

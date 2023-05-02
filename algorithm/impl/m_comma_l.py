@@ -3,7 +3,7 @@ from ..module.mutation import Mutation
 from ..module.selection import Selection
 
 from typings.optional import Int
-from core.model.point import Vector
+from core.model.point import PointSet
 
 
 class MuCommaLambda(Evolution):
@@ -14,7 +14,7 @@ class MuCommaLambda(Evolution):
         self.mu_size, self.lambda_size = mu_size, lambda_size
         super().__init__(lambda_size, max_queue_size, mutation, selection)
 
-    def join(self, parents: Vector, offspring: Vector) -> Vector:
+    def join(self, parents: PointSet, offspring: PointSet) -> PointSet:
         return sorted(offspring)[:self.mu_size]
 
     def __info__(self):

@@ -1,5 +1,7 @@
 import unittest
 
+from space.model import Backdoor
+
 from instance.impl import Instance, StreamCipher
 from instance.module.encoding import CNF
 from instance.module.variables import Indexes
@@ -18,11 +20,11 @@ class TestInstance(unittest.TestCase):
         clauses = [[1, 2], [2, 3], [-1, 2, 3], [-4, 1, 2]]
         instance = Instance(encoding=CNF(from_clauses=clauses))
 
-        self.assertEqual(instance.get_instance_vars(), None)
-
-        indexes = Indexes(from_iterable=[4])
-        i_vars = instance.get_instance_vars(indexes)
-        self.assertListEqual(i_vars.dependent_vars, indexes.variables())
+        backdoor = Backdoor(Indexes(from_iterable=[4]))
+        i_vars = instance.get_instance_vars(backdoor)
+        self.assertEqual(i_vars.searchable, backdoor)
+        self.assertListEqual(i_vars.dependent_vars, [])
+        self.assertListEqual(i_vars.propagation_vars, [])
 
         self.assertEqual(i_vars.get_propagation(RandomStateStub()), ([], []))
         self.assertEqual(i_vars.get_dependent([1, 2, -3, -4]), ([-4], []))

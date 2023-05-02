@@ -1,6 +1,6 @@
 import unittest
 
-from function.models import Status
+from function.model import Status
 from function.module.measure import SolvingTime, Propagations, Conflicts, LearnedLiterals
 
 

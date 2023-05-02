@@ -1,14 +1,14 @@
 import os
 import json
 
+from time import sleep
 from typing import Any, Dict
 from datetime import datetime
-from time import sleep, time as now
+
+from util.work_path import WorkPath
+from typings.error import OutputSessionError
 
 from .output import Output, LogFormat, Config
-
-from typings.work_path import WorkPath
-from typings.error import OutputSessionError
 
 
 def date_now() -> str:

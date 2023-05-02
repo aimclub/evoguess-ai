@@ -2,14 +2,14 @@ from typing import List, Optional
 
 from typings.ordered import Ordered
 from typings.optional import Primitive
+from typings.searchable import Searchable
 from core.module.comparator import Comparator
-from instance.module.variables import Backdoor
 
 
 class Point(Ordered):
-    def __init__(self, backdoor: Backdoor, comparator: Comparator):
+    def __init__(self, searchable: Searchable, comparator: Comparator):
         self.estimation = {}
-        self.backdoor = backdoor
+        self.searchable = searchable
         super().__init__(comparator)
 
     def estimated(self) -> bool:
@@ -25,15 +25,15 @@ class Point(Ordered):
         return self
 
     def __len__(self):
-        return len(self.backdoor)
+        return len(self.searchable)
 
     def __str__(self):
-        return f'{repr(self.backdoor)} by {self.value():.7g}'
+        return f'{repr(self.searchable)} by {self.value():.7g}'
 
 
-Vector = List[Point]
+PointSet = List[Point]
 
 __all__ = [
     'Point',
-    'Vector',
+    'PointSet',
 ]

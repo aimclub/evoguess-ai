@@ -4,8 +4,8 @@ from .indexes import Indexes
 from ..var_tools import parse_range
 
 
-class Interval(Indexes):
-    slug = 'variables:interval'
+class Range(Indexes):
+    slug = 'variables:range'
 
     def __init__(self, start: int = None, length: int = None, from_string: str = None):
         self.start, self.length = start, length
@@ -29,5 +29,5 @@ class Interval(Indexes):
 
 
 __all__ = [
-    'Interval'
+    'Range'
 ]

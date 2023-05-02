@@ -13,15 +13,20 @@ def identity(_object: T) -> T:
 
 
 def concat(*iterables: Iterable[T]) -> List[T]:
+    # todo: try to use itertools chain method
     return reduce(lambda x, y: x.extend(y) or x, iterables, [])
 
 
 def to_oct(bits: Iterable[int]) -> int:
-    return sum([1 << (7 - i) for i, bit in enumerate(bits) if bit])
+    return from_bin(bits, 8)
 
 
 def to_bin(value: int, size: int) -> List[int]:
     return [1 if value & (1 << (size - 1 - i)) else 0 for i in range(size)]
+
+
+def from_bin(bits: Iterable[int], size: int) -> int:
+    return sum([1 << (size - i - 1) for i, bit in enumerate(bits) if bit])
 
 
 def list_of(example: T, dimension: Dimension) -> List[T]:

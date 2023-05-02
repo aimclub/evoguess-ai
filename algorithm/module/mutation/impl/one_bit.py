@@ -1,17 +1,17 @@
 from ..mutation import Mutation
 
-from instance.module.variables import Backdoor
+from typings.searchable import Searchable
 
 
 class OneBit(Mutation):
     slug = 'mutation:one-bit'
 
-    def mutate(self, individual: Backdoor) -> Backdoor:
-        mask = individual.get_mask()
-        i = self.random_state.randint(0, len(mask))
+    def mutate(self, individual: Searchable) -> Searchable:
+        vector = individual.get_vector()
+        i = self.random_state.randint(0, len(vector))
 
-        mask[i] = not mask[i]
-        return individual.get_copy(mask)
+        vector[i] = not vector[i]
+        return individual.make_copy(vector)
 
 
 __all__ = [

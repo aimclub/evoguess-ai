@@ -23,23 +23,22 @@ class StreamCipher(Instance):
         self.output_set = output_set
         self.extra_set = extra_set or Variables(from_vars=[])
 
+    def get_dependent_vars(self) -> List[Var]:
+        return [
+            *self.extra_set.variables(),
+            *self.output_set.variables()
+        ]
+
     def get_propagation_vars(self) -> List[Var]:
         return self.input_set.variables()
 
-    def get_dependent_vars(self, *args: Variables) -> List[Var]:
-        return [
-            *self.extra_set.variables(),
-            *self.output_set.variables(),
-            *super().get_dependent_vars(*args)
-        ]
-
-    def __info__(self):
-        return {
-            **super().__info__(),
-            'input_set': self.input_set.__info__(),
-            'extra_set': self.extra_set.__info__(),
-            'output_set': self.output_set.__info__(),
-        }
+    # def __info__(self):
+    #     return {
+    #         **super().__info__(),
+    #         'input_set': self.input_set.__info__(),
+    #         'extra_set': self.extra_set.__info__(),
+    #         'output_set': self.output_set.__info__(),
+    #     }
 
 
 __all__ = [

@@ -9,14 +9,15 @@ from function.module.measure import Propagations
 
 from instance.impl import Instance
 from instance.module.encoding import CNF
-from instance.module.variables import Interval
+from instance.module.variables import Range
 
+from space.impl import BackdoorSet
+
+from util.work_path import WorkPath
 from output.impl import OptimizeLogger
-from typings.work_path import WorkPath
 from executor.impl import ProcessExecutor
 
 from core.impl import Optimize
-from core.module.space import SearchSet
 from core.module.sampling import Const
 from core.module.limitation import WallTime
 from core.module.comparator import MinValueMaxSize
@@ -28,11 +29,11 @@ if __name__ == '__main__':
 
     logs_path = root_path.to_path('logs', 'test')
     solution = Optimize(
-        space=SearchSet(
-            by_mask=[],
-            variables=Interval(start=1, length=150)
+        space=BackdoorSet(
+            by_vector=[],
+            variables=Range(start=1, length=150)
         ),
-        executor=ProcessExecutor(max_workers=16),
+        executor=ProcessExecutor(max_workers=4),
         sampling=Const(size=16384, split_into=4096),
         instance=Instance(
             encoding=CNF(from_file=cnf_file)

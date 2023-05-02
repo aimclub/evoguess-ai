@@ -1,8 +1,8 @@
 from enum import Enum
 from typing import List, Dict, Union, Any
 
+from util.work_path import WorkPath
 from typings.optional import Primitive
-from typings.work_path import WorkPath
 
 
 class LogFormat(Enum):

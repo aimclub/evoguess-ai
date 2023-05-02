@@ -1,7 +1,8 @@
 import unittest
 
+from space.model import Backdoor
+from instance.module.variables import Range
 from algorithm.module.mutation import OneBit, Uniform, Doer
-from instance.module.variables import Backdoor, Interval
 
 
 class RandomStateStub:
@@ -21,30 +22,26 @@ class RandomStateStub:
 class TestMutation(unittest.TestCase):
     def test_one_bit(self):
         mutation = OneBit()
-        backdoor = Backdoor(
-            from_vars=Interval(start=1, length=8).variables()
-        )
+        backdoor = Backdoor(Range(start=1, length=8))
 
         mutation.random_state = RandomStateStub([3])
         self.assertEqual(
             mutation.mutate(
-                backdoor.get_copy([1, 1, 0, 1, 1, 0, 1, 1]),
+                backdoor.make_copy([1, 1, 0, 1, 1, 0, 1, 1]),
             ),
-            backdoor.get_copy([1, 1, 0, 0, 1, 0, 1, 1]),
+            backdoor.make_copy([1, 1, 0, 0, 1, 0, 1, 1]),
         )
 
         mutation.random_state = RandomStateStub([7])
         self.assertEqual(
             mutation.mutate(
-                backdoor.get_copy([1, 1, 0, 1, 1, 0, 1, 1]),
+                backdoor.make_copy([1, 1, 0, 1, 1, 0, 1, 1]),
             ),
-            backdoor.get_copy([1, 1, 0, 1, 1, 0, 1, 0]),
+            backdoor.make_copy([1, 1, 0, 1, 1, 0, 1, 0]),
         )
 
     def test_uniform(self):
-        backdoor = Backdoor(
-            from_vars=Interval(start=1, length=8).variables()
-        )
+        backdoor = Backdoor(Range(start=1, length=8))
 
         mutation = Uniform()
         mutation.random_state = RandomStateStub(
@@ -52,9 +49,9 @@ class TestMutation(unittest.TestCase):
         )
         self.assertEqual(
             mutation.mutate(
-                backdoor.get_copy([1, 1, 0, 1, 1, 0, 1, 1]),
+                backdoor.make_copy([1, 1, 0, 1, 1, 0, 1, 1]),
             ),
-            backdoor.get_copy([0, 1, 1, 1, 1, 0, 1, 1]),
+            backdoor.make_copy([0, 1, 1, 1, 1, 0, 1, 1]),
         )
 
         mutation.random_state = RandomStateStub(
@@ -63,9 +60,9 @@ class TestMutation(unittest.TestCase):
         )
         self.assertEqual(
             mutation.mutate(
-                backdoor.get_copy([1, 1, 0, 1, 1, 0, 1, 1]),
+                backdoor.make_copy([1, 1, 0, 1, 1, 0, 1, 1]),
             ),
-            backdoor.get_copy([0, 1, 1, 1, 1, 0, 1, 1]),
+            backdoor.make_copy([0, 1, 1, 1, 1, 0, 1, 1]),
         )
 
         mutation = Uniform(flip_scale=2)
@@ -74,15 +71,13 @@ class TestMutation(unittest.TestCase):
         )
         self.assertEqual(
             mutation.mutate(
-                backdoor.get_copy([1, 1, 0, 1, 1, 0, 1, 1]),
+                backdoor.make_copy([1, 1, 0, 1, 1, 0, 1, 1]),
             ),
-            backdoor.get_copy([0, 1, 1, 0, 1, 1, 1, 1]),
+            backdoor.make_copy([0, 1, 1, 0, 1, 1, 1, 1]),
         )
 
     def test_doer(self):
-        backdoor = Backdoor(
-            from_vars=Interval(start=1, length=8).variables()
-        )
+        backdoor = Backdoor(Range(start=1, length=8))
 
         mutation = Doer()
         mutation.random_state = RandomStateStub(
@@ -90,7 +85,7 @@ class TestMutation(unittest.TestCase):
         )
         self.assertEqual(
             mutation.mutate(
-                backdoor.get_copy([1, 1, 0, 1, 1, 0, 1, 1]),
+                backdoor.make_copy([1, 1, 0, 1, 1, 0, 1, 1]),
             ),
-            backdoor.get_copy([0, 1, 1, 1, 1, 0, 1, 1]),
+            backdoor.make_copy([0, 1, 1, 1, 1, 0, 1, 1]),
         )

@@ -3,13 +3,13 @@ from typing import TYPE_CHECKING
 from ..selection import *
 
 if TYPE_CHECKING:
-    from core.model.point import Vector
+    from core.model.point import PointSet
 
 
 class Roulette(Selection):
     slug = 'selection:roulette'
 
-    def select(self, population: 'Vector', size: int) -> 'Vector':
+    def select(self, population: 'PointSet', size: int) -> 'PointSet':
         ranges, rng, count = [], 0, len(population)
         for i, point1 in enumerate(population):
             w = 0.

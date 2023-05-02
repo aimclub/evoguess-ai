@@ -1,6 +1,6 @@
 from typing import Optional
 
-from function.models import Results
+from function.model import Results
 from .point import Point
 from .job import Job, n_completed as nc
 

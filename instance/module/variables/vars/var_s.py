@@ -1,6 +1,8 @@
-from .var import *
+from typing import Callable, Any, Dict, List
 
-from typing import Callable, Any, Dict
+from .var import Var, AnyVar, VarMap
+from typings.searchable import Supplements
+
 from util.iterable import to_bin
 
 

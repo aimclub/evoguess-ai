@@ -1,38 +1,38 @@
+from space import Space
 from executor import Executor
 from instance import Instance
 from function import Function
 
 from typing import List, Optional
-
-from ..static import CORE_CACHE
-from ..module.space import Space
-from ..module.sampling import Sampling
-
-from typings.optional import Int
 from util.iterable import pick_by
 
-from instance.module.variables import Backdoor
-from function.models import Estimation, Results, WorkerArgs
+from ..static import CORE_CACHE
+from ..module.sampling import Sampling
+
+from typings.searchable import Searchable
+from function.model import Estimation, Results, WorkerArgs
 
 
 class Context:
-    def __init__(self,
-                 space: Space,
-                 instance: Instance,
-                 function: Function,
-                 sampling: Sampling,
-                 executor: Executor,
-                 backdoor: Backdoor,
-                 sample_seed: Int):
+    def __init__(
+            self,
+            space: Space,
+            instance: Instance,
+            function: Function,
+            sampling: Sampling,
+            executor: Executor,
+            searchable: Searchable,
+            sample_seed: Optional[int]
+    ):
         self.space = space
-        self.backdoor = backdoor
         self.instance = instance
         self.function = function
         self.sampling = sampling
         self.executor = executor
+        self.searchable = searchable
 
         self.sample_seed = sample_seed
-        self.sample_size = min(backdoor.power(), self.sampling.max_size) \
+        self.sample_size = min(searchable.power(), self.sampling.max_size) \
             if not self.instance.input_dependent else self.sampling.max_size
         self.sample_state = self.sampling.get_state(0, self.sample_size)
 
@@ -43,10 +43,10 @@ class Context:
         ]
 
     def get_estimation(self, results: Optional[Results] = None) -> Estimation:
-        del CORE_CACHE.estimating[self.backdoor]
+        del CORE_CACHE.estimating[self.searchable]
         if results is None:
             # todo: add cancel info
-            estimation = CORE_CACHE.canceled[self.backdoor] = {
+            estimation = CORE_CACHE.canceled[self.searchable] = {
                 'canceled': True,
                 'sample_seed': self.sample_seed,
             }
@@ -56,11 +56,11 @@ class Context:
             if not len(picked):
                 raise Exception('all workers return an error')
 
-            estimation = CORE_CACHE.estimated[self.backdoor] = {
+            estimation = CORE_CACHE.estimated[self.searchable] = {
                 'accuracy': len(picked) / len(results),
                 'sample_seed': self.sample_seed,
                 **self.sampling.summarize(picked),
-                **self.function.calculate(self.backdoor, picked),
+                **self.function.calculate(self.searchable, picked),
             }
         return estimation
 

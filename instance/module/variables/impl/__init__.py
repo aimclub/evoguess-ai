@@ -1,18 +1,12 @@
+from .range import *
 from .indexes import *
-from .interval import *
-from .backdoor import *
 
 variables = {
+    Range.slug: Range,
     Indexes.slug: Indexes,
-    Interval.slug: Interval,
-    Backdoor.slug: Backdoor
 }
 
 __all__ = [
+    'Range',
     'Indexes',
-    'Interval',
-    'Backdoor',
-    # types
-    'Mask',
-    'ByteMask'
 ]

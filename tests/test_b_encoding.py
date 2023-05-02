@@ -1,8 +1,8 @@
 import unittest
 from copy import copy
 
-from typings.work_path import WorkPath
-from instance.module.encoding import CNF, CNFP, CNFData, CNFPData
+from util.work_path import WorkPath
+from instance.module.encoding import CNF, CNFData, CNFPData
 
 
 class TestEncodings(unittest.TestCase):

@@ -2,7 +2,7 @@ from typing import Tuple
 from numpy.random import randint, RandomState
 
 from typings.optional import Int
-from instance.module.variables import Backdoor
+from typings.searchable import Searchable
 
 
 class Crossover:
@@ -12,7 +12,10 @@ class Crossover:
         self.random_seed = random_seed or randint(2 ** 32 - 1)
         self.random_state = RandomState(seed=self.random_seed)
 
-    def cross(self, ind1: Backdoor, ind2: Backdoor) -> Tuple[Backdoor, Backdoor]:
+    def cross(self, ind1: Searchable, ind2: Searchable) -> Searchable:
+        return self.cross2(ind1, ind2)[self.random_state.randint(2)]
+
+    def cross2(self, ind1: Searchable, ind2: Searchable) -> Tuple[Searchable, Searchable]:
         raise NotImplementedError
 
     def __info__(self):

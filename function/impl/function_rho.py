@@ -1,25 +1,24 @@
-from math import log2
 from os import getpid
 from time import time as now
 
 from ..abc.function import aggregate_results
-from ..models import WorkerArgs, WorkerResult, \
+from ..model import WorkerArgs, WorkerResult, \
     WorkerCallable, Payload, Results, Estimation, Status
 from .function_gad import GuessAndDetermine, gad_supplements
 
+from typings.searchable import Searchable
 from function.module.solver import Solver
 from function.module.measure import Measure
-from instance.module.variables import Backdoor
 
 
 def rho_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     space, solver, measure, instance, bytemask = payload
-    backdoor, timestamp = space.unpack(instance, bytemask), now()
+    searchable, timestamp = space.unpack(instance, bytemask), now()
 
     times, values, statuses = {}, {}, {}
     encoding_data = instance.encoding.get_data()
     with solver.use_incremental(encoding_data, measure) as incremental:
-        for assumptions, _ in gad_supplements(args, instance, backdoor):
+        for assumptions, _ in gad_supplements(args, instance, searchable):
             # todo: use constraints with incremental propagation?
             time, value, status, _ = incremental.propagate(assumptions, add_model=False)
 
@@ -39,9 +38,9 @@ class RhoFunction(GuessAndDetermine):
     def get_worker_fn(self) -> WorkerCallable:
         return rho_worker_fn
 
-    def calculate(self, backdoor: Backdoor, results: Results) -> Estimation:
+    def calculate(self, searchable: Searchable, results: Results) -> Estimation:
         times, values, statuses, count, ptime = aggregate_results(results)
-        power, time_sum = backdoor.power(), sum(times.values())
+        power, time_sum = searchable.power(), sum(times.values())
 
         if count > 0 and self.penalty_power > power:
             rho_value = float(statuses.get(Status.RESOLVED, 0)) / count
@@ -54,7 +53,6 @@ class RhoFunction(GuessAndDetermine):
             'count': count,
             'value': round(value, 6),
             'ptime': round(ptime, 4),
-            'size': len(backdoor),
             'statuses': statuses,
             'time_sum': round(time_sum, 4),
         }

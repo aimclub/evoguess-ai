@@ -5,9 +5,9 @@ from pysat import solvers as pysat
 
 from ..solver import Report, Solver, IncrSolver
 
-from function.module.measure import Measure, Budget, EMPTY_BUDGET
+from typings.searchable import Assumptions, Constraints, Supplements
 from instance.module.encoding import EncodingData, CNFData, CNFPData
-from instance.module.variables.vars import Assumptions, Constraints, Supplements
+from function.module.measure import Measure, Budget, EMPTY_BUDGET
 
 
 class PySatTimer:

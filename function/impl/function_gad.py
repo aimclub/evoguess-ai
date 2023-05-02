@@ -5,22 +5,21 @@ from pysat.solvers import Glucose3
 from numpy.random import RandomState
 from typing import Callable, Iterable, List
 
-from ..models import WorkerArgs, WorkerResult, \
+from ..model import WorkerArgs, WorkerResult, \
     WorkerCallable, Payload, Results, Estimation
 from ..abc.function import Function, aggregate_results
 
+from instance import Instance
 from util.iterable import concat
-from instance.impl.instance import Instance
-from instance.module.variables import Backdoor
-from instance.module.variables.vars import Supplements, compress
+from typings.searchable import Searchable, Supplements, combine
 
 
-def sequence_mapper(var_bases: List[int]) -> Callable:
-    reversed_var_bases = var_bases[::-1]
+def sequence_mapper(dimension: List[int]) -> Callable:
+    reversed_dimension = dimension[::-1]
 
     def map_substitution(number: int) -> List[int]:
         substitution = []
-        for base in reversed_var_bases:
+        for base in reversed_dimension:
             number, value = divmod(number, base)
             substitution.insert(0, value)
         return substitution
@@ -29,21 +28,20 @@ def sequence_mapper(var_bases: List[int]) -> Callable:
 
 
 def gad_supplements(args: WorkerArgs, instance: Instance,
-                    backdoor: Backdoor) -> Iterable[Supplements]:
+                    searchable: Searchable) -> Iterable[Supplements]:
+    power, dimension = searchable.power(), searchable.dimension()
     sample_seed, sample_size, offset, length = args
     sample_state = RandomState(sample_seed)
-    var_bases = backdoor.get_var_bases()
-    var_power = backdoor.power()
 
-    if sample_size >= var_power:
+    if sample_size >= power:
         sequence = concat(*(
-            sample_state.permutation(var_power)
-            for _ in range(ceil(sample_size / var_power))
+            sample_state.permutation(power)
+            for _ in range(ceil(sample_size / power))
         ))[offset:offset + length]
-        substitutions = list(map(sequence_mapper(var_bases), sequence))
+        substitutions = list(map(sequence_mapper(dimension), sequence))
     else:
-        shape = (offset + length, len(var_bases))
-        substitutions = sample_state.randint(0, var_bases, shape)[offset:]
+        shape = (offset + length, len(dimension))
+        substitutions = sample_state.randint(0, dimension, shape)[offset:]
 
     if instance.input_dependent:
         encoding_data = instance.encoding.get_data()
@@ -52,16 +50,16 @@ def gad_supplements(args: WorkerArgs, instance: Instance,
         # todo: improve function package typing
         with Glucose3(encoding_data.clauses()) as solver:
             for substitution in substitutions:
-                values = {var: value for var, value in zip(backdoor, substitution)}
                 assumptions, _ = instance_vars.get_propagation(sample_state)
-                yield compress(
-                    *(var.supplements(values) for var in backdoor),
+                yield combine(
+                    searchable.substitute(with_substitution=substitution),
                     instance_vars.get_dependent(solver.propagate(assumptions)[1])
                 )
     else:
+        print(searchable, len(substitutions), args)
         for substitution in substitutions:
-            values = {var: value for var, value in zip(backdoor, substitution)}
-            yield compress(*(var.supplements(values) for var in backdoor))
+            yield searchable.substitute(with_substitution=substitution)
+        print(searchable, len(substitutions), args, '-- ok')
 
 
 def gad_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
@@ -86,10 +84,10 @@ class GuessAndDetermine(Function):
     def get_worker_fn(self) -> WorkerCallable:
         return gad_worker_fn
 
-    def calculate(self, backdoor: Backdoor, results: Results) -> Estimation:
+    def calculate(self, searchable: Searchable, results: Results) -> Estimation:
         times, values, statuses, count, ptime = aggregate_results(results)
         time_sum, value_sum = sum(times.values()), sum(values.values())
-        power, value = backdoor.power(), value_sum if count else float('inf')
+        power, value = searchable.power(), value_sum if count else float('inf')
 
         if count > 0 and count != power:
             value = float(value_sum) / count * power

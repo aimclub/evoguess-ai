@@ -1,4 +1,6 @@
-from typing import Any, Callable, Dict, Tuple, TYPE_CHECKING
+from typing import Any, Callable, Dict, Tuple
+
+from space import Space
 
 from . import worker_t
 from .worker_t import *
@@ -6,18 +8,15 @@ from .worker_t import *
 from ..module.solver.solver import Solver
 from ..module.measure.measure import Measure
 
+from typings.searchable import ByteVector
 from instance.impl.instance import Instance
-from instance.module.variables.impl.backdoor import ByteMask
-
-if TYPE_CHECKING:
-    from core.module.space import Space
 
 Payload = Tuple[
-    'Space',
+    Space,
     Solver,
     Measure,
     Instance,
-    ByteMask
+    ByteVector
 ]
 
 WorkerCallable = Callable[

@@ -1,16 +1,14 @@
-from typing import Union, List, Tuple, Dict, Any
+from typing import Union, List, Dict, Any
 
-Assumptions = List[int]
-Constraints = List[List[int]]
-Supplements = Tuple[Assumptions, Constraints]
+from typings.searchable import Supplements
 
 AnyVar = Union['Var', int]
 VarMap = Dict[AnyVar, int]
 
 
 class Var:
-    def __init__(self, base: int, name: str):
-        self.base = base
+    def __init__(self, dim: int, name: str):
+        self.dim = dim
         self.name = name
 
     @property
@@ -41,10 +39,6 @@ class Var:
 __all__ = [
     'Var',
     # types
-    'List',
     'AnyVar',
-    'VarMap',
-    'Assumptions',
-    'Constraints',
-    'Supplements'
+    'VarMap'
 ]

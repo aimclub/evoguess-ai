@@ -1,6 +1,7 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
-from .var import *
+from .var import Var, AnyVar, VarMap
+from typings.searchable import Supplements
 
 
 class Domain(Var):

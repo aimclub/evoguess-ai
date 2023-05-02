@@ -1,9 +1,10 @@
 from typing import NamedTuple, Any, Optional
 
-from function.models import Status
+from function.model import Status
 from function.module.measure import Measure
 from instance.module.encoding import EncodingData
-from instance.module.variables.vars import Assumptions, Supplements, Constraints
+
+from typings.searchable import Assumptions, Supplements, Constraints
 
 
 class Report(NamedTuple):

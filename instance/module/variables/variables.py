@@ -1,30 +1,24 @@
 from threading import Lock
-from itertools import chain
 from typing import Any, List, Dict, Iterable
 
-from .vars import Var, AnyVar
+from .vars import Var, AnyVar, get_var_deps, get_var_dims, get_var_sups
 from .var_tools import parse_vars_raw
 
 from util.lazy_file import get_file_data
+from typings.searchable import Supplements
 
 vars_data = {}
 parse_lock = Lock()
 
 
-def get_var_deps(_vars: Iterable[Var]) -> Iterable[AnyVar]:
-    return set(chain(*(v.deps for v in _vars)))
-
-
-def get_var_bases(_vars: Iterable[AnyVar]) -> List[int]:
-    return [2 if isinstance(v, int) else v.base for v in _vars]
-
-
 class Variables:
     slug = 'variables'
 
-    def __init__(self,
-                 from_file: str = None,
-                 from_vars: List[Var] = None):
+    def __init__(
+            self,
+            from_file: str = None,
+            from_vars: List[Var] = None
+    ):
         self._vars = from_vars
         self.filepath = from_file
 
@@ -56,29 +50,23 @@ class Variables:
         self._process_vars_raw()
         return vars_data[self.filepath]
 
-    def _upd_var_deps(self):
-        self._var_deps = get_var_deps(self.variables())
-
-    def _upd_var_bases(self):
-        self._var_bases = get_var_bases(self.variables())
-
-    def _upd_deps_bases(self):
-        self._deps_bases = get_var_bases(self.get_var_deps())
-
     def get_var_deps(self) -> Iterable[AnyVar]:
         if not self._var_deps:
-            self._upd_var_deps()
+            self._var_deps = get_var_deps(self.variables())
         return self._var_deps
 
-    def get_var_bases(self) -> List[int]:
+    def get_var_dims(self) -> List[int]:
         if not self._var_bases:
-            self._upd_var_bases()
+            self._var_bases = list(get_var_dims(self.variables()))
         return self._var_bases
 
-    def get_deps_bases(self) -> List[int]:
+    def get_deps_dims(self) -> List[int]:
         if not self._deps_bases:
-            self._upd_deps_bases()
+            self._deps_bases = list(get_var_dims(self.get_var_deps()))
         return self._deps_bases
+
+    def get_var_sups(self, sub: Iterable[int]) -> Supplements:
+        return get_var_sups(self.variables(), sub)
 
     def __len__(self):
         return len(self.variables())
@@ -117,7 +105,4 @@ __all__ = [
     'List',
     'AnyVar',
     'Variables',
-    # tools
-    'get_var_deps',
-    'get_var_bases'
 ]

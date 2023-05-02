@@ -3,7 +3,7 @@ from math import pow
 from ..mutation import Mutation
 
 from typings.optional import Int
-from instance.module.variables import Backdoor
+from typings.searchable import Searchable
 
 
 class Doer(Mutation):
@@ -28,17 +28,17 @@ class Doer(Mutation):
 
         return bound - 1
 
-    def mutate(self, individual: Backdoor) -> Backdoor:
-        mask = individual.get_mask()
-        prob = self.__get_alpha(len(mask)) / len(mask)
+    def mutate(self, individual: Searchable) -> Searchable:
+        vector = individual.get_vector()
+        prob = self.__get_alpha(len(vector)) / len(vector)
 
         # todo: move _distribution to tool funcs
-        distribution = self._distribution(prob, len(mask))
+        distribution = self._distribution(prob, len(vector))
         for i, value in enumerate(distribution):
             if prob > value:
-                mask[i] = not mask[i]
+                vector[i] = not vector[i]
 
-        return individual.get_copy(mask)
+        return individual.make_copy(vector)
 
     def __info__(self):
         return {

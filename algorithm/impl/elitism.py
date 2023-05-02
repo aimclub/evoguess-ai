@@ -6,7 +6,7 @@ from ..module.crossover import Crossover
 from ..module.selection import Selection
 
 from typings.optional import Int
-from core.model.point import Vector
+from core.model.point import PointSet
 from util.iterable import pick_by, omit_by
 
 
@@ -20,7 +20,7 @@ class Elitism(Genetic):
         self.elites_count, self.population_size = elites_count, population_size
         super().__init__(min_update_size, max_queue_size, mutation, crossover, selection)
 
-    def join(self, parents: Vector, offspring: Vector) -> Vector:
+    def join(self, parents: PointSet, offspring: PointSet) -> PointSet:
         # todo: fix same points in elites
         elite_indexes = argsort(parents)[:self.elites_count]
         additional_size = max(0, self.population_size - len(offspring))

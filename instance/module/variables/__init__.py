@@ -11,25 +11,17 @@ impls = {
 }
 
 
-# noinspection PyProtectedMember
-def make_backdoor(_variables: Variables) -> Backdoor:
-    return Backdoor(
-        from_vars=_variables._vars,
-        from_file=_variables.filepath,
-    )
-
-
-def variables_from(config: Dict[str, Any]) -> Variables:
+# todo: fix this
+def variables_from(config: Dict[str, Any]):
     slug = config.pop('slug')
     if config.get('from_vars') is not None:
         config['from_vars'] = list(map(var_from, config['from_vars']))
-    return impls[slug](**config)
+    return impls['variables'](**config)
 
 
 __all__ = [
     'Variables',
     *impl.__all__,
     # utils
-    'make_backdoor',
     'variables_from'
 ]

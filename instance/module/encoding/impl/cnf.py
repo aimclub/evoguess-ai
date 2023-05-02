@@ -3,7 +3,7 @@ from typing import List, Tuple, Dict, Any
 
 from ..encoding import Encoding, EncodingData
 
-from instance.module.variables.vars import Constraints, Supplements
+from typings.searchable import Constraints, Supplements
 
 Clause = List[int]
 Clauses = List[Clause]

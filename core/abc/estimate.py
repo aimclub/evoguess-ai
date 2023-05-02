@@ -1,5 +1,6 @@
 from typing import Any
 
+from space import Space
 from output import Logger
 from executor import Executor
 from function import Function
@@ -12,12 +13,11 @@ from ..model.point import Point
 from ..model.contex import Context
 
 from ..static import CORE_CACHE
-from ..module.space import Space
 from ..module.sampling import Sampling
 from ..module.comparator import Comparator
 
 from typings.optional import Int
-from instance.module.variables import Backdoor
+from typings.searchable import Searchable
 
 
 class Estimate(Core):
@@ -47,21 +47,21 @@ class Estimate(Core):
     def launch(self, *args, **kwargs) -> Any:
         raise NotImplementedError
 
-    def estimate(self, backdoor: Backdoor) -> Handle:
-        if backdoor in CORE_CACHE.estimating:
+    def estimate(self, searchable: Searchable) -> Handle:
+        if searchable in CORE_CACHE.estimating:
             # todo: refactor estimating handling
-            return CORE_CACHE.estimating[backdoor]
+            return CORE_CACHE.estimating[searchable]
 
-        point = Point(backdoor, self.comparator)
+        point = Point(searchable, self.comparator)
         return self._estimate(point)
 
     def _estimate(self, point: Point) -> Handle:
-        if point.backdoor in CORE_CACHE.canceled:
-            estimation = CORE_CACHE.canceled[point.backdoor]
+        if point.searchable in CORE_CACHE.canceled:
+            estimation = CORE_CACHE.canceled[point.searchable]
             return VoidHandle(point.set(**estimation))
 
-        if point.backdoor in CORE_CACHE.estimated:
-            estimation = CORE_CACHE.estimated[point.backdoor]
+        if point.searchable in CORE_CACHE.estimated:
+            estimation = CORE_CACHE.estimated[point.searchable]
             return VoidHandle(point.set(**estimation))
 
         self._job_number += 1
@@ -71,11 +71,11 @@ class Estimate(Core):
             function=self.function,
             sampling=self.sampling,
             executor=self.executor,
-            backdoor=point.backdoor,
+            searchable=point.searchable,
             # todo: move 2 ** 32 - 1 to const
             sample_seed=self.random_state.randint(2 ** 32 - 1)
         ), self._job_number).start(), point)
-        CORE_CACHE.estimating[point.backdoor] = handle
+        CORE_CACHE.estimating[point.searchable] = handle
 
         return handle
 

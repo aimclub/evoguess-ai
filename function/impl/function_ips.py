@@ -2,23 +2,21 @@ from os import getpid
 from time import time as now
 
 from ..abc.function import aggregate_results
-from ..models import WorkerArgs, WorkerResult, \
+from ..model import WorkerArgs, WorkerResult, \
     WorkerCallable, Payload, Results, Estimation, Status
 from .function_ibs import InverseBackdoorSets, ibs_supplements
 
-from function.module.solver import Solver
-from function.module.measure import Measure
-from instance.module.variables import Backdoor
+from typings.searchable import Searchable
 
 
 def ips_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     space, solver, measure, instance, bytemask = payload
-    backdoor, timestamp = space.unpack(instance, bytemask), now()
+    searchable, timestamp = space.unpack(instance, bytemask), now()
 
     times, values, statuses = {}, {}, {}
     encoding_data = instance.encoding.get_data()
     with solver.use_incremental(encoding_data, measure) as incremental:
-        for assumptions, _ in ibs_supplements(args, instance, backdoor):
+        for assumptions, _ in ibs_supplements(args, instance, searchable):
             # todo: use constraints with incremental propagation?
             time, value, status, _ = incremental.propagate(assumptions, add_model=False)
 
@@ -31,17 +29,13 @@ def ips_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
 class InversePolynomialSets(InverseBackdoorSets):
     slug = 'function:ips'
 
-    def __init__(self, solver: Solver, measure: Measure, min_solved: float = 0.):
-        super().__init__(solver, measure)
-        self.min_solved = min_solved
-
     def get_worker_fn(self) -> WorkerCallable:
         return ips_worker_fn
 
-    def calculate(self, backdoor: Backdoor, results: Results) -> Estimation:
+    def calculate(self, searchable: Searchable, results: Results) -> Estimation:
         times, values, statuses, count, ptime = aggregate_results(results)
         time_sum, value_sum = sum(times.values()), sum(values.values())
-        power, value = backdoor.power(), float('inf')
+        power, value = searchable.power(), float('inf')
 
         solved = statuses.get(Status.SOLVED, 0)
         resolved = statuses.get(Status.RESOLVED, 0)

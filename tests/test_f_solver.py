@@ -1,6 +1,6 @@
 import unittest
 
-from function.models import Status
+from function.model import Status
 from instance.module.encoding import CNF
 
 from function.module.solver import pysat, TwoSAT
