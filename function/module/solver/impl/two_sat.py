@@ -5,10 +5,10 @@ from pysat import solvers as pysat
 from ..solver import Report
 from .pysat import IncrPySAT, PySAT
 
+from function.model import Status
+from function.module.measure import Measure
 from typings.searchable import Supplements, Assumptions, Constraints
 from instance.module.encoding import EncodingData, Clause, Clauses
-from function.module.measure import Measure
-from function.model import Status
 
 
 def is2clause(clause: Clause, value_map: Dict[int, int]) -> bool:
