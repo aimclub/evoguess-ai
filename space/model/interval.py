@@ -1,3 +1,4 @@
+from math import log2, floor
 from typing import Optional, Iterable, Tuple, List, Dict, Any
 
 from util.polyfill import prod
@@ -5,6 +6,7 @@ from util.iterable import to_bin, split_by, from_bin
 
 from typings.searchable import Searchable, Assumptions, Constraints, Supplements, Vector
 from instance.module.variables import Indexes, AnyVar
+from instance.module.variables.vars import VarMap
 
 
 def _geq(lower: Assumptions) -> Constraints:
@@ -33,13 +35,6 @@ def _both(lower: Assumptions, upper: Assumptions) -> Constraints:
         return [*_geq(lower), *_leq(upper)]
 
 
-def _bits_to_num(bits: List[int]) -> int:
-    return sum([
-        bit << i for i, bit in
-        enumerate(reversed(bits))
-    ])
-
-
 class Interval(Searchable):
     def __init__(self, indexes: Indexes):
         super().__init__(length=len(indexes))
@@ -64,7 +59,7 @@ class Interval(Searchable):
 
     def substitute(
             self,
-            with_var_map: Optional[Dict[int, bool]] = None,
+            with_var_map: Optional[VarMap] = None,
             with_substitution: Optional[List[bool]] = None,
     ) -> Supplements:
         substitution = [
@@ -105,13 +100,16 @@ class Interval(Searchable):
         return super()._set_vector(vector)
 
     def __len__(self) -> int:
-        return self._get_size()[0]
+        return floor(log2(self._get_size()[0]))
 
     def __str__(self) -> str:
-        return f'0-{len(self)}'
+        return f'0-{self._get_size()[0]}'
 
     def __repr__(self) -> str:
         return f'[{str(self)}]({self.power()})'
+
+    def __hash__(self) -> int:
+        return hash(tuple(self._vector))
 
     def __copy__(self) -> 'Interval':
         return Interval(indexes=self._indexes)

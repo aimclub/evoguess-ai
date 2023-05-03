@@ -56,10 +56,8 @@ def gad_supplements(args: WorkerArgs, instance: Instance,
                     instance_vars.get_dependent(solver.propagate(assumptions)[1])
                 )
     else:
-        print(searchable, len(substitutions), args)
         for substitution in substitutions:
             yield searchable.substitute(with_substitution=substitution)
-        print(searchable, len(substitutions), args, '-- ok')
 
 
 def gad_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:

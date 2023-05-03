@@ -3,7 +3,7 @@ from util.polyfill import prod
 from typing import Optional, Iterator, List, Dict, Any
 
 from instance.module.variables import Variables, Var
-from instance.module.variables.vars import get_var_dims
+from instance.module.variables.vars import get_var_dims, VarMap
 from typings.searchable import Vector, Searchable, Supplements, combine
 
 
@@ -35,13 +35,13 @@ class Backdoor(Searchable):
 
     def substitute(
             self,
-            with_var_map: Optional[Dict[int, bool]] = None,
+            with_var_map: Optional[VarMap] = None,
             with_substitution: Optional[List[bool]] = None,
     ) -> Supplements:
         var_map = {
             _var: value for _var, value in
             zip(self.dependents(), with_substitution)
-        } if with_substitution else with_var_map
+        } if with_substitution is not None else with_var_map
         return combine(*(_var.supplements(var_map) for _var in self.dependents()))
 
     def _set_vector(self, vector: Vector) -> 'Backdoor':
@@ -64,7 +64,7 @@ class Backdoor(Searchable):
         return f'[{str(self)}]({len(self)})'
 
     def __hash__(self) -> int:
-        return hash(tuple(self.dependents()))
+        return hash(tuple(self._vector))
 
     def __iter__(self) -> Iterator[Var]:
         return iter(self.dependents())
