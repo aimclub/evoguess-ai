@@ -1,17 +1,18 @@
-# from .aig import *
 from .cnf import *
 from .cnfp import *
+from .source import *
 
 encodings = {
-    # AIG.slug: AIG,
     CNF.slug: CNF,
     CNFP.slug: CNFP,
+    Source.slug: Source,
 }
 
 __all__ = [
     # 'AIG',
     'CNF',
     'CNFP',
+    'Source',
     # types
     'Clause',
     'Atmost',
@@ -19,4 +20,5 @@ __all__ = [
     'Atmosts',
     'CNFData',
     'CNFPData',
+    'SourceData',
 ]

@@ -10,7 +10,7 @@ from util.iterable import concat
 from ..solver import Report, Solver, IncrSolver
 
 from function.module.budget import KeyLimit, UNLIMITED
-from instance.module.encoding import EncodingData, CNFData
+from instance.module.encoding import EncodingData, CNFData, SourceData
 from typings.searchable import Constraints, Supplements
 
 STATUSES = {
@@ -39,15 +39,15 @@ class External(Solver):
               limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
         files, launch_args = [], [self.from_executable]
 
-        if isinstance(encoding_data, CNFData):
+        if isinstance(encoding_data, CNFData) or isinstance(encoding_data, SourceData):
             source = encoding_data.source(supplements)
         else:
-            raise TypeError('External solvers works only with CNF or CNF+ encodings')
+            raise TypeError('External solvers works only with Source, CNF or CNF+ encodings')
 
         if self.stdin_file is not None:
             with NTFile(delete=False) as in_file:
-                in_file.write(source)
                 files.append(in_file.name)
+                in_file.write(source.encode())
                 launch_args.append(self.stdin_file % in_file.name)
 
         if self.stdout_file is not None:
@@ -121,7 +121,8 @@ class MinisatCS(External):
     slug = 'solver:ext:minisat_cs'
 
     stdin_file = f'%s'
-    stdout_file = f'%s'
+    # stdout_file = f'%s'
+    stdout_file = None
     limits = {}
     statistic = {
         'restarts': re.compile(r'^restarts\s+:\s+(\d+)', re.MULTILINE),

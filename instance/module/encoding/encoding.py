@@ -9,6 +9,7 @@ class EncodingData:
 
     @property
     def max_literal(self) -> int:
+        # todo: remove max_literal
         raise NotImplementedError
 
 

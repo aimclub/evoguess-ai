@@ -72,7 +72,7 @@ def solve(solver: pysat.Solver, assumptions: Assumptions = (),
     return Report(status, stats, model)
 
 
-def propagate(solver: pysat.Solver, max_literal: int, assumptions: Assumptions = ()) -> Report:
+def propagate(solver: pysat.Solver, assumptions: Assumptions = ()) -> Report:
     with PySatTimer(solver, UNLIMITED) as timer:
         status, literals = solver.propagate(assumptions)
         stats = {**solver.accum_stats(), 'time': timer.get_time()}
@@ -84,8 +84,7 @@ def propagate(solver: pysat.Solver, max_literal: int, assumptions: Assumptions =
     # during propagation or all literals in formula assigned.
     # Otherwise, the status is ``False``.
 
-    # todo: use solver.nof_vars() instead of max_literal
-    # print('check max_lit', solver.nof_vars(), max_literal)
+    max_literal = solver.nof_vars()
     status = not (status and len(literals) < max_literal)
     return Report(status, stats, literals)
 
@@ -128,7 +127,7 @@ class IncrPySAT(IncrSolver):
         return self._fix(solve(self.solver, assumptions, limit, add_model))
 
     def propagate(self, assumptions: Assumptions) -> Report:
-        return self._fix(propagate(self.solver, self.encoding_data.max_literal, assumptions))
+        return self._fix(propagate(self.solver, assumptions))
 
 
 class PySAT(Solver):
@@ -148,7 +147,7 @@ class PySAT(Solver):
     def propagate(self, encoding_data: EncodingData, supplements: Supplements) -> Report:
         assumptions, constraints = supplements
         with init(self.constructor, encoding_data, constraints) as solver:
-            return propagate(solver, encoding_data.max_literal, assumptions)
+            return propagate(solver, assumptions)
 
 
 class Cadical(PySAT):
