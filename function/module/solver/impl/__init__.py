@@ -6,6 +6,7 @@ from .external import *
 solvers = {
     TwoSAT.slug: TwoSAT,
     Kissat.slug: Kissat,
+    MinisatCS.slug: MinisatCS,
     Cadical.slug: Cadical,
     Glucose3.slug: Glucose3,
     Glucose4.slug: Glucose4,
@@ -21,5 +22,6 @@ solvers = {
 __all__ = [
     'pysat',
     'TwoSAT',
-    'Kissat'
+    'Kissat',
+    'MinisatCS'
 ]

@@ -105,7 +105,7 @@ class GuessAndDetermine(Function):
             value = float(value_sum) / stats.count * power
 
         estimation = {
-            'power': power,
+            # 'power': power,
             'count': stats.count,
             'value': round(value, 2),
             'ptime': round(stats.ptime_sum, 4),

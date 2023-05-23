@@ -117,6 +117,22 @@ class Kissat(External):
     }
 
 
+class MinisatCS(External):
+    slug = 'solver:ext:minisat_cs'
+
+    stdin_file = f'%s'
+    stdout_file = f'%s'
+    limits = {}
+    statistic = {
+        'restarts': re.compile(r'^restarts\s+:\s+(\d+)', re.MULTILINE),
+        'conflicts': re.compile(r'^conflicts\s+:\s+(\d+)', re.MULTILINE),
+        'decisions': re.compile(r'^decisions\s+:\s+(\d+)', re.MULTILINE),
+        'propagations': re.compile(r'^propagations\s+:\s+(\d+)', re.MULTILINE),
+        'learned_literals': re.compile(r'^conflict literals\s+:\s+(\d+)', re.MULTILINE),
+    }
+
+
 __all__ = [
-    'Kissat'
+    'Kissat',
+    'MinisatCS'
 ]
