@@ -4,9 +4,8 @@ from pysat import solvers as pysat
 
 from ..solver import Report
 from .pysat import IncrPySAT, PySAT
+from ...budget import UNLIMITED, KeyLimit
 
-from function.model import Status
-from function.module.measure import Measure
 from typings.searchable import Supplements, Assumptions, Constraints
 from instance.module.encoding import EncodingData, Clause, Clauses
 
@@ -25,34 +24,36 @@ def is2clause(clause: Clause, value_map: Dict[int, int]) -> bool:
     return size <= 2
 
 
-def check(clauses: Clauses, threshold: float, report: Report, add_model: bool = True) -> Report:
-    if report.status == Status.RESOLVED:
-        return report
+def check(clauses: Clauses, threshold: float, report: Report) -> Report:
+    if report.status: return report
 
-    time, value, status, literals = report
+    status, stats, literals = report
     value_map = {abs(lit): lit for lit in literals}
     false_count, false_limit = 0, (1 - threshold) * len(clauses)
-    stamp, model = now() - time, literals if add_model else None
+    stamp, status = now() - stats['time'], False
     for clause in clauses:  # todo: constraints not supported
         false_count += not is2clause(clause, value_map)
-        if false_count > false_limit:
-            return Report(now() - stamp, value, Status.EXHAUSTED, model)
-    return Report(now() - stamp, value, Status.SOLVED, model)
+        if false_count > false_limit: status = None
+
+    stats['time'] = now() - stamp
+    return Report(status, stats, literals)
 
 
 class IncrTwoSAT(IncrPySAT):
-    def __init__(self, encoding_data: EncodingData, measure: Measure,
-                 constraints: Constraints, constructor: Type, threshold: float):
-        super().__init__(encoding_data, measure, constraints, constructor)
+    def __init__(self, encoding_data: EncodingData, constraints: Constraints,
+                 constructor: Type, threshold: float):
+        super().__init__(encoding_data, constraints, constructor)
         self.threshold = threshold
 
-    def solve(self, assumptions: Assumptions, add_model: bool = True) -> Report:
-        return self.propagate(assumptions, add_model)  # todo: maybe raise Exception?
+    def solve(self, assumptions: Assumptions,
+              limit: KeyLimit = UNLIMITED,
+              add_model: bool = False) -> Report:
+        return self.propagate(assumptions)  # todo: maybe raise Exception?
 
-    def propagate(self, assumptions: Assumptions, add_model: bool = True) -> Report:
+    def propagate(self, assumptions: Assumptions) -> Report:
         return check(
             self.encoding_data.clauses(), self.threshold,
-            super().propagate(assumptions), add_model
+            super().propagate(assumptions)
         )
 
 
@@ -64,18 +65,17 @@ class TwoSAT(PySAT):
         # todo: move threshold to func
         self.threshold = threshold
 
-    def solve(self, encoding_data: EncodingData, measure: Measure,
-              supplements: Supplements, add_model: bool = True) -> Report:
-        return self.propagate(encoding_data, measure, supplements, add_model)
-
-    def propagate(self, encoding_data: EncodingData, measure: Measure,
-                  supplements: Supplements, add_model: bool = True) -> Report:
-        report = super().propagate(encoding_data, measure, supplements)
-        return check(encoding_data.clauses(), self.threshold, report, add_model)
-
-    def use_incremental(self, encoding_data: EncodingData, measure: Measure,
+    def use_incremental(self, encoding_data: EncodingData,
                         constraints: Constraints = ()) -> IncrTwoSAT:
-        return IncrTwoSAT(encoding_data, measure, constraints, self.constructor, self.threshold)
+        return IncrTwoSAT(encoding_data, constraints, self.constructor, self.threshold)
+
+    def solve(self, encoding_data: EncodingData, supplements: Supplements,
+              limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
+        return self.propagate(encoding_data, supplements)
+
+    def propagate(self, encoding_data: EncodingData, supplements: Supplements) -> Report:
+        report = super().propagate(encoding_data, supplements)
+        return check(encoding_data.clauses(), self.threshold, report)
 
 
 __all__ = [

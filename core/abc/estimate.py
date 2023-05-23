@@ -43,6 +43,7 @@ class Estimate(Core):
         CORE_CACHE.canceled = {}
         CORE_CACHE.estimated = {}
         CORE_CACHE.estimating = {}
+        CORE_CACHE.best_point = None
 
     def launch(self, *args, **kwargs) -> Any:
         raise NotImplementedError

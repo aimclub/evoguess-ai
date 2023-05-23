@@ -9,6 +9,7 @@ from function.impl.function_ibs import ibs_worker_fn, ibs_supplements
 from function.impl.function_ips import ips_worker_fn
 from function.impl.function_rho import rho_worker_fn
 
+from function.module.budget import AutoBudget, TaskBudget
 from function.module.solver import pysat, TwoSAT
 from function.module.measure import Propagations
 
@@ -79,9 +80,10 @@ class TestFunction(unittest.TestCase):
         ): self.assertTupleEqual(supplements, test_supplements)
 
     def test_gad_function(self):
+        budget = AutoBudget()
         solver = pysat.Glucose3()
         measure = Propagations()
-        function = GuessAndDetermine(solver, measure)
+        function = GuessAndDetermine(solver, budget, measure)
 
         space = BackdoorSet(Range(start=1, length=4))
         clauses = [[1, 2], [2, 3], [-1, 2, 3], [-4, 1, 2]]
@@ -89,7 +91,10 @@ class TestFunction(unittest.TestCase):
 
         backdoor = space.get_initial(instance)
         payload = function.get_payload(space, instance, backdoor)
-        self.assertEqual(payload, (space, solver, measure, instance, backdoor.pack()))
+        self.assertEqual(
+            payload,
+            (space, solver, budget, measure, instance, backdoor.pack())
+        )
 
         worker_fn = function.get_worker_fn()
         self.assertEqual(worker_fn, gad_worker_fn)
@@ -99,7 +104,10 @@ class TestFunction(unittest.TestCase):
         ])
         self.assertEqual(estimation['count'], 16)
         self.assertEqual(estimation['value'], 64.0)
-        self.assertEqual(estimation['statuses'], {1: 10, 0: 6})
+        self.assertEqual(
+            estimation['statuses'],
+            {'RESOLVED': 10, 'SOLVED': 6}
+        )
 
         estimation = function.calculate(backdoor, [
             ChunkResult(*worker_fn((43, 16, 0, 8), payload)),
@@ -107,7 +115,10 @@ class TestFunction(unittest.TestCase):
         ])
         self.assertEqual(estimation['count'], 16)
         self.assertEqual(estimation['value'], 64.0)
-        self.assertEqual(estimation['statuses'], {1: 10, 0: 6})
+        self.assertEqual(
+            estimation['statuses'],
+            {'RESOLVED': 10, 'SOLVED': 6}
+        )
 
         estimation = function.calculate(backdoor, [
             ChunkResult(*worker_fn((43, 16, 0, 4), payload)),
@@ -117,7 +128,10 @@ class TestFunction(unittest.TestCase):
         ])
         self.assertEqual(estimation['count'], 16)
         self.assertEqual(estimation['value'], 64.0)
-        self.assertEqual(estimation['statuses'], {1: 10, 0: 6})
+        self.assertEqual(
+            estimation['statuses'],
+            {'RESOLVED': 10, 'SOLVED': 6}
+        )
 
         estimation = function.calculate(backdoor, [])
         self.assertEqual(estimation['count'], 0)
@@ -184,9 +198,10 @@ class TestFunction(unittest.TestCase):
         ): self.assertTupleEqual(supplements, test_supplements)
 
     def test_ibs_function(self):
+        budget = TaskBudget(10)
         solver = pysat.Glucose3()
-        measure = Propagations(budget=10)
-        function = InverseBackdoorSets(solver, measure)
+        measure = Propagations()
+        function = InverseBackdoorSets(solver, budget, measure)
 
         clauses = [[-1, -2], [1, 3], [2, -4], [-3, 4]]
         instance = StreamCipher(
@@ -198,7 +213,10 @@ class TestFunction(unittest.TestCase):
 
         backdoor = space.get_initial(instance)
         payload = function.get_payload(space, instance, backdoor)
-        self.assertEqual(payload, (space, solver, measure, instance, backdoor.pack()))
+        self.assertEqual(
+            payload,
+            (space, solver, budget, measure, instance, backdoor.pack())
+        )
 
         worker_fn = function.get_worker_fn()
         self.assertEqual(worker_fn, ibs_worker_fn)
@@ -208,11 +226,14 @@ class TestFunction(unittest.TestCase):
         ])
         self.assertEqual(estimation['count'], 4)
         self.assertEqual(estimation['value'], 120.0)
-        self.assertEqual(estimation['statuses'], {1: 4})
+        self.assertEqual(
+            estimation['statuses'],
+            {'RESOLVED': 4}
+        )
 
     def test_ips_function(self):
         solver = TwoSAT()
-        measure = Propagations(budget=10)
+        measure = Propagations()
         function = InversePolynomialSets(solver, measure)
 
         clauses = [[-1, -2], [1, 3], [2, -4], [-3, 4]]
@@ -225,7 +246,10 @@ class TestFunction(unittest.TestCase):
 
         backdoor = space.get_initial(instance)
         payload = function.get_payload(space, instance, backdoor)
-        self.assertEqual(payload, (space, solver, measure, instance, backdoor.pack()))
+        self.assertEqual(
+            payload,
+            (space, solver, function.budget, measure, instance, backdoor.pack())
+        )
 
         worker_fn = function.get_worker_fn()
         self.assertEqual(worker_fn, ips_worker_fn)
@@ -235,7 +259,10 @@ class TestFunction(unittest.TestCase):
         ])
         self.assertEqual(estimation['count'], 4)
         self.assertEqual(estimation['value'], 12.0)
-        self.assertEqual(estimation['statuses'], {0: 2, 1: 2})
+        self.assertEqual(
+            estimation['statuses'],
+            {'RESOLVED': 4}
+        )
 
     def test_rho_function(self):
         solver = pysat.Glucose3()
@@ -248,7 +275,10 @@ class TestFunction(unittest.TestCase):
 
         backdoor = space.get_initial(instance)
         payload = function.get_payload(space, instance, backdoor)
-        self.assertEqual(payload, (space, solver, measure, instance, backdoor.pack()))
+        self.assertEqual(
+            payload,
+            (space, solver, function.budget, measure, instance, backdoor.pack())
+        )
 
         worker_fn = function.get_worker_fn()
         self.assertEqual(worker_fn, rho_worker_fn)
@@ -258,4 +288,7 @@ class TestFunction(unittest.TestCase):
         ])
         self.assertEqual(estimation['count'], 16)
         self.assertEqual(estimation['value'], 16.0)
-        self.assertEqual(estimation['statuses'], {1: 16})
+        self.assertEqual(
+            estimation['statuses'],
+            {'RESOLVED': 16}
+        )

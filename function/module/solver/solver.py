@@ -1,22 +1,19 @@
-from typing import NamedTuple, Any, Optional
+from typing import NamedTuple, Optional, Dict
 
-from function.model import Status
-from function.module.measure import Measure
 from instance.module.encoding import EncodingData
-
+from function.module.budget import KeyLimit, UNLIMITED
 from typings.searchable import Assumptions, Supplements, Constraints
 
 
 class Report(NamedTuple):
-    time: float
-    value: float
-    status: Status
-    model: Optional[Any]
+    status: Optional[bool]
+    stats: Dict[str, float]
+    model: Optional[Assumptions]
 
 
 class IncrSolver:
-    def __init__(self, encoding_data: EncodingData, measure: Measure, constraints: Constraints):
-        self.encoding_data, self.measure, self.constraints = encoding_data, measure, constraints
+    def __init__(self, encoding_data: EncodingData, constraints: Constraints):
+        self.encoding_data, self.constraints = encoding_data, constraints
 
     def __enter__(self):
         raise NotImplementedError
@@ -24,26 +21,27 @@ class IncrSolver:
     def __exit__(self, exc_type, exc_value, traceback):
         raise NotImplementedError
 
-    def solve(self, assumptions: Assumptions, add_model: bool = True) -> Report:
+    def solve(self, assumptions: Assumptions,
+              limit: KeyLimit = UNLIMITED,
+              add_model: bool = False) -> Report:
         raise NotImplementedError
 
-    def propagate(self, assumptions: Assumptions, add_model: bool = True) -> Report:
+    def propagate(self, assumptions: Assumptions) -> Report:
         raise NotImplementedError
 
 
 class Solver:
     slug = 'solver'
 
-    def solve(self, encoding_data: EncodingData, measure: Measure,
-              supplements: Supplements, add_model: bool) -> Report:
-        raise NotImplementedError
-
-    def propagate(self, encoding_data: EncodingData, measure: Measure,
-                  supplements: Supplements, add_model: bool) -> Report:
-        raise NotImplementedError
-
-    def use_incremental(self, encoding_data: EncodingData, measure: Measure,
+    def use_incremental(self, encoding_data: EncodingData,
                         constraints: Constraints = ()) -> IncrSolver:
+        raise NotImplementedError
+
+    def solve(self, encoding_data: EncodingData, supplements: Supplements,
+              limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
+        raise NotImplementedError
+
+    def propagate(self, encoding_data: EncodingData, supplements: Supplements) -> Report:
         raise NotImplementedError
 
     def __str__(self):
@@ -60,4 +58,7 @@ __all__ = [
     'IncrSolver',
     # types
     'Report',
+    'KeyLimit',
+    # const
+    'UNLIMITED'
 ]

@@ -44,7 +44,6 @@ class Optimize(Estimate):
                          sampling, function, comparator, random_seed)
 
         self.optimization_trace = []
-        CORE_CACHE.best_point = None
 
     def launch(self, *args, **kwargs) -> PointSet:
         start_stamp = now()

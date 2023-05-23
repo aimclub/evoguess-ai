@@ -36,7 +36,11 @@ ProcessId = int
 ProcessTime = float
 
 TimeMap = Dict[Status, float]
+Time2Map = Dict[Status, float]
+
 ValueMap = Dict[Status, float]
+Value2Map = Dict[Status, float]
+
 StatusMap = Dict[Status, int]
 
 WorkerResult = Tuple[
@@ -44,7 +48,9 @@ WorkerResult = Tuple[
     ProcessTime,
     # main info
     TimeMap,
+    Time2Map,
     ValueMap,
+    Value2Map,
     StatusMap,
     WorkerArgs,
 ]
@@ -55,7 +61,9 @@ class ChunkResult(NamedTuple):
     ptime: ProcessTime
     # main info
     times: TimeMap
+    times2: Time2Map
     values: ValueMap
+    values2: Value2Map
     statuses: StatusMap
     arguments: WorkerArgs
 
@@ -66,7 +74,9 @@ __all__ = [
     'Status',
     'Results',
     'TimeMap',
+    'Time2Map',
     'ValueMap',
+    'Value2Map',
     'StatusMap',
     'WorkerArgs',
     'ChunkResult',

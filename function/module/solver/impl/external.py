@@ -6,11 +6,12 @@ from tempfile import NamedTemporaryFile as NTFile
 from subprocess import Popen, TimeoutExpired, PIPE
 
 from util.iterable import concat
-from ..solver import Report, Solver, IncrSolver
-from typings.searchable import Constraints, Supplements
 
-from function.module.measure import Measure
+from ..solver import Report, Solver, IncrSolver
+
+from function.module.budget import KeyLimit, UNLIMITED
 from instance.module.encoding import EncodingData, CNFData
+from typings.searchable import Constraints, Supplements
 
 STATUSES = {
     10: True,
@@ -30,9 +31,13 @@ class External(Solver):
     def __init__(self, from_executable: str):
         self.from_executable = from_executable
 
-    def solve(self, encoding_data: EncodingData, measure: Measure,
-              supplements: Supplements, add_model: bool = True) -> Report:
-        timeout, files, launch_args = None, [], [self.from_executable]
+    def use_incremental(self, encoding_data: EncodingData,
+                        constraints: Constraints = ()) -> IncrSolver:
+        raise RuntimeError('External solvers supports only solve procedure')
+
+    def solve(self, encoding_data: EncodingData, supplements: Supplements,
+              limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
+        files, launch_args = [], [self.from_executable]
 
         if isinstance(encoding_data, CNFData):
             source = encoding_data.source(supplements)
@@ -50,14 +55,15 @@ class External(Solver):
                 files.append(out_file.name)
                 launch_args.append(self.stdout_file % out_file.name)
 
-        key, value = measure.get_budget()
+        timeout, (key, value) = None, limit
         if value is not None and key == 'time':
             timeout = value + len(source) * 6e-08
         if value is not None and key in self.limits:
             launch_args.append(self.limits[key] % value)
 
-        timestamp = now()
-        process = Popen(launch_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        timestamp, process = now(), Popen(
+            launch_args, stdin=PIPE, stdout=PIPE, stderr=PIPE
+        )
         try:
             data = None if self.stdin_file else source.encode()
             output, error = process.communicate(data, timeout)
@@ -86,16 +92,9 @@ class External(Solver):
         finally:
             [os.remove(file) for file in files]
 
-        # print(len(supplements[0]), status, stats['time'])
-        value, status = measure.check_and_get(stats, status)
-        return Report(stats['time'], value, status, solution)
+        return Report(status, stats, solution)
 
-    def propagate(self, encoding_data: EncodingData, measure: Measure,
-                  supplements: Supplements, add_model: bool = True) -> Report:
-        raise RuntimeError('External solvers supports only solve procedure')
-
-    def use_incremental(self, encoding_data: EncodingData, measure: Measure,
-                        constraints: Constraints = ()) -> IncrSolver:
+    def propagate(self, encoding_data: EncodingData, supplements: Supplements) -> Report:
         raise RuntimeError('External solvers supports only solve procedure')
 
 

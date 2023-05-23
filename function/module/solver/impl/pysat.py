@@ -5,17 +5,17 @@ from pysat import solvers as pysat
 
 from ..solver import Report, Solver, IncrSolver
 
-from typings.searchable import Assumptions, Constraints, Supplements
+from function.module.budget import KeyLimit, UNLIMITED
 from instance.module.encoding import EncodingData, CNFData, CNFPData
-from function.module.measure import Measure, Budget, EMPTY_BUDGET
+from typings.searchable import Assumptions, Constraints, Supplements
 
 
 class PySatTimer:
-    def __init__(self, solver: pysat.Solver, budget: Budget):
+    def __init__(self, solver: pysat.Solver, limit: KeyLimit):
         self._timer = None
         self._solver = solver
         self._timestamp = None
-        self.key, self.value = budget
+        self.key, self.value = limit
 
     def get_time(self) -> float:
         return now() - self._timestamp
@@ -33,6 +33,8 @@ class PySatTimer:
                 self._solver.conf_budget(int(self.value))
             elif self.key == 'propagations':
                 self._solver.prop_budget(int(self.value))
+            else:
+                raise KeyError(f'PySat don\'t support {self.key} limit')
 
         self._timestamp = now()
         return self
@@ -58,20 +60,20 @@ def init(constructor: Type, encoding_data: EncodingData,
     return solver
 
 
-def solve(solver: pysat.Solver, measure: Measure,
-          assumptions: Assumptions = (), add_model: bool = True) -> Report:
-    with PySatTimer(solver, measure.get_budget()) as timer:
+def solve(solver: pysat.Solver, assumptions: Assumptions = (),
+          limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
+    with PySatTimer(solver, limit) as timer:
         status = solver.solve_limited(assumptions, expect_interrupt=True)
         stats = {**solver.accum_stats(), 'time': timer.get_time()}
 
-    value, status = measure.check_and_get(stats, status)
-    model = solver.get_model() if add_model and status else None
-    return Report(stats['time'], value, status, model)
+    model = None
+    if add_model and status:
+        model = solver.get_model()
+    return Report(status, stats, model)
 
 
-def propagate(solver: pysat.Solver, measure: Measure, max_literal: int,
-              assumptions: Assumptions = (), add_model: bool = True) -> Report:
-    with PySatTimer(solver, EMPTY_BUDGET) as timer:
+def propagate(solver: pysat.Solver, max_literal: int, assumptions: Assumptions = ()) -> Report:
+    with PySatTimer(solver, UNLIMITED) as timer:
         status, literals = solver.propagate(assumptions)
         stats = {**solver.accum_stats(), 'time': timer.get_time()}
 
@@ -81,28 +83,30 @@ def propagate(solver: pysat.Solver, measure: Measure, max_literal: int,
     # evoguess: The status is ``True`` if conflict arisen
     # during propagation or all literals in formula assigned.
     # Otherwise, the status is ``False``.
+
+    # todo: use solver.nof_vars() instead of max_literal
+    # print('check max_lit', solver.nof_vars(), max_literal)
     status = not (status and len(literals) < max_literal)
-    value, status = measure.check_and_get(stats, status)
-    return Report(stats['time'], value, status, literals if add_model else None)
+    return Report(status, stats, literals)
 
 
 class IncrPySAT(IncrSolver):
     solver = None
-    last_fixed_value = None
+    last_stats = {}
 
-    def __init__(self, encoding_data: EncodingData, measure: Measure,
+    def __init__(self, encoding_data: EncodingData,
                  constraints: Constraints, constructor: Type):
-        super().__init__(encoding_data, measure, constraints)
+        super().__init__(encoding_data, constraints)
         self.constructor = constructor
 
     def _fix(self, report: Report) -> Report:
-        if self.measure.key == 'time':
-            return report
-
-        time, value, status, model = report
-        value -= self.last_fixed_value
-        self.last_fixed_value = report.value
-        return Report(time, value, status, model)
+        fixed_stats = {
+            key: value if key == 'time' else
+            value - self.last_stats.get(key, 0)
+            for key, value in report.stats.items()
+        }
+        status, self.last_stats, model = report
+        return Report(status, fixed_stats, model)
 
     def __enter__(self):
         self.solver = init(
@@ -118,34 +122,33 @@ class IncrPySAT(IncrSolver):
             self.solver.delete()
             self.solver = None
 
-    def solve(self, assumptions: Assumptions, add_model: bool = True) -> Report:
-        return self._fix(solve(self.solver, self.measure, assumptions, add_model))
+    def solve(self, assumptions: Assumptions,
+              limit: KeyLimit = UNLIMITED,
+              add_model: bool = False) -> Report:
+        return self._fix(solve(self.solver, assumptions, limit, add_model))
 
-    def propagate(self, assumptions: Assumptions, add_model: bool = True) -> Report:
-        return self._fix(propagate(
-            self.solver, self.measure, self.encoding_data.max_literal, assumptions, add_model
-        ))
+    def propagate(self, assumptions: Assumptions) -> Report:
+        return self._fix(propagate(self.solver, self.encoding_data.max_literal, assumptions))
 
 
 class PySAT(Solver):
     def __init__(self, constructor: Type):
         self.constructor = constructor
 
-    def solve(self, encoding_data: EncodingData, measure: Measure,
-              supplements: Supplements, add_model: bool = True) -> Report:
+    def use_incremental(self, encoding_data: EncodingData,
+                        constraints: Constraints = ()) -> IncrPySAT:
+        return IncrPySAT(encoding_data, constraints, self.constructor)
+
+    def solve(self, encoding_data: EncodingData, supplements: Supplements,
+              limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
         assumptions, constraints = supplements
         with init(self.constructor, encoding_data, constraints) as solver:
-            return solve(solver, measure, assumptions, add_model)
+            return solve(solver, assumptions, limit, add_model)
 
-    def propagate(self, encoding_data: EncodingData, measure: Measure,
-                  supplements: Supplements, add_model: bool = True) -> Report:
-        max_literal, (assumptions, constraints) = encoding_data.max_literal, supplements
+    def propagate(self, encoding_data: EncodingData, supplements: Supplements) -> Report:
+        assumptions, constraints = supplements
         with init(self.constructor, encoding_data, constraints) as solver:
-            return propagate(solver, measure, max_literal, assumptions, add_model)
-
-    def use_incremental(self, encoding_data: EncodingData, measure: Measure,
-                        constraints: Constraints = ()) -> IncrPySAT:
-        return IncrPySAT(encoding_data, measure, constraints, self.constructor)
+            return propagate(solver, encoding_data.max_literal, assumptions)
 
 
 class Cadical(PySAT):

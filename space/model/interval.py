@@ -1,4 +1,5 @@
 from math import log2, floor
+from sys import getrecursionlimit, setrecursionlimit
 from typing import Optional, Iterable, Tuple, List, Dict, Any
 
 from util.polyfill import prod
@@ -65,6 +66,8 @@ class Interval(Searchable):
         substitution = [
             with_var_map[_var] for _var in self.dependents()
         ] if with_var_map else with_substitution
+        if getrecursionlimit() < len(self._vector) - 100:
+            setrecursionlimit(2048)
 
         number = from_bin(substitution, self._length)
         length, remainder = self._get_size()
