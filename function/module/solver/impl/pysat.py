@@ -1,17 +1,17 @@
 from typing import Type
 from threading import Timer
 from time import time as now
-from pysat import solvers as pysat
 
+from pysat import solvers as slv, formula as fml
 from ..solver import Report, Solver, IncrSolver
 
 from function.module.budget import KeyLimit, UNLIMITED
-from instance.module.encoding import EncodingData, CNFData, CNFPData
+from instance.module.encoding import Formula
 from typings.searchable import Assumptions, Constraints, Supplements
 
 
 class PySatTimer:
-    def __init__(self, solver: pysat.Solver, limit: KeyLimit):
+    def __init__(self, solver: slv.Solver, limit: KeyLimit):
         self._timer = None
         self._solver = solver
         self._timestamp = None
@@ -47,20 +47,20 @@ class PySatTimer:
         self._solver = None
 
 
-def init(constructor: Type, encoding_data: EncodingData,
-         constraints: Constraints) -> pysat.Solver:
-    if isinstance(encoding_data, CNFData):
-        clauses = encoding_data.clauses(constraints)
-        solver = constructor(clauses, True)
-        if isinstance(encoding_data, CNFPData):
-            for literals, rhs in encoding_data.atmosts():
+def init(constructor: Type[slv.Solver], formula: Formula,
+         constraints: Constraints) -> slv.Solver:
+    if isinstance(formula, fml.CNF):
+        formula.extend(constraints)
+        solver = constructor(formula, True)
+        if isinstance(formula, fml.CNFPlus):
+            for literals, rhs in formula.atmosts:
                 solver.add_atmost(literals, rhs)
     else:
         raise TypeError('PySat works only with CNF or CNF+ encodings')
     return solver
 
 
-def solve(solver: pysat.Solver, assumptions: Assumptions = (),
+def solve(solver: slv.Solver, assumptions: Assumptions = (),
           limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
     with PySatTimer(solver, limit) as timer:
         status = solver.solve_limited(assumptions, expect_interrupt=True)
@@ -72,7 +72,7 @@ def solve(solver: pysat.Solver, assumptions: Assumptions = (),
     return Report(status, stats, model)
 
 
-def propagate(solver: pysat.Solver, assumptions: Assumptions = ()) -> Report:
+def propagate(solver: slv.Solver, assumptions: Assumptions = ()) -> Report:
     with PySatTimer(solver, UNLIMITED) as timer:
         status, literals = solver.propagate(assumptions)
         stats = {**solver.accum_stats(), 'time': timer.get_time()}
@@ -93,9 +93,9 @@ class IncrPySAT(IncrSolver):
     solver = None
     last_stats = {}
 
-    def __init__(self, encoding_data: EncodingData,
-                 constraints: Constraints, constructor: Type):
-        super().__init__(encoding_data, constraints)
+    def __init__(self, formula: Formula, constraints: Constraints,
+                 constructor: Type[slv.Solver]):
+        super().__init__(formula, constraints)
         self.constructor = constructor
 
     def _fix(self, report: Report) -> Report:
@@ -110,7 +110,7 @@ class IncrPySAT(IncrSolver):
     def __enter__(self):
         self.solver = init(
             self.constructor,
-            self.encoding_data,
+            self.formula,
             self.constraints,
         )
         self.last_fixed_value = 0
@@ -121,8 +121,7 @@ class IncrPySAT(IncrSolver):
             self.solver.delete()
             self.solver = None
 
-    def solve(self, assumptions: Assumptions,
-              limit: KeyLimit = UNLIMITED,
+    def solve(self, assumptions: Assumptions, limit: KeyLimit = UNLIMITED,
               add_model: bool = False) -> Report:
         return self._fix(solve(self.solver, assumptions, limit, add_model))
 
@@ -131,22 +130,21 @@ class IncrPySAT(IncrSolver):
 
 
 class PySAT(Solver):
-    def __init__(self, constructor: Type):
+    def __init__(self, constructor: Type[slv.Solver]):
         self.constructor = constructor
 
-    def use_incremental(self, encoding_data: EncodingData,
-                        constraints: Constraints = ()) -> IncrPySAT:
-        return IncrPySAT(encoding_data, constraints, self.constructor)
+    def use_incremental(self, formula: Formula, constraints: Constraints = ()) -> IncrPySAT:
+        return IncrPySAT(formula, constraints, self.constructor)
 
-    def solve(self, encoding_data: EncodingData, supplements: Supplements,
+    def solve(self, formula: Formula, supplements: Supplements,
               limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
         assumptions, constraints = supplements
-        with init(self.constructor, encoding_data, constraints) as solver:
+        with init(self.constructor, formula, constraints) as solver:
             return solve(solver, assumptions, limit, add_model)
 
-    def propagate(self, encoding_data: EncodingData, supplements: Supplements) -> Report:
+    def propagate(self, formula: Formula, supplements: Supplements) -> Report:
         assumptions, constraints = supplements
-        with init(self.constructor, encoding_data, constraints) as solver:
+        with init(self.constructor, formula, constraints) as solver:
             return propagate(solver, assumptions)
 
 
@@ -154,70 +152,70 @@ class Cadical(PySAT):
     slug = 'solver:pysat:cd'
 
     def __init__(self):
-        super().__init__(pysat.Cadical)
+        super().__init__(slv.Cadical)
 
 
 class Glucose3(PySAT):
     slug = 'solver:pysat:g3'
 
     def __init__(self):
-        super().__init__(pysat.Glucose3)
+        super().__init__(slv.Glucose3)
 
 
 class Glucose4(PySAT):
     slug = 'solver:pysat:g4'
 
     def __init__(self):
-        super().__init__(pysat.Glucose4)
+        super().__init__(slv.Glucose4)
 
 
 class Lingeling(PySAT):
     slug = 'solver:pysat:lgl'
 
     def __init__(self):
-        super().__init__(pysat.Lingeling)
+        super().__init__(slv.Lingeling)
 
 
 class MapleCM(PySAT):
     slug = 'solver:pysat:mcm'
 
     def __init__(self):
-        super().__init__(pysat.MapleCM)
+        super().__init__(slv.MapleCM)
 
 
 class MapleSAT(PySAT):
     slug = 'solver:pysat:mpl'
 
     def __init__(self):
-        super().__init__(pysat.Maplesat)
+        super().__init__(slv.Maplesat)
 
 
 class MapleChrono(PySAT):
     slug = 'solver:pysat:mcb'
 
     def __init__(self):
-        super().__init__(pysat.MapleChrono)
+        super().__init__(slv.MapleChrono)
 
 
 class Minicard(PySAT):
     slug = 'solver:pysat:mc'
 
     def __init__(self):
-        super().__init__(pysat.Minicard)
+        super().__init__(slv.Minicard)
 
 
 class Minisat22(PySAT):
     slug = 'solver:pysat:mgh'
 
     def __init__(self):
-        super().__init__(pysat.Minisat22)
+        super().__init__(slv.Minisat22)
 
 
 class MinisatGH(PySAT):
     slug = 'solver:pysat:m22'
 
     def __init__(self):
-        super().__init__(pysat.MinisatGH)
+        super().__init__(slv.MinisatGH)
 
 
 __all__ = [
@@ -233,5 +231,7 @@ __all__ = [
     'MinisatGH',
     # types
     'PySAT',
-    'IncrPySAT'
+    'IncrPySAT',
+    # utils
+    'PySatTimer',
 ]

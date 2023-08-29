@@ -3,45 +3,39 @@ from typing import Dict, List, Any
 
 from ..encoding import Encoding
 
-Clause = List[int]
-Clauses = List[Clause]
-
-cnf_formula = {}
+wcnf_formula = {}
 
 
-class CNF(Encoding):
-    slug = 'encoding:cnf'
+class WCNF(Encoding):
+    slug = 'encoding:wcnf'
 
     def __init__(
             self,
             from_file: str = None,
             from_string: str = None,
-            from_clauses: Clauses = None,
             comment_lead: List[str] = ('c',)
     ):
         self.from_file = from_file
         self.from_string = from_string
-        self.from_clauses = from_clauses
         self.comment_lead = comment_lead
 
-    def get_formula(self) -> formula.CNF:
+    def get_formula(self) -> formula.WCNF:
         if self.from_file is not None:
-            if self.from_file not in cnf_formula:
-                _formula = formula.CNF(
+            if self.from_file not in wcnf_formula:
+                _formula = formula.WCNF(
                     from_file=self.from_file,
                     comment_lead=self.comment_lead
                 )
-                cnf_formula[self.from_file] = _formula
-            return cnf_formula[self.from_file].copy()
+                wcnf_formula[self.from_file] = _formula
+            return wcnf_formula[self.from_file].copy()
 
-        return formula.CNF(
+        return formula.WCNF(
             from_string=self.from_string,
-            from_clauses=self.from_clauses,
             comment_lead=self.comment_lead
         )
 
     def __copy__(self):
-        return CNF(
+        return WCNF(
             from_file=self.from_file,
             from_string=self.from_string,
             comment_lead=self.comment_lead,
@@ -52,43 +46,30 @@ class CNF(Encoding):
             'slug': self.slug,
             'from_file': self.from_file,
             'from_string': self.from_string,
-            'from_clauses': self.from_clauses,
             'comment_lead': self.comment_lead
         }
 
 
-class CNFPlus(CNF):
-    slug = 'encoding:cnf+'
+class WCNFPlus(WCNF):
+    slug = 'encoding:wcnf+'
 
-    def __init__(
-            self,
-            from_file: str = None,
-            from_string: str = None,
-            comment_lead: List[str] = ('c',)
-    ):
-        super().__init__(
-            from_file=from_file,
-            from_string=from_string,
-            comment_lead=comment_lead
-        )
-
-    def get_formula(self) -> formula.CNFPlus:
+    def get_formula(self) -> formula.WCNFPlus:
         if self.from_file is not None:
-            if self.from_file not in cnf_formula:
-                _formula = formula.CNFPlus(
+            if self.from_file not in wcnf_formula:
+                _formula = formula.WCNFPlus(
                     from_file=self.from_file,
                     comment_lead=self.comment_lead
                 )
-                cnf_formula[self.from_file] = _formula
-            return cnf_formula[self.from_file].copy()
+                wcnf_formula[self.from_file] = _formula
+            return wcnf_formula[self.from_file].copy()
 
-        return formula.CNFPlus(
+        return formula.WCNFPlus(
             from_string=self.from_string,
             comment_lead=self.comment_lead
         )
 
     def __copy__(self):
-        return CNFPlus(
+        return WCNFPlus(
             from_file=self.from_file,
             from_string=self.from_string,
             comment_lead=self.comment_lead,
@@ -96,9 +77,6 @@ class CNFPlus(CNF):
 
 
 __all__ = [
-    'CNF',
-    'CNFPlus',
-    # types
-    'Clause',
-    'Clauses'
+    'WCNF',
+    'WCNFPlus'
 ]

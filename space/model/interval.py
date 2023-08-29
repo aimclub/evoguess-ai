@@ -5,7 +5,8 @@ from typing import Optional, Iterable, Tuple, List, Dict, Any
 from util.polyfill import prod
 from util.iterable import to_bin, split_by, from_bin
 
-from typings.searchable import Searchable, Assumptions, Constraints, Supplements, Vector
+from typings.searchable import Searchable, \
+    Assumptions, Constraints, Supplements, Vector
 from instance.module.variables import Indexes, AnyVar
 from instance.module.variables.vars import VarMap
 
@@ -66,7 +67,7 @@ class Interval(Searchable):
         substitution = [
             with_var_map[_var] for _var in self.dependents()
         ] if with_var_map else with_substitution
-        if getrecursionlimit() < len(self._vector) - 100:
+        if getrecursionlimit() < len(self._vector) + 100:
             setrecursionlimit(2048)
 
         number = from_bin(substitution, self._length)

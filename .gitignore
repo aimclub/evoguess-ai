@@ -3,5 +3,6 @@ docs/build
 data/experiments
 
 tools/
+examples/data
 examples/logs
 examples/solvers

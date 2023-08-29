@@ -1,24 +1,20 @@
 from .cnf import *
-from .cnfp import *
-from .source import *
+from .wcnf import *
 
 encodings = {
     CNF.slug: CNF,
-    CNFP.slug: CNFP,
-    Source.slug: Source,
+    WCNF.slug: WCNF,
+    CNFPlus.slug: CNFPlus,
+    WCNFPlus.slug: WCNFPlus,
 }
 
 __all__ = [
     # 'AIG',
     'CNF',
-    'CNFP',
-    'Source',
+    'WCNF',
+    'CNFPlus',
+    'WCNFPlus',
     # types
     'Clause',
-    'Atmost',
-    'Clauses',
-    'Atmosts',
-    'CNFData',
-    'CNFPData',
-    'SourceData',
+    'Clauses'
 ]

@@ -2,6 +2,7 @@ import os
 import re
 
 from time import time as now
+from pysat import formula as fml
 from tempfile import NamedTemporaryFile as NTFile
 from subprocess import Popen, TimeoutExpired, PIPE
 
@@ -9,14 +10,21 @@ from util.iterable import concat
 
 from ..solver import Report, Solver, IncrSolver
 
+from instance.module.encoding import Formula
 from function.module.budget import KeyLimit, UNLIMITED
-from instance.module.encoding import EncodingData, CNFData, SourceData
 from typings.searchable import Constraints, Supplements
 
 STATUSES = {
     10: True,
     20: False
 }
+
+
+def source(formula: fml.CNF) -> bytes:
+    return ''.join([
+        f'p cnf {formula.nv} {len(formula.clauses)}\n',
+        *(' '.join(map(str, c)) + ' 0\n' for c in formula.clauses)
+    ]).encode()
 
 
 class External(Solver):
@@ -31,23 +39,24 @@ class External(Solver):
     def __init__(self, from_executable: str):
         self.from_executable = from_executable
 
-    def use_incremental(self, encoding_data: EncodingData,
+    def use_incremental(self, formula: Formula,
                         constraints: Constraints = ()) -> IncrSolver:
         raise RuntimeError('External solvers supports only solve procedure')
 
-    def solve(self, encoding_data: EncodingData, supplements: Supplements,
+    def solve(self, formula: Formula, supplements: Supplements,
               limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
         files, launch_args = [], [self.from_executable]
+        assumptions, constraints = supplements
 
-        if isinstance(encoding_data, CNFData) or isinstance(encoding_data, SourceData):
-            source = encoding_data.source(supplements)
+        if isinstance(formula, fml.CNF):
+            formula.extend(constraints + [[lit] for lit in assumptions])
         else:
-            raise TypeError('External solvers works only with Source, CNF or CNF+ encodings')
+            raise TypeError('External solvers works only with CNF or CNF+ encodings')
 
         if self.stdin_file is not None:
             with NTFile(delete=False) as in_file:
+                formula.to_fp(in_file)
                 files.append(in_file.name)
-                in_file.write(source.encode())
                 launch_args.append(self.stdin_file % in_file.name)
 
         if self.stdout_file is not None:
@@ -57,7 +66,7 @@ class External(Solver):
 
         timeout, (key, value) = None, limit
         if value is not None and key == 'time':
-            timeout = value + len(source) * 6e-08
+            timeout = value + len(formula.clauses) * 6e-08
         if value is not None and key in self.limits:
             launch_args.append(self.limits[key] % value)
 
@@ -65,7 +74,7 @@ class External(Solver):
             launch_args, stdin=PIPE, stdout=PIPE, stderr=PIPE
         )
         try:
-            data = None if self.stdin_file else source.encode()
+            data = None if self.stdin_file else source(formula)
             output, error = process.communicate(data, timeout)
             # todo: handle error
 
@@ -94,7 +103,7 @@ class External(Solver):
 
         return Report(status, stats, solution)
 
-    def propagate(self, encoding_data: EncodingData, supplements: Supplements) -> Report:
+    def propagate(self, formula: Formula, supplements: Supplements) -> Report:
         raise RuntimeError('External solvers supports only solve procedure')
 
 

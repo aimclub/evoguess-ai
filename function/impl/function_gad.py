@@ -50,11 +50,11 @@ def gad_supplements(args: WorkerArgs, instance: Instance,
         substitutions = sample_state.randint(0, dimension, shape)[offset:]
 
     if instance.input_dependent:
-        encoding_data = instance.encoding.get_data()
+        formula = instance.encoding.get_formula()
         instance_vars = instance.get_instance_vars()
         # todo: use solver.DEFAULT instead of Glucose3
         # todo: improve function package typing
-        with Glucose3(encoding_data.clauses()) as solver:
+        with Glucose3(formula) as solver:
             for substitution in substitutions:
                 assumptions, _ = instance_vars.get_propagation(sample_state)
                 yield combine(
@@ -72,9 +72,9 @@ def gad_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
 
     # limit = measure.get_limit(budget)
     times, times2, values, values2 = {}, {}, {}, {}
-    encoding_data, statuses = instance.encoding.get_data(), {}
+    formula, statuses = instance.encoding.get_formula(), {}
     for supplements in gad_supplements(args, instance, backdoor):
-        report = solver.solve(encoding_data, supplements)
+        report = solver.solve(formula, supplements)
         time, value, status = measure.check_and_get(report, budget)
 
         times[status.value] = times.get(status.value, 0.) + time

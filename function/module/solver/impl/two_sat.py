@@ -1,13 +1,13 @@
 from time import time as now
 from typing import Type, Dict
-from pysat import solvers as pysat
+from pysat import solvers as slv, formula as fml
 
 from ..solver import Report
 from .pysat import IncrPySAT, PySAT
 from ...budget import UNLIMITED, KeyLimit
 
 from typings.searchable import Supplements, Assumptions, Constraints
-from instance.module.encoding import EncodingData, Clause, Clauses
+from instance.module.encoding import Formula, Clause, Clauses
 
 
 def is2clause(clause: Clause, value_map: Dict[int, int]) -> bool:
@@ -24,8 +24,13 @@ def is2clause(clause: Clause, value_map: Dict[int, int]) -> bool:
     return size <= 2
 
 
-def check(clauses: Clauses, threshold: float, report: Report) -> Report:
+def check(formula: Formula, threshold: float, report: Report) -> Report:
     if report.status: return report
+
+    if isinstance(formula, fml.CNF):
+        clauses = formula.clauses
+    else:
+        raise TypeError('PySat works only with CNF or CNF+ encodings')
 
     status, stats, literals = report
     value_map = {abs(lit): lit for lit in literals}
@@ -40,9 +45,9 @@ def check(clauses: Clauses, threshold: float, report: Report) -> Report:
 
 
 class IncrTwoSAT(IncrPySAT):
-    def __init__(self, encoding_data: EncodingData, constraints: Constraints,
+    def __init__(self, formula: Formula, constraints: Constraints,
                  constructor: Type, threshold: float):
-        super().__init__(encoding_data, constraints, constructor)
+        super().__init__(formula, constraints, constructor)
         self.threshold = threshold
 
     def solve(self, assumptions: Assumptions,
@@ -52,7 +57,7 @@ class IncrTwoSAT(IncrPySAT):
 
     def propagate(self, assumptions: Assumptions) -> Report:
         return check(
-            self.encoding_data.clauses(), self.threshold,
+            self.formula, self.threshold,
             super().propagate(assumptions)
         )
 
@@ -61,21 +66,21 @@ class TwoSAT(PySAT):
     slug = 'solver:two-sat'
 
     def __init__(self, threshold: float = 1.0):
-        super().__init__(pysat.Glucose3)
+        super().__init__(slv.Glucose3)
         # todo: move threshold to func
         self.threshold = threshold
 
-    def use_incremental(self, encoding_data: EncodingData,
+    def use_incremental(self, formula: Formula,
                         constraints: Constraints = ()) -> IncrTwoSAT:
-        return IncrTwoSAT(encoding_data, constraints, self.constructor, self.threshold)
+        return IncrTwoSAT(formula, constraints, self.constructor, self.threshold)
 
-    def solve(self, encoding_data: EncodingData, supplements: Supplements,
+    def solve(self, formula: Formula, supplements: Supplements,
               limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
-        return self.propagate(encoding_data, supplements)
+        return self.propagate(formula, supplements)
 
-    def propagate(self, encoding_data: EncodingData, supplements: Supplements) -> Report:
-        report = super().propagate(encoding_data, supplements)
-        return check(encoding_data.clauses(), self.threshold, report)
+    def propagate(self, formula: Formula, supplements: Supplements) -> Report:
+        report = super().propagate(formula, supplements)
+        return check(formula, self.threshold, report)
 
 
 __all__ = [

@@ -24,11 +24,11 @@ def ibs_supplements(args: WorkerArgs, instance: Instance,
 
     sample_seed, _, offset, length = args
     sample_state = RandomState(sample_seed)
-    encoding_data = instance.encoding.get_data()
+    formula = instance.encoding.get_formula()
     instance_vars = instance.get_instance_vars(searchable)
     # todo: use solver.DEFAULT instead of Glucose3
     # todo: improve function package typing
-    with Glucose3(encoding_data.clauses()) as solver:
+    with Glucose3(formula) as solver:
         for index in range(offset + length):
             assumptions, _ = instance_vars.get_propagation(sample_state)
             if index >= offset:
@@ -41,9 +41,9 @@ def ibs_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
 
     limit = measure.get_limit(budget)
     times, times2, values, values2 = {}, {}, {}, {}
-    encoding_data, statuses = instance.encoding.get_data(), {}
+    formula, statuses = instance.encoding.get_formula(), {}
     for supplements in ibs_supplements(args, instance, backdoor):
-        report = solver.solve(encoding_data, supplements, limit)
+        report = solver.solve(formula, supplements, limit)
         time, value, status = measure.check_and_get(report, budget)
 
         times[status.value] = times.get(status.value, 0.) + time

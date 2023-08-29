@@ -1,6 +1,6 @@
 from typing import NamedTuple, Optional, Dict
 
-from instance.module.encoding import EncodingData
+from instance.module.encoding import Formula
 from function.module.budget import KeyLimit, UNLIMITED
 from typings.searchable import Assumptions, Supplements, Constraints
 
@@ -12,8 +12,8 @@ class Report(NamedTuple):
 
 
 class IncrSolver:
-    def __init__(self, encoding_data: EncodingData, constraints: Constraints):
-        self.encoding_data, self.constraints = encoding_data, constraints
+    def __init__(self, formula: Formula, constraints: Constraints):
+        self.formula, self.constraints = formula, constraints
 
     def __enter__(self):
         raise NotImplementedError
@@ -33,15 +33,14 @@ class IncrSolver:
 class Solver:
     slug = 'solver'
 
-    def use_incremental(self, encoding_data: EncodingData,
-                        constraints: Constraints = ()) -> IncrSolver:
+    def use_incremental(self, formula: Formula, constraints: Constraints = ()) -> IncrSolver:
         raise NotImplementedError
 
-    def solve(self, encoding_data: EncodingData, supplements: Supplements,
+    def solve(self, formula: Formula, supplements: Supplements,
               limit: KeyLimit = UNLIMITED, add_model: bool = False) -> Report:
         raise NotImplementedError
 
-    def propagate(self, encoding_data: EncodingData, supplements: Supplements) -> Report:
+    def propagate(self, formula: Formula, supplements: Supplements) -> Report:
         raise NotImplementedError
 
     def __str__(self):

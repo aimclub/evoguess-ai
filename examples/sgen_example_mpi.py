@@ -1,5 +1,5 @@
 from core.impl import Optimize
-from core.module.space import InputSet
+from core.module.space import SearchSet
 from core.module.sampling import Const
 from core.module.limitation import WallTime
 from core.module.comparator import MinValueMaxSize
@@ -9,6 +9,7 @@ from executor.impl import MPIExecutor
 
 from instance.impl import Instance
 from instance.module.encoding import CNF
+from instance.module.variables import Interval
 
 from function.impl import GuessAndDetermine
 from function.module.measure import SolvingTime
@@ -26,7 +27,10 @@ if __name__ == '__main__':
     logs_path = WorkPath('examples', 'logs')
 
     solution = Optimize(
-        space=InputSet(),
+        space=SearchSet(
+            by_mask=[],
+            variables=Interval(start=1, length=150)
+        ),
         executor=MPIExecutor(),
         sampling=Const(size=4096, split_into=256),
         instance=Instance(

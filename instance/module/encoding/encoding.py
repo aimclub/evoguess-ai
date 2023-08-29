@@ -1,31 +1,17 @@
-from typing import Dict, Any
-
-from util.lazy_file import get_file_data
+from typing import Dict, List, Any
 
 
-class EncodingData:
-    def source(self) -> str:
+class Formula:
+    def to_file(self, filename: str):
         raise NotImplementedError
 
-    @property
-    def max_literal(self) -> int:
-        # todo: remove max_literal
+    def __iter__(self) -> List[Any]:
         raise NotImplementedError
 
 
 class Encoding:
-    def __init__(self, from_file: str = None):
-        self.filepath = from_file
-
-    def get_data(self) -> EncodingData:
+    def get_formula(self) -> Formula:
         raise NotImplementedError
-
-    def get_raw_data(self) -> str:
-        try:
-            return get_file_data(self.filepath)
-        except FileNotFoundError as exc:
-            msg = f'Encoding file {self.filepath} not found'
-            raise FileNotFoundError(msg) from exc
 
     def __config__(self) -> Dict[str, Any]:
         raise NotImplementedError
@@ -33,5 +19,6 @@ class Encoding:
 
 __all__ = [
     'Encoding',
-    'EncodingData'
+    # types
+    'Formula'
 ]

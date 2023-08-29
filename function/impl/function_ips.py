@@ -17,8 +17,8 @@ def ips_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     searchable, timestamp = space.unpack(instance, bytemask), now()
 
     times, times2, values, values2 = {}, {}, {}, {}
-    encoding_data, statuses = instance.encoding.get_data(), {}
-    with solver.use_incremental(encoding_data) as incremental:
+    formula, statuses = instance.encoding.get_formula(), {}
+    with solver.use_incremental(formula) as incremental:
         for assumptions, _ in ibs_supplements(args, instance, searchable):
             # todo: use constraints with incremental propagation?
             report = incremental.propagate(assumptions)
