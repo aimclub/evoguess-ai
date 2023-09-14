@@ -1,8 +1,11 @@
 from typing import Any, Dict, TypeVar
 
-from . import impl
 from .impl import *
+from ._utility import *
+from . import impl, _utility
+
 from .vars import var_from
+from ._enum import Enumerable
 from .variables import Variables
 
 impls = {
@@ -24,7 +27,9 @@ def variables_from(config: Dict[str, Any]) -> TVariables:
 
 __all__ = [
     'Variables',
+    'Enumerable',
     *impl.__all__,
+    *_utility.__all__,
     # from loader
     'variables_from',
 ]

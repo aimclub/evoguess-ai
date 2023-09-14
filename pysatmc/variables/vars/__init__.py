@@ -1,8 +1,7 @@
-from typing import Dict, Any, Iterable
+from typing import Dict, Any, Iterable, Optional, List
 from itertools import chain
 
-from ..._utility import \
-    Supplements, combine
+from .._utility import Supplements, combine
 
 from .var import *
 from .var_d import *
@@ -31,9 +30,12 @@ def get_var_dims(_vars: Iterable[AnyVar]) -> Iterable[int]:
     return iter([2 if isinstance(_var, int) else _var.dim for _var in _vars])
 
 
-def get_var_sups(_vars: Iterable[Var], sub: Iterable[int]) -> Supplements:
-    var_map = {_var: value for _var, value in zip(_vars, sub)}
-    return combine(*(_var.supplements(var_map) for _var in _vars))
+def get_var_sups(_vars: Iterable[Var], using_var_map: Optional[VarMap] = None,
+                 using_values: Optional[List[int]] = None) -> Supplements:
+    var_map = using_var_map if using_values is None else {
+        _var: value for _var, value in zip(_vars, using_values)
+    }
+    return combine(*(_var.substitute(var_map) for _var in _vars))
 
 
 __all__ = [

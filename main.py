@@ -2,18 +2,16 @@ from algorithm.impl import LogSearch
 from algorithm.module.mutation import LogDiv
 from algorithm.module.selection import Roulette
 
+from pysatmc.encoding import CNF
+from pysatmc.variables import Range
+from pysatmc.solver import PySatSolver
+from pysatmc.problem import SatProblem
+
 from function.impl import GuessAndDetermine
-from function.module.solver import Kissat
 from function.module.budget import AutoBudget
 from function.module.measure import SolvingTime
 
-from instance.impl import Instance
-from instance.module.encoding import CNF
-from instance.module.variables import Range
-
-from space.impl import IntervalSet
-
-from util.work_path import WorkPath
+from space.impl import BackdoorSet
 from output.impl import OptimizeLogger
 from executor.impl import ProcessExecutor
 
@@ -22,28 +20,29 @@ from core.module.sampling import Const
 from core.module.limitation import WallTime
 from core.module.comparator import MinValueMaxSize
 
+from util.work_path import WorkPath
+
 if __name__ == '__main__':
     root_path = WorkPath('examples')
     data_path = root_path.to_path('data')
-    cnf_file = data_path.to_file('pvs_4_7.cnf', 'sort')
-    solver_path = root_path.to_path('solvers', 'kissat-rel-3.0.0')
+    logs_path = root_path.to_path('logs')
+    solver_path = root_path.to_path('solvers')
 
-    solver_file = solver_path.to_file('kissat', 'build')
-    logs_path = root_path.to_path('logs', 'test47')
+    cnf_file = data_path.to_file('pvs_4_7.cnf', 'sort')
+    solver_file = solver_path.to_file('kissat', 'kissat-rel-3.0.0', 'build')
     solution = Optimize(
-        space=IntervalSet(
-            indexes=Range(start=1, length=850),
-            by_vector=[0] * 213 + [1] * 1000
+        space=BackdoorSet(
+            variables=Range(start=1, length=28)
         ),
-        executor=ProcessExecutor(max_workers=1),
-        sampling=Const(size=4, split_into=1),
-        instance=Instance(
+        executor=ProcessExecutor(max_workers=4),
+        sampling=Const(size=128, split_into=32),
+        problem=SatProblem(
+            solver=PySatSolver(),
             encoding=CNF(from_file=cnf_file),
         ),
         function=GuessAndDetermine(
             measure=SolvingTime(),
             budget=AutoBudget(),
-            solver=Kissat(solver_file),
         ),
         algorithm=LogSearch(
             population_size=6,
@@ -54,8 +53,8 @@ if __name__ == '__main__':
             min_update_size=6
         ),
         comparator=MinValueMaxSize(),
-        logger=OptimizeLogger(logs_path),
-        limitation=WallTime(from_string='00:30:00'),
+        limitation=WallTime(from_string='00:10:00'),
+        logger=OptimizeLogger(logs_path.to_path('test47')),
     ).launch()
 
     for point in solution:

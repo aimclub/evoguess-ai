@@ -1,23 +1,21 @@
 from typing import Any, Callable, Dict, Tuple
 
 from space import Space
+from pysatmc.problem import Problem
 
 from . import worker_t
 from .worker_t import *
 
-from ..module.solver.solver import Solver
 from ..module.budget.budget import Budget
 from ..module.measure.measure import Measure
 
 from typings.searchable import ByteVector
-from instance.impl.instance import Instance
 
 Payload = Tuple[
     Space,
-    Solver,
     Budget,
     Measure,
-    Instance,
+    Problem,
     ByteVector
 ]
 

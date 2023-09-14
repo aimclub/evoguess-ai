@@ -1,14 +1,13 @@
 from math import log2, floor
 from sys import getrecursionlimit, setrecursionlimit
-from typing import Optional, Iterable, Tuple, List, Dict, Any
+from typing import Any, List, Dict, Tuple, Optional
 
-from util.polyfill import prod
+from pysatmc.variables import Indexes, \
+    Assumptions, Constraints, Supplements, prod
+from pysatmc.variables.vars import Var, VarMap
+
 from util.iterable import to_bin, split_by, from_bin
-
-from typings.searchable import Searchable, \
-    Assumptions, Constraints, Supplements, Vector
-from instance.module.variables import Indexes, AnyVar
-from instance.module.variables.vars import VarMap
+from typings.searchable import Searchable, Vector
 
 
 def _geq(lower: Assumptions) -> Constraints:
@@ -54,23 +53,21 @@ class Interval(Searchable):
         return self._int_power
 
     def dimension(self) -> List[int]:
-        return self._indexes.get_var_dims()
+        return self._indexes.dimension()
 
-    def dependents(self) -> Iterable[AnyVar]:
-        return self._indexes.get_var_deps()
+    def variables(self) -> List[Var]:
+        return self._indexes.variables()
 
-    def substitute(
-            self,
-            with_var_map: Optional[VarMap] = None,
-            with_substitution: Optional[List[bool]] = None,
-    ) -> Supplements:
-        substitution = [
-            with_var_map[_var] for _var in self.dependents()
-        ] if with_var_map else with_substitution
+    def substitute(self, using_values: Optional[List[int]] = None,
+                   using_var_map: Optional[VarMap] = None) -> Supplements:
+        values = using_values if using_var_map is None else [
+            using_var_map[_var] for _var in self._indexes
+        ]
+        # todo: replace recursive method by iterative
         if getrecursionlimit() < len(self._vector) + 100:
             setrecursionlimit(2048)
 
-        number = from_bin(substitution, self._length)
+        number = from_bin(values, self._length)
         length, remainder = self._get_size()
         if number >= self._int_oversize:
             offset = (number - self._int_oversize) % length
@@ -84,8 +81,8 @@ class Interval(Searchable):
         # print('n, l, p:', number, lower, upper)
         # print('d, r, -:', length, remainder, self._length)
         constraints, one_lit_clauses = split_by(_both(
-            self._indexes.get_var_sups(to_bin(lower, self._length))[0],
-            self._indexes.get_var_sups(to_bin(upper, self._length))[0]
+            self._indexes.substitute(to_bin(lower, self._length))[0],
+            self._indexes.substitute(to_bin(upper, self._length))[0]
         ), lambda x: len(x) > 1)
         return [clause[0] for clause in one_lit_clauses], constraints
 
@@ -109,11 +106,11 @@ class Interval(Searchable):
     def __str__(self) -> str:
         return f'0-{self._get_size()[0]}'
 
-    def __repr__(self) -> str:
-        return f'[{str(self)}]({self.power()})'
-
     def __hash__(self) -> int:
         return hash(tuple(self._vector))
+
+    def __repr__(self) -> str:
+        return f'[{str(self)}]({self.power()})'
 
     def __copy__(self) -> 'Interval':
         return Interval(indexes=self._indexes)

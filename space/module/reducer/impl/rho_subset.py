@@ -6,7 +6,7 @@ from ..reducer import Reducer
 from instance import Instance
 # from function.module.solver import pysat
 # from function.module.measure import Propagations
-from instance.module.variables import Variables
+from pysatmc.variables import Variables
 # from instance.module.variables.vars import Index
 
 

@@ -1,10 +1,10 @@
-from instance import Instance
+from pysatmc import Problem
 
-from instance.module.variables import Variables
+from pysatmc.variables import Variables
 
 
 class Reducer:
-    def reduce(self, instance: Instance, variables: Variables) -> Variables:
+    def reduce(self, problem: Problem, variables: Variables) -> Variables:
         raise NotImplementedError
 
 

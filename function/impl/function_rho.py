@@ -6,23 +6,21 @@ from ..model import WorkerArgs, WorkerResult, \
 from ..abc.function import aggregate_results, format_statuses
 from .function_gad import GuessAndDetermine, gad_supplements
 
-from ..module.solver import Solver
 from ..module.measure import Measure
+from ..module.budget import AutoBudget
 
 from typings.searchable import Searchable
-from function.module.budget.impl import AutoBudget
 
 
 def rho_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
-    space, solver, budget, measure, instance, bytemask = payload
-    searchable, timestamp = space.unpack(instance, bytemask), now()
+    space, budget, measure, problem, bytemask = payload
+    searchable, timestamp = space.unpack(problem, bytemask), now()
 
     times, times2, values, values2 = {}, {}, {}, {}
-    formula, statuses = instance.encoding.get_formula(), {}
-    with solver.use_incremental(formula) as incremental:
-        for assumptions, _ in gad_supplements(args, instance, searchable):
-            # todo: use constraints with incremental propagation?
-            report = incremental.propagate(assumptions)
+    formula, statuses = problem.encoding.get_formula(), {}
+    with problem.solver.get_instance(formula) as incremental:
+        for supplements in gad_supplements(args, problem, searchable):
+            report = incremental.propagate(supplements)
             time, value, status = measure.check_and_get(report, budget)
 
             times[status.value] = times.get(status.value, 0.) + time
@@ -37,8 +35,8 @@ def rho_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
 class RhoFunction(GuessAndDetermine):
     slug = 'function:rho'
 
-    def __init__(self, solver: Solver, measure: Measure, penalty_power: float):
-        super().__init__(solver, AutoBudget(), measure)
+    def __init__(self, measure: Measure, penalty_power: float):
+        super().__init__(AutoBudget(), measure)
         self.penalty_power = penalty_power
 
     def get_worker_fn(self) -> WorkerCallable:

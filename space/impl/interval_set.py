@@ -3,9 +3,9 @@ from typing import Dict, Any, Optional
 from ..abc import Space
 from ..model import Interval
 
-from instance import Instance
+from pysatmc.problem import Problem
 from typings.searchable import Vector
-from instance.module.variables import Indexes
+from pysatmc.variables import Indexes
 
 
 class IntervalSet(Space):
@@ -20,16 +20,17 @@ class IntervalSet(Space):
         self.indexes = indexes
 
     # noinspection PyProtectedMember
-    def get_initial(self, instance: Instance) -> Interval:
-        interval = self._get_searchable(instance)
+    def get_initial(self, problem: Problem) -> Interval:
+        interval = self._get_searchable(problem)
         if self.by_vector is not None:
             interval._set_vector(self.by_vector)
         return interval
 
-    def _get_searchable(self, instance: Instance) -> Interval:
+    def _get_searchable(self, problem: Problem) -> Interval:
         return Interval(indexes=self.indexes)
 
     def __config__(self) -> Dict[str, Any]:
+        # todo: add realisation
         pass
 
 

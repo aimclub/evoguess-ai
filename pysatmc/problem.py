@@ -1,17 +1,15 @@
 from numpy.random import RandomState
 from typing import Any, List, Dict, Union, Optional
 
-from ._utility import Supplements, combine
+from .solver import Solver, Report
 from .encoding import Encoding, CNF, WCNF
-from .variables import Indexes, Variables
-from .variables.vars import Var, \
-    VarMap, get_var_deps, get_var_dims
-from .solver import Solver, _Solver
+from .variables.vars import Var, VarMap
+from .variables import Indexes, Variables, Enumerable
 
 
 class CommentSet:
     def __init__(self, leading: str = None):
-        pass
+        self.leading = leading
 
     def variables(self) -> List[Var]:
         pass
@@ -41,30 +39,66 @@ class Problem:
         self.input_set = input_set
         self.output_set = output_set
 
-    def _get_input_vars(self) -> List[Var]:
-        return self.input_set.variables()
+        assert (input_set and output_set) or \
+               (not input_set and not output_set), \
+            'Set both (input and output) sets or neither'
 
-    def _get_output_vars(self) -> List[Var]:
-        return self.output_set.variables()
+    def resolve(self, decomposition: Optional[Enumerable] = None,
+                with_random_state: Optional[RandomState] = None,
+                with_output_values: Optional[List[int]] = None,
+                with_output_var_map: Optional[VarMap] = None,
+                with_input_values: Optional[List[int]] = None,
+                with_input_var_map: Optional[VarMap] = None) -> Report:
+        formula, supplements = self.encoding.get_formula(), ([], [])
+        if self.input_set and (with_input_values or with_input_var_map):
+            with_output_var_map = self.process_output_var_map(
+                None, with_input_values, with_input_var_map
+            )
+        if self.output_set and (with_output_values or with_output_var_map):
+            supplements = self.input_set.substitute(
+                with_output_values, with_output_var_map
+            )
 
-    def get_input_supplements(
-            self, from_values: Optional[List[int]] = None,
-            from_random_state: Optional[RandomState] = None
-    ) -> Supplements:
-        # todo: optimize
-        input_vars = self._get_input_vars()
-        var_deps = get_var_deps(input_vars)
+        if decomposition is None:
+            return self.solver.solve(formula, supplements)
 
-        values = from_values if from_values else \
-            from_random_state.randint(0, get_var_dims(var_deps))
+        state, stats_sum = with_random_state, {'count': 0}
+        for supplements in decomposition.enumerate(with_random_state=state):
+            status, stats, model = self.solver.solve(formula, supplements)
+            for key in set(stats_sum.keys()).union(stats.keys()):
+                stats_sum[key] = stats_sum.get(key, 0) + (
+                    1 if key == 'count' else stats.get(key, 0)
+                )
+            print(stats_sum)
+            # if status: return Report(status, stats_sum, model)
+        else:
+            return Report(False, stats_sum, None)
 
-        var_map = {var: value for var, value in zip(var_deps, values)}
-        return combine(*(var.supplements(var_map) for var in input_vars))
+    def evaluate(self, decomposition: Enumerable, sample_length: int,
+                 with_random_state: Optional[RandomState] = None) -> Report:
+        # todo: add realisation
+        pass
 
-    def get_output_supplements(self, var_map: VarMap) -> Supplements:
-        return combine(*(
-            var.supplements(var_map) for var in self._get_output_vars()
-        ))
+    def process_output_var_map(
+            self, with_random_state: Optional[RandomState] = None,
+            from_input_values: Optional[List[int]] = None,
+            from_input_var_map: Optional[VarMap] = None
+    ) -> VarMap:
+        assert self.input_set, 'Input set not presented!'
+        if not (from_input_values or from_input_var_map):
+            dimension = self.input_set.dimension()
+            random_state = with_random_state or RandomState()
+            from_input_values = random_state.randint(0, dimension)
+
+        # todo: optimize formula solving
+        formula = self.encoding.get_formula()
+        input_sups = self.input_set.substitute(
+            from_input_values, from_input_var_map
+        )
+        return {
+            abs(literal): 1 if literal > 0 else 0 for literal in
+            self.solver.propagate(formula, input_sups).model
+        }
 
     def __config__(self) -> Dict[str, Any]:
         return {
@@ -75,7 +109,7 @@ class Problem:
         }
 
 
-class Sat(Problem):
+class SatProblem(Problem):
     slug = 'problem:sat'
 
     def __init__(
@@ -85,7 +119,7 @@ class Sat(Problem):
         super().__init__(solver, encoding, input_set, output_set)
 
 
-class MaxSat(Problem):
+class MaxSatProblem(Problem):
     slug = 'problem:max-sat'
 
     def __init__(
@@ -96,9 +130,9 @@ class MaxSat(Problem):
 
 
 __all__ = [
-    'Sat',
-    'MaxSat',
     'Problem',
+    'SatProblem',
+    'MaxSatProblem',
     # types
-    'CommentSet'
+    'CommentSet',
 ]

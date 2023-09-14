@@ -1,7 +1,7 @@
 from typing import Any, Dict, Tuple, Optional, NamedTuple
 
 from ..encoding import Formula
-from .._utility import Assumptions, Supplements
+from ..variables import Assumptions, Supplements
 
 KeyLimit = Tuple[
     Optional[str],
@@ -36,7 +36,7 @@ class _Solver:
             self,
             supplements: Supplements,
             limit: KeyLimit = UNLIMITED,
-            extract_model: bool = False
+            extract_model: bool = True
     ) -> Report:
         raise NotImplementedError
 
@@ -48,7 +48,7 @@ class _Solver:
 
 
 class Solver:
-    def use_incremental(
+    def get_instance(
             self,
             formula: Formula,
             use_timer: bool = True
@@ -60,10 +60,10 @@ class Solver:
             formula: Formula,
             supplements: Supplements,
             limit: KeyLimit = UNLIMITED,
-            extract_model: bool = False,
+            extract_model: bool = True,
             use_timer: bool = True
     ) -> Report:
-        with self.use_incremental(formula, use_timer) as solver:
+        with self.get_instance(formula, use_timer) as solver:
             return solver.solve(supplements, limit, extract_model)
 
     def propagate(
@@ -72,7 +72,7 @@ class Solver:
             supplements: Supplements,
             use_timer: bool = True
     ) -> Report:
-        with self.use_incremental(formula, use_timer) as solver:
+        with self.get_instance(formula, use_timer) as solver:
             return solver.propagate(supplements)
 
     def __config__(self) -> Dict[str, Any]:

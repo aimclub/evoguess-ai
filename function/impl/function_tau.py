@@ -1,11 +1,7 @@
 from os import getpid
 from time import time as now
-from typing import Iterable
-from numpy.random import RandomState
 
-from pysatmc.problem import Problem
-from pysatmc.variables import combine
-
+from .function_gad import gad_supplements
 from ..model import WorkerArgs, WorkerResult, \
     WorkerCallable, Payload, Results, Estimation, Status
 from ..abc.function import Function, aggregate_results, format_statuses
@@ -13,33 +9,17 @@ from ..abc.function import Function, aggregate_results, format_statuses
 from ..module.measure import Measure
 from ..module.budget import TaskBudget
 
-from typings.searchable import Searchable, Supplements
+from typings.searchable import Searchable
 
 
-def ibs_supplements(args: WorkerArgs, problem: Problem,
-                    searchable: Searchable) -> Iterable[Supplements]:
-    # The IBS function only works with the problem
-    # for which the output_set is defined
-    if not problem.output_set: return ()
-
-    sample_seed, _, offset, length = args
-    sample_state = RandomState(sample_seed)
-    for index in range(offset + length):
-        var_map = problem.process_output_var_map(sample_state)
-        if index >= offset: yield combine(
-            searchable.substitute(using_var_map=var_map),
-            problem.output_set.substitute(using_var_map=var_map)
-        )
-
-
-def ibs_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
+def tau_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     space, budget, measure, problem, bytemask = payload
-    backdoor, timestamp = space.unpack(problem, bytemask), now()
+    searchable, timestamp = space.unpack(problem, bytemask), now()
 
     limit = measure.get_limit(budget)
     times, times2, values, values2 = {}, {}, {}, {}
     formula, statuses = problem.encoding.get_formula(), {}
-    for supplements in ibs_supplements(args, problem, backdoor):
+    for supplements in gad_supplements(args, problem, searchable):
         report = problem.solver.solve(formula, supplements, limit)
         time, value, status = measure.check_and_get(report, budget)
 
@@ -52,27 +32,28 @@ def ibs_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     return getpid(), now() - timestamp, times, times2, values, values2, statuses, args
 
 
-class InverseBackdoorSets(Function):
-    slug = 'function:ibs'
-    supbs_required = True
+class TauFunction(Function):
+    slug = 'function:tau'
 
     def __init__(self, budget: TaskBudget, measure: Measure,
-                 min_solved: float = 0.):
+                 penalty_power: float):
         super().__init__(budget, measure)
-        self.min_solved = min_solved
+        self.penalty_power = penalty_power
 
     def get_worker_fn(self) -> WorkerCallable:
-        return ibs_worker_fn
+        return tau_worker_fn
 
     def calculate(self, searchable: Searchable, results: Results) -> Estimation:
         times, values, statuses, stats = aggregate_results(results)
         time_sum, value_sum = sum(times.values()), sum(values.values())
-        power, budget, value = searchable.power(), self.budget.value(), float(
-            'inf')
+        power, value = searchable.power(), float('inf')
 
+        solved = statuses.get(Status.SOLVED, 0)
         resolved = statuses.get(Status.RESOLVED, 0)
-        if resolved > 0 and resolved >= self.min_solved * stats.count:
-            value = power * budget * (3. * stats.count / resolved)
+        if stats.count > 0 and self.penalty_power > power:
+            rho_value = float(solved + resolved) / stats.count
+            penalty_value = (1. - rho_value) * self.penalty_power
+            value = rho_value * power + penalty_value
 
         return {
             'count': stats.count,
@@ -89,7 +70,5 @@ class InverseBackdoorSets(Function):
 
 
 __all__ = [
-    'InverseBackdoorSets',
-    # utils
-    'ibs_supplements'
+    'TauFunction'
 ]

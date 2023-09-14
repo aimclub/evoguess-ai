@@ -1,12 +1,12 @@
 from .pysat import *
 
 solvers = {
-    PySat.slug: PySat,
+    PySatSolver.slug: PySatSolver,
 }
 
 __all__ = [
-    'PySat',
-    '_PySat',
+    'PySatSolver',
+    '_PySatSolver',
     # types
     'PySatSetts',
     'PySatTimer',

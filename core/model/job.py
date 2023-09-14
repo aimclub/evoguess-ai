@@ -4,8 +4,9 @@ from typing import List
 
 from .contex import Context
 
-from util.iterable import list_of
 from function.model import ChunkResult, Results
+
+from util.iterable import list_of
 from typings.error import AlreadyRunning, CancelledError
 from typings.future import Future, Timeout, AcquireFutures
 
@@ -76,7 +77,7 @@ class Job(Future):
     def _process(self, context: Context):
         fn = context.function.get_worker_fn()
         payload = context.function.get_payload(
-            context.space, context.instance, context.searchable
+            context.space, context.problem, context.searchable
         )
 
         tasks = context.get_tasks(self._results)

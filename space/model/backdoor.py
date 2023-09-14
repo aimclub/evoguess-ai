@@ -2,9 +2,11 @@ from itertools import compress
 from util.polyfill import prod
 from typing import Optional, Iterator, List, Dict, Any
 
-from instance.module.variables import Variables, Var
-from instance.module.variables.vars import get_var_dims, VarMap
-from typings.searchable import Vector, Searchable, Supplements, combine
+from pysatmc.variables import Variables
+from pysatmc.variables.vars import Var, \
+    VarMap, get_var_dims, get_var_sups
+
+from typings.searchable import Vector, Searchable, Supplements
 
 
 class Backdoor(Searchable):
@@ -17,48 +19,38 @@ class Backdoor(Searchable):
         self._var_deps = None
         self._var_bases = None
         self._var_state = None
-        # self._deps_bases = None
 
     def power(self) -> int:
         return prod(self.dimension())
 
     def dimension(self) -> List[int]:
         if not self._var_bases:
-            self._var_bases = list(get_var_dims(self.dependents()))
+            self._var_bases = list(get_var_dims(self.variables()))
         return self._var_bases
 
-    def dependents(self) -> List[Var]:
-        # todo: rename this or get_var_deps
+    def variables(self) -> List[Var]:
         if not self._var_state:
             self._var_state = list(compress(self._variables, self._vector))
         return self._var_state
 
-    def substitute(
-            self,
-            with_var_map: Optional[VarMap] = None,
-            with_substitution: Optional[List[bool]] = None,
-    ) -> Supplements:
-        var_map = {
-            _var: value for _var, value in
-            zip(self.dependents(), with_substitution)
-        } if with_substitution is not None else with_var_map
-        return combine(*(_var.supplements(var_map) for _var in self.dependents()))
+    def substitute(self, using_values: Optional[List[int]] = None,
+                   using_var_map: Optional[VarMap] = None) -> Supplements:
+        return get_var_sups(self.variables(), using_var_map, using_values)
 
     def _set_vector(self, vector: Vector) -> 'Backdoor':
         self._var_deps = None
         self._var_state = None
         self._var_bases = None
-        # self._deps_bases = None
         return super()._set_vector(vector)
 
     def __copy__(self) -> 'Backdoor':
         return Backdoor(self._variables)
 
     def __len__(self) -> int:
-        return len(self.dependents())
+        return len(self.variables())
 
     def __str__(self) -> str:
-        return ' '.join(map(str, self.dependents()))
+        return ' '.join(map(str, self.variables()))
 
     def __repr__(self) -> str:
         return f'[{str(self)}]({len(self)})'
@@ -67,10 +59,10 @@ class Backdoor(Searchable):
         return hash(tuple(self._vector))
 
     def __iter__(self) -> Iterator[Var]:
-        return iter(self.dependents())
+        return iter(self.variables())
 
     def __contains__(self, item: Var) -> bool:
-        return item in self.dependents()
+        return item in self.variables()
 
     def __eq__(self, other: 'Backdoor') -> bool:
         # todo: more effective __eq__

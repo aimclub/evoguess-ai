@@ -1,43 +1,45 @@
 from math import ceil
 from time import time as now
-from typing import List, Dict, Any
+from typing import Any, List, Dict, Optional
 from itertools import chain, product
-from util.iterable import concat, slice_by
 
 from output import Logger
 from executor import Executor
-from instance import Instance
 
 from ..abc import Core
 
 from function.module.measure import Measure
 from function.model import Status, Estimation
-from function.impl.function_gad import sequence_mapper
-from function.module.solver import Solver, Report, IncrSolver
 
-from typings.optional import Int
-from typings.searchable import Searchable, Assumptions
+from pysatmc.problem import Problem
+from pysatmc.variables import Assumptions
+from pysatmc.solver import Solver, _Solver, Report
+
+from typings.searchable import Searchable
+from util.iterable import concat, slice_by
 
 
-def get_propagation(solver: IncrSolver, searchable: Searchable) -> Report:
-    dimension = searchable.dimension()
+def get_propagation(solver: _Solver, searchable: Searchable) -> Report:
     time_sum, value_sum, up_tasks, hard_tasks = 0, 0, [], []
-    for substitution in map(sequence_mapper(dimension), range(searchable.power())):
-        assumptions, _ = searchable.substitute(with_substitution=substitution)
-        time, value, status, _ = solver.propagate(assumptions, add_model=False)
-        (up_tasks if status == Status.RESOLVED else hard_tasks).append(assumptions)
+    for supplements in searchable.enumerate():
+        time, value, status, _ = solver.propagate(supplements)
+        assumptions, _ = supplements
+        (up_tasks if status == Status.RESOLVED else hard_tasks).append(
+            assumptions)
         time_sum, value_sum = time_sum + time, value_sum + value
 
     status = Status.SOLVED if len(hard_tasks) else Status.RESOLVED
     return Report(time_sum, value_sum, status, (up_tasks, hard_tasks))
 
 
-def hard_worker(solver: Solver, measure: Measure, instance: Instance,
-                up_tasks: List[Assumptions], hard_tasks: List[Assumptions]) -> Report:
-    time_sum, value_sum, encoding_data = 0, 0, instance.encoding.get_data()
-    with solver.use_incremental(encoding_data, measure) as incremental:
+def hard_worker(solver: Solver, problem: Problem, up_tasks: List[Assumptions],
+                hard_tasks: List[Assumptions]) -> Report:
+    time_sum, value_sum, formula = 0, 0, problem.encoding.get_formula()
+    with solver.get_instance(formula) as incremental:
         for up_task_assumptions in chain(up_tasks, hard_tasks):
-            time, value, _, _ = incremental.solve(up_task_assumptions, add_model=False)
+            time, value, _, _ = incremental.solve(
+                (up_task_assumptions, []), extract_model=False
+            )
             time_sum, value_sum = time_sum + time, value_sum + value
 
     return Report(time_sum, value_sum, Status.RESOLVED, None)
@@ -46,23 +48,17 @@ def hard_worker(solver: Solver, measure: Measure, instance: Instance,
 class Combine(Core):
     slug = 'core:combine'
 
-    def __init__(self,
-                 logger: Logger,
-                 solver: Solver,
-                 measure: Measure,
-                 instance: Instance,
-                 executor: Executor,
-                 random_seed: Int = None):
-        self.solver = solver
+    def __init__(self, logger: Logger, measure: Measure, problem: Problem,
+                 executor: Executor, random_seed: Optional[int] = None):
         self.measure = measure
         self.executor = executor
-        super().__init__(logger, instance, random_seed)
+        super().__init__(logger, problem, random_seed)
 
     def launch(self, *searchables: Searchable) -> Estimation:
-        encoding_data = self.instance.encoding.get_data()
+        formula = self.problem.encoding.get_formula()
         total_var_set, start_stamp = set(concat(*searchables)), now()
         time_sum, value_sum, all_up_tasks, all_hard_tasks = 0, 0, [], []
-        with self.solver.use_incremental(encoding_data, self.measure) as solver:
+        with self.problem.solver.get_instance(formula) as solver:
             for searchable in searchables:
                 report = get_propagation(solver, searchable)
                 time, value, status, (up_tasks, hard_tasks) = report
@@ -75,15 +71,17 @@ class Combine(Core):
             for hard_tasks, count in [(ts, len(ts)) for ts in all_hard_tasks]:
                 hard_tasks_count = count * len(acc_hard_tasks)
                 acc_hard_tasks = [
-                    concat(*parts) for parts in product(acc_hard_tasks, hard_tasks)
-                    if solver.propagate(concat(*parts))[2] == Status.SOLVED
+                    concat(*parts) for parts in
+                    product(acc_hard_tasks, hard_tasks)
+                    if solver.propagate((concat(*parts), [])).status
                 ]
                 ratio = round(len(acc_hard_tasks) / hard_tasks_count, 2)
-                print(f'reduced: {hard_tasks_count} -> {len(acc_hard_tasks)} (x{ratio})')
+                print(
+                    f'reduced: {hard_tasks_count} -> {len(acc_hard_tasks)} (x{ratio})')
 
         split_into = ceil(len(acc_hard_tasks) / self.executor.max_workers)
         for future in self.executor.submit_all(hard_worker, *(
-                (self.solver, self.measure, self.instance, all_up_tasks, hard_tasks)
+                (self.solver, self.problem, all_up_tasks, hard_tasks)
                 for hard_tasks in slice_by(acc_hard_tasks, split_into)
         )).as_complete():
             time, value, _, _ = future.result()

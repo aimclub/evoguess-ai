@@ -1,10 +1,9 @@
-from typing import Any
+from typing import Any, Optional, Dict
 
 from space import Space
 from output import Logger
 from executor import Executor
 from function import Function
-from instance import Instance
 
 from ..abc.core import *
 from ..model.job import Job
@@ -16,28 +15,22 @@ from ..static import CORE_CACHE
 from ..module.sampling import Sampling
 from ..module.comparator import Comparator
 
-from typings.optional import Int
+from pysatmc.problem import Problem
 from typings.searchable import Searchable
 
 
 class Estimate(Core):
     slug = 'core:estimate'
 
-    def __init__(self,
-                 space: Space,
-                 logger: Logger,
-                 instance: Instance,
-                 executor: Executor,
-                 sampling: Sampling,
-                 function: Function,
-                 comparator: Comparator,
-                 random_seed: Int = None):
+    def __init__(self, space: Space, logger: Logger, problem: Problem,
+                 executor: Executor, sampling: Sampling, function: Function,
+                 comparator: Comparator, random_seed: Optional[int] = None):
         self.space = space
         self.executor = executor
         self.sampling = sampling
         self.function = function
         self.comparator = comparator
-        super().__init__(logger, instance, random_seed)
+        super().__init__(logger, problem, random_seed)
 
         self._job_number = 0
         CORE_CACHE.canceled = {}
@@ -68,7 +61,7 @@ class Estimate(Core):
         self._job_number += 1
         handle = JobHandle(Job(Context(
             space=self.space,
-            instance=self.instance,
+            problem=self.problem,
             function=self.function,
             sampling=self.sampling,
             executor=self.executor,
@@ -79,6 +72,10 @@ class Estimate(Core):
         CORE_CACHE.estimating[point.searchable] = handle
 
         return handle
+
+    def __config__(self) -> Dict[str, Any]:
+        # todo: add realisation
+        return {}
 
 
 __all__ = [

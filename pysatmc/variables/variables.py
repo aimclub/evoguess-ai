@@ -1,17 +1,18 @@
 import json
 
 from threading import Lock
-from typing import Any, List, Dict, Iterable
+from typing import Any, List, Dict, Optional
 
-from .._utility import Supplements
-from .vars import Var, AnyVar, var_from, \
+from .vars import Var, AnyVar, VarMap, var_from, \
     get_var_deps, get_var_dims, get_var_sups
+from ._utility import Supplements, prod
+from ._enum import Enumerable
 
 vars_data = {}
 parse_lock = Lock()
 
 
-class Variables:
+class Variables(Enumerable):
     slug = 'variables'
 
     def __init__(
@@ -39,6 +40,9 @@ class Variables:
             _vars = list(map(var_from, config))
             vars_data[self.filepath] = _vars
 
+    def power(self) -> int:
+        return prod(self.dimension())
+
     def variables(self) -> List[Var]:
         if self._vars is not None:
             return self._vars
@@ -48,29 +52,24 @@ class Variables:
         self._load_from_file()
         return vars_data[self.filepath]
 
-    def get_var_deps(self) -> List[AnyVar]:
-        if not self._var_deps:
-            self._var_deps = list(
-                get_var_deps(self.variables())
-            )
-        return self._var_deps
-
-    def get_var_dims(self) -> List[int]:
+    def dimension(self) -> List[int]:
         if not self._var_bases:
-            self._var_bases = list(
-                get_var_dims(self.variables())
-            )
+            self._var_bases = list(get_var_dims(self.variables()))
         return self._var_bases
 
-    def get_deps_dims(self) -> List[int]:
-        if not self._deps_bases:
-            self._deps_bases = list(
-                get_var_dims(self.get_var_deps())
-            )
-        return self._deps_bases
+    def dependents(self) -> List[AnyVar]:
+        if not self._var_deps:
+            self._var_deps = list(get_var_deps(self.variables()))
+        return self._var_deps
 
-    def get_var_sups(self, sub: Iterable[int]) -> Supplements:
-        return get_var_sups(self.variables(), sub)
+    # def get_deps_dims(self) -> List[int]:
+    #     if not self._deps_bases:
+    #         self._deps_bases = list(get_var_dims(self.get_var_deps()))
+    #     return self._deps_bases
+
+    def substitute(self, using_values: Optional[List[int]] = None,
+                   using_var_map: Optional[VarMap] = None) -> Supplements:
+        return get_var_sups(self._vars, using_var_map, using_values)
 
     def __len__(self):
         return len(self.variables())

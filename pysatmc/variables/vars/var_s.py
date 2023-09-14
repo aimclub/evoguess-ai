@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Callable
 
 from .var import Var, AnyVar, VarMap
-from ..._utility import Supplements, to_bin
+from .._utility import Supplements, to_bin
 
 
 class Switch(Var):
@@ -11,7 +11,7 @@ class Switch(Var):
         self.group, self.fn = group, fn
         super().__init__(2, name)
 
-    def supplements(self, var_map: VarMap) -> Supplements:
+    def substitute(self, var_map: VarMap) -> Supplements:
         constraints, size = [], len(self.group)
         value = var_map[self] if self in var_map else \
             self.fn(*(var_map[i] for i in self.group))

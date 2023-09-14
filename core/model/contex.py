@@ -1,6 +1,5 @@
 from space import Space
 from executor import Executor
-from instance import Instance
 from function import Function
 
 from typing import List, Optional
@@ -9,6 +8,7 @@ from util.iterable import pick_by
 from ..static import CORE_CACHE
 from ..module.sampling import Sampling
 
+from pysatmc.problem import Problem
 from typings.searchable import Searchable
 from function.model import Estimation, Results, WorkerArgs
 
@@ -17,7 +17,7 @@ class Context:
     def __init__(
             self,
             space: Space,
-            instance: Instance,
+            problem: Problem,
             function: Function,
             sampling: Sampling,
             executor: Executor,
@@ -25,7 +25,7 @@ class Context:
             sample_seed: Optional[int]
     ):
         self.space = space
-        self.instance = instance
+        self.problem = problem
         self.function = function
         self.sampling = sampling
         self.executor = executor
@@ -33,7 +33,7 @@ class Context:
 
         self.sample_seed = sample_seed
         self.sample_size = min(searchable.power(), self.sampling.max_size) \
-            if not self.instance.input_dependent else self.sampling.max_size
+            if not self.problem.output_set else self.sampling.max_size
         self.sample_state = self.sampling.get_state(0, self.sample_size)
 
     def get_tasks(self, results: Results) -> List[WorkerArgs]:

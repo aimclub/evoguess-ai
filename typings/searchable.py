@@ -1,21 +1,17 @@
 from copy import copy
-from typing import Optional, Tuple, List, Dict, TypeVar, TYPE_CHECKING, Any
+from typing import Optional, List, Dict, TypeVar, Any
+
+from pysatmc.variables.vars import Var, VarMap
+from pysatmc.variables import Supplements, Enumerable
 
 from util.iterable import concat, list_of, slice_by, to_bin, to_oct
-
-if TYPE_CHECKING:
-    from instance.module.variables.vars import Var
 
 Vector = List[int]
 ByteVector = bytes
 TSearchable = TypeVar('TSearchable', bound='Searchable')
 
-Assumptions = List[int]
-Constraints = List[List[int]]
-Supplements = Tuple[Assumptions, Constraints]
 
-
-class Searchable:
+class Searchable(Enumerable):
     slug = 'searchable'
 
     def __init__(self, length: int):
@@ -28,14 +24,11 @@ class Searchable:
     def dimension(self) -> List[int]:
         raise NotImplementedError
 
-    def dependents(self) -> List['Var']:
+    def variables(self) -> List[Var]:
         raise NotImplementedError
 
-    def substitute(
-            self,
-            with_var_map: Optional[Dict[int, bool]] = None,
-            with_substitution: Optional[List[bool]] = None,
-    ) -> Supplements:
+    def substitute(self, using_values: Optional[List[int]] = None,
+                   using_var_map: Optional[VarMap] = None) -> Supplements:
         raise NotImplementedError
 
     def get_vector(self) -> Vector:
@@ -78,22 +71,10 @@ class Searchable:
         raise NotImplementedError
 
 
-def combine(*args: Supplements) -> Supplements:
-    assumptions, constraints = [], []
-    for supplements in args:
-        assumptions.extend(supplements[0])
-        constraints.extend(supplements[1])
-    return assumptions, constraints
-
-
 __all__ = [
     'Searchable',
     # types
     'Vector',
     'ByteVector',
-    'Assumptions',
-    'Constraints',
     'Supplements',
-    # tools
-    'combine'
 ]

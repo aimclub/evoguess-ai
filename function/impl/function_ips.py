@@ -6,22 +6,21 @@ from ..model import WorkerArgs, WorkerResult, \
 from ..abc.function import aggregate_results, format_statuses
 from .function_ibs import InverseBackdoorSets, ibs_supplements
 
+from ..module.measure import Measure
+from ..module.budget import TaskBudget
+
 from typings.searchable import Searchable
-from function.module.solver import Solver
-from function.module.measure import Measure
-from ..module.budget.impl import TaskBudget
 
 
 def ips_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
-    space, solver, budget, measure, instance, bytemask = payload
-    searchable, timestamp = space.unpack(instance, bytemask), now()
+    space, budget, measure, problem, bytemask = payload
+    searchable, timestamp = space.unpack(problem, bytemask), now()
 
     times, times2, values, values2 = {}, {}, {}, {}
-    formula, statuses = instance.encoding.get_formula(), {}
-    with solver.use_incremental(formula) as incremental:
-        for assumptions, _ in ibs_supplements(args, instance, searchable):
-            # todo: use constraints with incremental propagation?
-            report = incremental.propagate(assumptions)
+    formula, statuses = problem.encoding.get_formula(), {}
+    with problem.solver.get_instance(formula) as incremental:
+        for supplements in ibs_supplements(args, problem, searchable):
+            report = incremental.propagate(supplements)
             time, value, status = measure.check_and_get(report, budget)
 
             times[status.value] = times.get(status.value, 0.) + time
@@ -36,9 +35,9 @@ def ips_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
 class InversePolynomialSets(InverseBackdoorSets):
     slug = 'function:ips'
 
-    def __init__(self, solver: Solver, measure: Measure,
-                 min_solved: float = 0., only_propagate: bool = False):
-        super().__init__(solver, TaskBudget(0), measure, min_solved)
+    def __init__(self, measure: Measure, min_solved: float = 0.,
+                 only_propagate: bool = False):
+        super().__init__(TaskBudget(0), measure, min_solved)
         self.only_propagate = only_propagate
 
     def get_worker_fn(self) -> WorkerCallable:

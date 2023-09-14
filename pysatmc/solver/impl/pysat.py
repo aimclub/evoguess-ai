@@ -1,5 +1,4 @@
 from math import copysign
-from optparse import Option
 from threading import Timer
 from time import time as now
 from typing import Dict, Union, \
@@ -8,9 +7,9 @@ from typing import Dict, Union, \
 from pysat.examples.rc2 import RC2
 from pysat import solvers as slv, formula as fml
 
-from pysatmc.encoding import Formula
-from pysatmc._utility import Assumptions, Constraints, Supplements
-from pysatmc.solver.solver import Solver, _Solver, Report, KeyLimit, UNLIMITED
+from ...encoding import Formula
+from ...variables import Assumptions, Supplements
+from ..solver import Solver, _Solver, Report, KeyLimit, UNLIMITED
 
 
 #
@@ -98,7 +97,6 @@ class _RC2(RC2):
             if not self.get_core():
                 return _status
             self.process_core()
-            print(self.accum_stats())
 
         return True
 
@@ -130,11 +128,8 @@ AnySolver = Union[slv.Solver, _RC2]
 
 #
 # ==============================================================================
-def _solve(
-        solver: slv.Solver, assumptions: Assumptions = (),
-        limit: KeyLimit = UNLIMITED, extract_model: bool = False,
-        use_timer: bool = True
-) -> Report:
+def _solve(solver: AnySolver, assumptions: Assumptions, limit: KeyLimit,
+           extract_model: bool, use_timer: bool) -> Report:
     if not use_timer and limit == UNLIMITED:
         status = solver.solve(assumptions)
         stats = solver.accum_stats()
@@ -151,9 +146,7 @@ def _solve(
 
 #
 # ==============================================================================
-def _propagate(
-        solver: slv.Solver, assumptions: Assumptions = ()
-) -> Report:
+def _propagate(solver: AnySolver, assumptions: Assumptions) -> Report:
     stamp, (status, literals) = now(), solver.propagate(assumptions)
     stats = {**solver.accum_stats(), 'time': now() - stamp}
 
@@ -178,7 +171,7 @@ def get_max_sat_alg(settings: PySatSetts, formula: fml.WCNF):
 
 #
 # ==============================================================================
-class _PySat(_Solver):
+class _PySatSolver(_Solver):
     _solver = None
     _last_stats = {}
 
@@ -199,27 +192,27 @@ class _PySat(_Solver):
             self._solver = None
 
     def _create(
-            self, formula: Formula, supplements: Supplements
+            self, supplements: Supplements
     ) -> Tuple[Optional[AnySolver], Assumptions]:
         assumptions, constraints = supplements
-        if isinstance(formula, fml.CNF):
+        if isinstance(self.formula, fml.CNF):
             name = self.settings.sat_name
             if len(constraints) > 0:
-                solver = slv.Solver(name, formula)
+                solver = slv.Solver(name, self.formula)
                 solver.append_formula(constraints)
                 return solver.solver, assumptions
             elif self._solver is None:
-                solver = slv.Solver(name, formula)
+                solver = slv.Solver(name, self.formula)
                 self._solver = solver.solver
             return None, assumptions
-        elif isinstance(formula, fml.WCNF):
+        elif isinstance(self.formula, fml.WCNF):
             return get_max_sat_alg(
-                self.settings, formula
+                self.settings, self.formula
             ).append_formula(constraints + [
                 [lit] for lit in assumptions
             ]), []
         else:
-            raise TypeError(f'Unknown formula {type(formula)}')
+            raise TypeError(f'Unknown formula {type(self.formula)}')
 
     def _fix_stats(self, report):
         fixed_stats = {
@@ -233,9 +226,9 @@ class _PySat(_Solver):
     def solve(
             self, supplements: Supplements,
             limit: KeyLimit = UNLIMITED,
-            extract_model: bool = False
+            extract_model: bool = True
     ) -> Report:
-        solver, assumptions = self._create(self.formula, supplements)
+        solver, assumptions = self._create(supplements)
         if solver is None: return self._fix_stats(_solve(
             self._solver, assumptions, limit, extract_model, self.use_timer
         ))
@@ -244,7 +237,7 @@ class _PySat(_Solver):
         )
 
     def propagate(self, supplements: Supplements) -> Report:
-        solver, assumptions = self._create(self.formula, supplements)
+        solver, assumptions = self._create(supplements)
         if solver is None: return self._fix_stats(
             _propagate(self._solver, assumptions)
         )
@@ -253,26 +246,28 @@ class _PySat(_Solver):
 
 #
 # ==============================================================================
-class PySat(Solver):
+class PySatSolver(Solver):
     slug = 'solver:pysat'
 
     def __init__(self, sat_name: str = 'm22', max_sat_alg: str = 'rc2'):
         self.settings = PySatSetts(sat_name, max_sat_alg)
 
-    def use_incremental(
+    def get_instance(
             self, formula: Formula, use_timer: bool = True
-    ) -> _PySat:
-        return _PySat(formula, self.settings, use_timer)
+    ) -> _PySatSolver:
+        return _PySatSolver(formula, self.settings, use_timer)
 
     def __config__(self) -> Dict[str, Any]:
         return {
-            'slug': self.slug
+            'slug': self.slug,
+            'sat_name': self.settings.sat_name,
+            'max_sat_alg': self.settings.max_sat_alg,
         }
 
 
 __all__ = [
-    'PySat',
-    '_PySat',
+    'PySatSolver',
+    '_PySatSolver',
     # types
     'PySatSetts',
     'PySatTimer',

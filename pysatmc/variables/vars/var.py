@@ -1,6 +1,6 @@
 from typing import Any, List, Dict, Union
 
-from ..._utility import Supplements
+from .._utility import Supplements
 
 AnyVar = Union['Var', int]
 VarMap = Dict[AnyVar, int]
@@ -24,7 +24,7 @@ class Var:
         else:
             return False
 
-    def supplements(self, var_map: VarMap) -> Supplements:
+    def substitute(self, var_map: VarMap) -> Supplements:
         raise NotImplementedError
 
     def __config__(self) -> Dict[str, Any]:
