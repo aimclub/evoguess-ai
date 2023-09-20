@@ -4,7 +4,7 @@ from typing import Any, List, Dict, Union, Optional
 from .solver import Solver, Report
 from .encoding import Encoding, CNF, WCNF
 from .variables.vars import Var, VarMap
-from .variables import Indexes, Variables, Enumerable
+from .variables import Indexes, Variables, Enumerable, Supplements
 
 
 class CommentSet:
@@ -55,7 +55,7 @@ class Problem:
                 None, with_input_values, with_input_var_map
             )
         if self.output_set and (with_output_values or with_output_var_map):
-            supplements = self.input_set.substitute(
+            supplements = self.output_set.substitute(
                 with_output_values, with_output_var_map
             )
 
@@ -69,8 +69,7 @@ class Problem:
                 stats_sum[key] = stats_sum.get(key, 0) + (
                     1 if key == 'count' else stats.get(key, 0)
                 )
-            print(stats_sum)
-            # if status: return Report(status, stats_sum, model)
+            if status: return Report(status, stats_sum, model)
         else:
             return Report(False, stats_sum, None)
 
@@ -99,6 +98,19 @@ class Problem:
             abs(literal): 1 if literal > 0 else 0 for literal in
             self.solver.propagate(formula, input_sups).model
         }
+
+    def process_output_supplements(
+            self, with_random_state: Optional[RandomState] = None,
+            from_input_values: Optional[List[int]] = None,
+            from_input_var_map: Optional[VarMap] = None
+    ) -> Supplements:
+        return self.output_set.substitute(
+            using_var_map=self.process_output_var_map(
+                with_random_state=with_random_state,
+                from_input_values=from_input_values,
+                from_input_var_map=from_input_var_map
+            )
+        )
 
     def __config__(self) -> Dict[str, Any]:
         return {

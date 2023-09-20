@@ -1,5 +1,4 @@
-from pysatmc import Problem
-
+from pysatmc.problem import Problem
 from pysatmc.variables import Variables
 
 

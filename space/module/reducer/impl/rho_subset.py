@@ -3,7 +3,7 @@
 
 from ..reducer import Reducer
 
-from instance import Instance
+from pysatmc.problem import Problem
 # from function.module.solver import pysat
 # from function.module.measure import Propagations
 from pysatmc.variables import Variables
@@ -17,7 +17,7 @@ class RhoSubset(Reducer):
     def __init__(self, of_size: int):
         self.of_size = of_size
 
-    def reduce(self, instance: Instance, variables: Variables) -> Variables:
+    def reduce(self, problem: Problem, variables: Variables) -> Variables:
         pass
         # if self._indexes is None:
         #     data, measure = instance.encoding.get_data(), Propagations()

@@ -67,6 +67,7 @@ class _RC2(RC2):
         super().get_core()
         return self.core
 
+    # todo: remove assumptions
     def solve(self, assumptions=()):
         self.status = self._compute(assumptions, False)
         return self.status
@@ -183,7 +184,7 @@ class _PySatSolver(_Solver):
         self.settings = settings
         super().__init__(formula, use_timer)
 
-    def __enter__(self) -> '_PySat':
+    def __enter__(self) -> '_PySatSolver':
         return self
 
     def __exit__(self, *args):
@@ -214,6 +215,25 @@ class _PySatSolver(_Solver):
         else:
             raise TypeError(f'Unknown formula {type(self.formula)}')
 
+    def _unit_check(
+            self, supplements: Supplements
+    ) -> Report:
+        name = self.settings.sat_name
+        assumptions, constraints = supplements
+        if self._solver is None:
+            if isinstance(self.formula, fml.CNF):
+                formula = self.formula
+            elif isinstance(self.formula, fml.WCNF):
+                formula = self.formula.hard
+            else:
+                raise TypeError(f'Unknown formula {type(self.formula)}')
+            solver = slv.Solver(name, formula)
+            self._solver = solver.solver
+
+        return self._fix_stats(
+            _propagate(self._solver, assumptions)
+        )
+
     def _fix_stats(self, report):
         fixed_stats = {
             key: value if key == 'time' else
@@ -228,13 +248,17 @@ class _PySatSolver(_Solver):
             limit: KeyLimit = UNLIMITED,
             extract_model: bool = True
     ) -> Report:
+        report = self._unit_check(supplements)
+        if report.status is not None: return report
+
         solver, assumptions = self._create(supplements)
         if solver is None: return self._fix_stats(_solve(
             self._solver, assumptions, limit, extract_model, self.use_timer
         ))
-        with solver: return _solve(
-            solver, assumptions, limit, extract_model, self.use_timer
-        )
+        with solver:
+            return _solve(
+                solver, assumptions, limit, extract_model, self.use_timer
+            )
 
     def propagate(self, supplements: Supplements) -> Report:
         solver, assumptions = self._create(supplements)

@@ -22,14 +22,12 @@ from util.iterable import concat, slice_by
 def get_propagation(solver: _Solver, searchable: Searchable) -> Report:
     time_sum, value_sum, up_tasks, hard_tasks = 0, 0, [], []
     for supplements in searchable.enumerate():
-        time, value, status, _ = solver.propagate(supplements)
-        assumptions, _ = supplements
-        (up_tasks if status == Status.RESOLVED else hard_tasks).append(
-            assumptions)
+        status, stats, _ = solver.propagate(supplements)
+        (up_tasks if status else hard_tasks).append(supplements)
         time_sum, value_sum = time_sum + time, value_sum + value
 
-    status = Status.SOLVED if len(hard_tasks) else Status.RESOLVED
-    return Report(time_sum, value_sum, status, (up_tasks, hard_tasks))
+    status = len(hard_tasks) == 0
+    return Report(status, stats, (up_tasks, hard_tasks))
 
 
 def hard_worker(solver: Solver, problem: Problem, up_tasks: List[Assumptions],

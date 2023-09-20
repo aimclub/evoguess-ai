@@ -32,7 +32,7 @@ def tau_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     return getpid(), now() - timestamp, times, times2, values, values2, statuses, args
 
 
-class TauFunction(Function):
+class RhoTFunction(Function):
     slug = 'function:tau'
 
     def __init__(self, budget: TaskBudget, measure: Measure,
@@ -70,5 +70,5 @@ class TauFunction(Function):
 
 
 __all__ = [
-    'TauFunction'
+    'RhoTFunction'
 ]

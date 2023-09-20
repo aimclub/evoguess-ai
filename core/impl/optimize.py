@@ -28,7 +28,7 @@ class Optimize(Estimate):
 
     def __init__(self, space: Space, logger: Logger, problem: Problem,
                  executor: Executor, sampling: Sampling, function: Function,
-                 algorithm: Algorithm, comparator: Comparator,
+                 comparator: Comparator, algorithm: Algorithm,
                  limitation: Limitation, random_seed: Optional[int] = None):
         self.algorithm = algorithm
         self.limitation = limitation

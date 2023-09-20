@@ -23,16 +23,18 @@ def gad_supplements(args: WorkerArgs, problem: Problem,
     sample_state = RandomState(sample_seed)
 
     power, substitutions = searchable.power(), []
-    if problem.output_set and sample_size >= power:
+    if problem.output_set or sample_size >= power:
         for chunk_i in range(ceil(sample_size / power)):
-            enum = searchable.enumerate(0, power, sample_state)
-            var_map = problem.process_output_var_map(sample_state)
-            substitutions.extend([(sups, var_map) for sups in enum])
+            output_supplements = ([], []) if not problem.output_set \
+                else problem.process_output_supplements(sample_state)
+            substitutions.extend([
+                (supplements, output_supplements) for supplements
+                in searchable.enumerate(0, power, sample_state)
+            ])
 
-        for sups, var_map in substitutions[offset:offset + length]:
-            yield combine(
-                sups, problem.output_set.substitute(using_var_map=var_map)
-            )
+        substitutions = substitutions[offset:offset + length]
+        for supplements, output_supplements in substitutions:
+            yield combine(supplements, output_supplements)
     else:
         dimension = searchable.dimension()
         arguments = (0, dimension, (offset + length, len(dimension)))
