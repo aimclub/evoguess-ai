@@ -1,9 +1,11 @@
 import unittest
 
 from space.model import Backdoor
+from pysatmc.variables import Range
+
 from core.model.point import Point
-from instance.module.variables import Range
 from core.module.comparator import MinValueMaxSize
+
 from algorithm.module.selection import BestPoint, Roulette
 
 
@@ -38,8 +40,9 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(selection.select(vector, 2), [vector[4], vector[2]])
 
         selection = BestPoint(best_count=2)
-        self.assertEqual(selection.select([vector[0]], 2), [vector[0], vector[0]])
-        # selection.select(vector, 3)
+        self.assertEqual(
+            selection.select([vector[0]], 2), [vector[0], vector[0]]
+        )
 
     def test_roulette(self):
         comparator = MinValueMaxSize()
@@ -54,8 +57,13 @@ class TestSelection(unittest.TestCase):
 
         selection = Roulette()
         selection.random_state = RandomStateStub([0.05, 0.8])
-        self.assertEqual(selection.select(vector, 2), [vector[0], vector[4]])
+        self.assertEqual(
+            selection.select(vector, 2), [vector[0], vector[4]]
+        )
 
         selection = Roulette()
         selection.random_state = RandomStateStub([0.05, 0.05, 0.8, 0.65])
-        self.assertEqual(selection.select(vector, 4), [vector[0], vector[0], vector[4], vector[3]])
+        self.assertEqual(
+            selection.select(vector, 4),
+            [vector[0], vector[0], vector[4], vector[3]]
+        )

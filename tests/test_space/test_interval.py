@@ -2,7 +2,8 @@ import unittest
 from copy import copy
 
 from space.model import Interval
-from instance.module.variables import Range, Indexes
+
+from pysatmc.variables import Range, Indexes
 
 
 class TestInterval(unittest.TestCase):
@@ -26,7 +27,8 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(repr(interval_t40), f'[0-{2 ** 24}]({2 ** 40})')
 
         self.assertEqual(interval_t40.get_vector(), [0] * 24 + [1] * 40)
-        self.assertEqual(interval.get_vector(), Interval.unpack(interval.pack()))
+        self.assertEqual(interval.get_vector(),
+                         Interval.unpack(interval.pack()))
 
         head_vector = interval.get_vector()[:40] + [0] * 40
         interval_h40 = interval.make_copy(head_vector)
@@ -39,7 +41,8 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(repr(interval_h40), f'[0-1]({2 ** 64 - 2 ** 24 + 1})')
 
         self.assertEqual(interval_h40.get_vector(), [1] * 40 + [0] * 24)
-        self.assertEqual(interval.get_vector(), Interval.unpack(interval.pack()))
+        self.assertEqual(interval.get_vector(),
+                         Interval.unpack(interval.pack()))
 
     def test_index_interval(self):
         str_iterable = '1 5 9 12 17 21 23 24 25 35'
@@ -53,15 +56,15 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(len(interval), 3)
 
         self.assertEqual(
-            interval.substitute(with_substitution=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+            interval.substitute(using_values=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
             ([-1, -5, -9, -12, -17, -21], [[-23, -24], [-23, -25]])
         )
         self.assertEqual(
-            interval.substitute(with_substitution=[0, 1, 1, 0, 0, 1, 0, 1, 0, 1]),
+            interval.substitute(using_values=[0, 1, 1, 0, 0, 1, 0, 1, 0, 1]),
             ([-1, 5, 9, -12, -17, 21], [[-23, -24], [-23, -25]])
         )
         self.assertEqual(
-            interval.substitute(with_substitution=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
+            interval.substitute(using_values=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
             ([1, 5, 9, 12, 17, 21], [[23, 24], [23, 25], [23, 35]])
         )
 
@@ -71,5 +74,6 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(len(interval), 10)
 
         self.assertEqual(
-            interval.substitute(with_substitution=[1, 1, 1, 1, 0, 0, 1, 1, 1, 1]), ([], [])
+            interval.substitute(using_values=[1, 1, 1, 1, 0, 0, 1, 1, 1, 1]),
+            ([], [])
         )

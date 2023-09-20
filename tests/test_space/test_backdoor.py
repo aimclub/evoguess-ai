@@ -2,10 +2,9 @@ import unittest
 from copy import copy
 
 from space.model import Backdoor
-from typings.searchable import combine
 
-from instance.module.variables import Range, Indexes, Variables
-from instance.module.variables.vars import Index, Domain, XorSwitch, get_var_deps
+from pysatmc.variables import Range, Indexes, Variables
+from pysatmc.variables.vars import Index, Domain, XorSwitch, get_var_deps
 
 
 class TestBackdoor(unittest.TestCase):
@@ -17,8 +16,9 @@ class TestBackdoor(unittest.TestCase):
 
         backdoor_copy = copy(backdoor)
         self.assertEqual(backdoor.get_vector(), [1] * 64)
+        self.assertEqual(backdoor.variables(), backdoor_copy.variables())
+        self.assertEqual(backdoor.dimension(), backdoor_copy.dimension())
         self.assertEqual(backdoor.get_vector(), backdoor_copy.get_vector())
-        self.assertEqual(backdoor.dependents(), backdoor_copy.dependents())
 
         backdoor_vector = backdoor.get_vector()[:40] + [0] * 40
         backdoor_40 = backdoor.make_copy(backdoor_vector)
@@ -27,7 +27,10 @@ class TestBackdoor(unittest.TestCase):
         self.assertEqual(backdoor_40.power(), 2 ** 40)
         self.assertEqual(backdoor_40.get_vector(), [1] * 40 + [0] * 24)
 
-        self.assertEqual(backdoor.get_vector(), Backdoor.unpack(backdoor.pack()))
+        self.assertEqual(
+            backdoor.get_vector(),
+            Backdoor.unpack(backdoor.pack())
+        )
 
     def test_index_backdoor(self):
         str_iterable = '1 5 9 12 17 21 23 24 25 35'
@@ -45,7 +48,7 @@ class TestBackdoor(unittest.TestCase):
             self.assertEqual(variable.name, str_vars[i])
 
         int_vars = set(map(int, str_vars))
-        self.assertEqual(get_var_deps(backdoor.dependents()), int_vars)
+        self.assertEqual(get_var_deps(backdoor.variables()), int_vars)
         self.assertEqual(backdoor.dimension(), [2] * len(int_vars))
 
     def test_vars_backdoor(self):
@@ -54,15 +57,15 @@ class TestBackdoor(unittest.TestCase):
             Index(7), Index(8), Index(9), Index(10),
             XorSwitch('x1', [11, 12]), XorSwitch('x2', [13, 14])
         ]))
-        variables = backdoor.dependents()
-        for variable in variables:
+        variables = backdoor.variables()
+        for variable in backdoor.variables():
             self.assertIn(variable, backdoor)
 
         self.assertEqual(backdoor, copy(backdoor))
         self.assertNotEqual(backdoor, backdoor.make_copy([1, 1, 1]))
 
         var_deps = {variables[0], *range(7, 15)}
-        self.assertEqual(get_var_deps(backdoor.dependents()), var_deps)
+        self.assertEqual(get_var_deps(variables), var_deps)
 
         values = [4, 1, 1, 0, 0, 1, 0]
         alters = ['d1', 7, 8, 9, 10, 'x1', 'x2']
@@ -70,11 +73,17 @@ class TestBackdoor(unittest.TestCase):
             self.assertEqual(var, alt)
         self.assertEqual(str(backdoor), 'd1 7 8 9 10 x1 x2')
 
-        value_dict = {var: value for var, value in zip(backdoor, values)}
-        self.assertEqual(value_dict[7], 1)
-        self.assertEqual(value_dict['d1'], 4)
-        assumptions, constraints = combine(*(
-            var.supplements(value_dict) for var in backdoor
-        ))
-        self.assertEqual(assumptions, [-1, -2, -3, -4, 5, -6, 7, 8, -9, -10])
-        self.assertEqual(constraints, [[11, 12], [-11, -12], [13, -14], [-13, 14]])
+        expected_assumptions = [-1, -2, -3, -4, 5, -6, 7, 8, -9, -10]
+        expected_constraints = [[11, 12], [-11, -12], [13, -14], [-13, 14]]
+        assumptions, constraints = backdoor.substitute(using_values=values)
+
+        self.assertEqual(assumptions, expected_assumptions)
+        self.assertEqual(constraints, expected_constraints)
+
+        var_map = {var: value for var, value in zip(backdoor, values)}
+        assumptions, constraints = backdoor.substitute(using_var_map=var_map)
+        self.assertEqual(assumptions, expected_assumptions)
+        self.assertEqual(constraints, expected_constraints)
+
+        self.assertEqual(var_map['d1'], 4)
+        self.assertEqual(var_map[7], 1)
