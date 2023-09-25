@@ -1,6 +1,6 @@
-from math import ceil
+import json
 from time import time as now
-from typing import Any, List, Dict, Optional
+from typing import Any, List, Dict, Optional, Tuple
 from itertools import product
 
 from output import Logger
@@ -9,26 +9,46 @@ from executor import Executor
 from ..abc import Core
 
 from function.model import Estimation
-from function.module.budget import TaskBudget
+from function.module.budget import TaskBudget, KeyLimit
 from function.module.measure import Measure
 
 from pysatmc.solver import Report
 from pysatmc.problem import Problem
-from pysatmc.variables import Assumptions
+from pysatmc.variables import Assumptions, Supplements
 
 from typings.searchable import Searchable
 from util.iterable import concat, slice_by
 
+IndexTask = Tuple[int, Supplements]
 
-def hard_worker(problem: Problem, hard_tasks: List[Assumptions]) -> Report:
-    stats_sum, formula = {}, problem.encoding.get_formula()
+TaskSlice = Tuple[List[Supplements], List[Supplements]]
+IndexTaskSlice = Tuple[List[IndexTask], List[IndexTask]]
+
+
+def propagate(problem: Problem, searchable: Searchable) -> TaskSlice:
+    up_tasks, no_up_tasks = [], []
+    formula = problem.encoding.get_formula(copy=False)
+    with problem.solver.get_instance(formula.hard) as solver:
+        for supplements in searchable.enumerate():
+            status, _, _ = solver.propagate(supplements)
+            if status is None or status:
+                no_up_tasks.append(supplements)
+            else:
+                up_tasks.append(supplements)
+
+    return up_tasks, no_up_tasks
+
+
+def limit_worker(problem: Problem, index_task: Tuple[int, Supplements],
+                 limit: KeyLimit) -> Tuple[Tuple[int, Supplements], Report]:
+    formula = problem.encoding.get_formula(copy=False)
     with problem.solver.get_instance(formula) as solver:
-        for assumptions in hard_tasks:
-            _, stats, _ = solver.solve((assumptions, []))
-            for key in set(stats_sum.keys()).union(stats.keys()):
-                stats_sum[key] = stats_sum.get(key, 0) + stats.get(key, 0)
+        return index_task, solver.solve(index_task[1], limit)
 
-    return Report(True, stats_sum, None)
+
+def hard_worker(problem: Problem, hard_task: Assumptions) -> Report:
+    formula = problem.encoding.get_formula(copy=False)
+    return problem.solver.solve(formula, (hard_task, []))
 
 
 class CombineT(Core):
@@ -43,58 +63,95 @@ class CombineT(Core):
         super().__init__(logger, problem, random_seed)
 
     def launch(self, *searchables: Searchable) -> Estimation:
-        formula = self.problem.encoding.get_formula()
-        time_sum, value_sum, all_hard_tasks = 0, 0, []
+        time_sum, value_sum, all_hard_dict = 0, 0, {}
         total_var_set, start_stamp = set(concat(*searchables)), now()
-        with self.problem.solver.get_instance(formula) as solver:
-            limit = self.measure.get_limit(self.budget)
-            for searchable in searchables:
-                index, count, hard_tasks = 0, 0, []
-                for supplements in searchable.enumerate():
-                    report = solver.solve(supplements, limit)
+
+        all_no_up_tasks = []
+        with self.logger:
+            for index, searchable in enumerate(searchables):
+                _, no_up_tasks = propagate(self.problem, searchable)
+                all_no_up_tasks.extend(
+                    (index, no_up_task) for
+                    no_up_task in no_up_tasks
+                )
+                all_hard_dict[index] = []
+                print(searchable, len(no_up_tasks))
+
+            stats_sum, limit = {}, self.measure.get_limit(self.budget)
+            future_all, i = self.executor.submit_all(limit_worker, *(
+                (self.problem, task, limit) for task in all_no_up_tasks
+            )), 0
+            while len(future_all) > 0:
+                for future in future_all.as_complete(timeout=5):
+                    (index, supplements), report = future.result()
                     tv = self.measure.check_and_get(report, self.budget)
                     time_sum, value_sum = time_sum + tv[0], value_sum + tv[1]
-                    if report.status is None:
-                        assumptions, _ = supplements
-                        hard_tasks.append(assumptions)
 
-                    index += 1
-                    count += (1 if report.model else 0)
-                    print(f'{count}/{index}', report)
+                    i, (status, _, model) = i + 1, report
+                    if status is None: all_hard_dict[index].append(supplements)
+                    _model = len(model) if status else ''
+                    print(f'{i}/{len(all_no_up_tasks)}: {status}', end='')
+                    print(', time:', time_sum, 'value:', value_sum)
 
-                print(searchable, 'hard:', len(hard_tasks))
-                all_hard_tasks.append(hard_tasks)
+            all_hard_tasks = []
+            for index, hard_tasks in all_hard_dict.items():
+                print(f'{index}({len(hard_tasks)}): {hard_tasks}')
+                all_hard_tasks.append([a for a, c in hard_tasks])
 
+            print('time:', time_sum, 'value:', value_sum)
+            formula = self.problem.encoding.get_formula()
             all_hard_tasks = sorted(all_hard_tasks, key=len, reverse=True)
+            with self.problem.solver.get_instance(formula.hard) as solver:
+                [acc_hard_tasks, *all_hard_tasks] = all_hard_tasks
+                for hard_tasks in all_hard_tasks:
+                    acc_hard_tasks = [
+                        concat(*parts) for parts in
+                        product(acc_hard_tasks, hard_tasks)
+                    ]
 
-            [acc_hard_tasks, *all_hard_tasks] = all_hard_tasks
-            for hard_tasks, count in [(ts, len(ts)) for ts in all_hard_tasks]:
-                ht_count = count * len(acc_hard_tasks)
-                acc_hard_tasks = [
-                    concat(*parts) for parts in
-                    product(acc_hard_tasks, hard_tasks)
-                    if solver.propagate((concat(*parts), [])).status
-                ]
-                ratio = round(len(acc_hard_tasks) / ht_count, 2)
-                print(
-                    f'reduced: {ht_count} -> {len(acc_hard_tasks)} (x{ratio})')
+                    no_up_acc_hard_task = []
+                    for acc_hard_task in acc_hard_tasks:
+                        status, _, _ = solver.propagate((acc_hard_task, []))
+                        if status is None or status:
+                            no_up_acc_hard_task.append(acc_hard_task)
 
-        split_into = ceil(len(acc_hard_tasks) / self.executor.max_workers)
-        for future in self.executor.submit_all(hard_worker, *(
-                (self.problem, hard_tasks) for hard_tasks
-                in slice_by(acc_hard_tasks, split_into)
-        )).as_complete():
-            time, value, _, _ = future.result()
-            time_sum, value_sum = time_sum + time, value_sum + value
+                    ratio = round(
+                        len(no_up_acc_hard_task) / len(acc_hard_tasks), 2)
+                    suf_str = f'{len(no_up_acc_hard_task)} (x{ratio})'
+                    print(f'reduced: {len(acc_hard_tasks)} -> {suf_str}')
+                    acc_hard_tasks = no_up_acc_hard_task
 
-        return {
-            'value': time_sum,
-            'time_sum': time_sum,
-            'value_sum': value_sum,
-            'real_time': now() - start_stamp,
-            'hard_tasks': len(acc_hard_tasks),
-            'total_tasks': 2 ** len(total_var_set)
-        }
+            filename = 'hard_tasks_prod.jsonl'
+            if self.logger._session is not None:
+                filepath = self.logger._session.to_file(filename)
+                with open(filepath, 'a+') as handle:
+                    for hard_task in acc_hard_tasks:
+                        string = json.dumps({
+                            "assumptions": hard_task
+                        })
+                        handle.write(f'{string}\n')
+
+            future_all, i = self.executor.submit_all(hard_worker, *(
+                (self.problem, hard_task) for hard_task in acc_hard_tasks
+            )), 0
+            while len(future_all) > 0:
+                for future in future_all.as_complete(count=1):
+                    report = future.result()
+                    i, (status, _, model) = i + 1, report
+                    print(f'{i}/{len(acc_hard_tasks)}: {report}')
+                    tv = self.measure.check_and_get(report, self.budget)
+                    time_sum, value_sum = time_sum + tv[0], value_sum + tv[1]
+
+            result = {
+                'value': time_sum,
+                'time_sum': time_sum,
+                'value_sum': value_sum,
+                'real_time': now() - start_stamp,
+                'hard_tasks': len(acc_hard_tasks),
+                'total_tasks': 2 ** len(total_var_set)
+            }
+            self.logger._format(result, filename='result.jsonl')
+            return result
 
     def __config__(self) -> Dict[str, Any]:
         return {}

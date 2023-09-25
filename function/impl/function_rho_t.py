@@ -19,16 +19,18 @@ def tau_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     limit = measure.get_limit(budget)
     times, times2, values, values2 = {}, {}, {}, {}
     formula, statuses = problem.encoding.get_formula(), {}
-    for supplements in gad_supplements(args, problem, searchable):
-        report = problem.solver.solve(formula, supplements, limit)
-        time, value, status = measure.check_and_get(report, budget)
+    with problem.solver.get_instance(formula) as incremental:
+        for supplements in gad_supplements(args, problem, searchable):
+            # todo: clear interrupt in incremental
+            report = incremental.solve(supplements, limit)
+            time, value, status = measure.check_and_get(report, budget)
 
-        times[status.value] = times.get(status.value, 0.) + time
-        values[status.value] = values.get(status.value, 0.) + value
-        statuses[status.value] = statuses.get(status.value, 0) + 1
+            times[status.value] = times.get(status.value, 0.) + time
+            values[status.value] = values.get(status.value, 0.) + value
+            statuses[status.value] = statuses.get(status.value, 0) + 1
 
-        times2[status.value] = times2.get(status.value, 0.) + time ** 2
-        values2[status.value] = values2.get(status.value, 0.) + value ** 2
+            times2[status.value] = times2.get(status.value, 0.) + time ** 2
+            values2[status.value] = values2.get(status.value, 0.) + value ** 2
     return getpid(), now() - timestamp, times, times2, values, values2, statuses, args
 
 

@@ -24,7 +24,7 @@ class CNF(Encoding):
         self.from_clauses = from_clauses
         self.comment_lead = comment_lead
 
-    def get_formula(self) -> formula.CNF:
+    def get_formula(self, copy: bool = True) -> formula.CNF:
         if self.from_file is not None:
             if self.from_file not in cnf_data:
                 _formula = formula.CNF(
@@ -32,7 +32,8 @@ class CNF(Encoding):
                     comment_lead=self.comment_lead
                 )
                 cnf_data[self.from_file] = _formula
-            return cnf_data[self.from_file].copy()
+            return cnf_data[self.from_file].copy() if \
+                copy else cnf_data[self.from_file]
 
         return formula.CNF(
             from_string=self.from_string,

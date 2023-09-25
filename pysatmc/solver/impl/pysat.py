@@ -196,7 +196,8 @@ class _PySatSolver(_Solver):
             self, supplements: Supplements
     ) -> Tuple[Optional[AnySolver], Assumptions]:
         assumptions, constraints = supplements
-        if isinstance(self.formula, fml.CNF):
+        if isinstance(self.formula, fml.CNF) or \
+                isinstance(self.formula, list):
             name = self.settings.sat_name
             if len(constraints) > 0:
                 solver = slv.Solver(name, self.formula)
@@ -249,6 +250,7 @@ class _PySatSolver(_Solver):
             extract_model: bool = True
     ) -> Report:
         report = self._unit_check(supplements)
+        # print('check', report.status, supplements)
         if report.status is not None: return report
 
         solver, assumptions = self._create(supplements)

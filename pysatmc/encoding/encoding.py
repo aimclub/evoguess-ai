@@ -10,7 +10,7 @@ class Formula:
 
 
 class Encoding:
-    def get_formula(self) -> Formula:
+    def get_formula(self, copy: bool = True) -> Formula:
         raise NotImplementedError
 
     def __config__(self) -> Dict[str, Any]:

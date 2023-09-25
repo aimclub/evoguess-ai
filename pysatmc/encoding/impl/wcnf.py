@@ -19,7 +19,7 @@ class WCNF(Encoding):
         self.from_string = from_string
         self.comment_lead = comment_lead
 
-    def get_formula(self) -> formula.WCNF:
+    def get_formula(self, copy: bool = True) -> formula.WCNF:
         if self.from_file is not None:
             if self.from_file not in wcnf_data:
                 _formula = formula.WCNF(
@@ -27,7 +27,8 @@ class WCNF(Encoding):
                     comment_lead=self.comment_lead
                 )
                 wcnf_data[self.from_file] = _formula
-            return wcnf_data[self.from_file].copy()
+            return wcnf_data[self.from_file].copy() if \
+                copy else wcnf_data[self.from_file]
 
         return formula.WCNF(
             from_string=self.from_string,
