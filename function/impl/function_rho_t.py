@@ -14,7 +14,7 @@ from typings.searchable import Searchable
 
 def tau_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     space, budget, measure, problem, bytemask = payload
-    searchable, timestamp = space.unpack(problem, bytemask), now()
+    searchable, timestamp = space.unpack(bytemask), now()
 
     limit = measure.get_limit(budget)
     times, times2, values, values2 = {}, {}, {}, {}

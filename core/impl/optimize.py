@@ -40,7 +40,7 @@ class Optimize(Estimate):
     def launch(self, *args, **kwargs) -> PointSet:
         start_stamp = now()
         with self.logger:
-            initial = self.space.get_initial(self.problem)
+            initial = self.space.get_initial()
             self.logger.meta(initial, self.comparator)
             # todo: search root estimation in cache
             point, handles = self.estimate(initial).result(), []

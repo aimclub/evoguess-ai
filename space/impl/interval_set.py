@@ -20,18 +20,21 @@ class IntervalSet(Space):
         self.indexes = indexes
 
     # noinspection PyProtectedMember
-    def get_initial(self, problem: Problem) -> Interval:
-        interval = self._get_searchable(problem)
+    def get_initial(self) -> Interval:
+        interval = self._get_searchable()
         if self.by_vector is not None:
             interval._set_vector(self.by_vector)
         return interval
 
-    def _get_searchable(self, problem: Problem) -> Interval:
+    def _get_searchable(self) -> Interval:
         return Interval(indexes=self.indexes)
 
     def __config__(self) -> Dict[str, Any]:
-        # todo: add realisation
-        pass
+        return {
+            'slug': self.slug,
+            'indexes': self.indexes.__config__(),
+            'by_vector': self.by_vector,
+        }
 
 
 __all__ = [

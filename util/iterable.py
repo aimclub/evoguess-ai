@@ -1,6 +1,6 @@
 from copy import copy
 from functools import reduce
-from itertools import islice
+from itertools import islice, chain
 from typing import Union, Callable, Iterable, Tuple, List, Any, TypeVar
 
 T = TypeVar('T', covariant=True)
@@ -12,13 +12,12 @@ def identity(_object: T) -> T:
     return _object
 
 
-def concat(*iterables: Iterable[T]) -> List[T]:
-    # todo: try to use itertools chain method
-    return reduce(lambda x, y: x.extend(y) or x, iterables, [])
-
-
 def to_oct(bits: Iterable[int]) -> int:
     return from_bin(bits, 8)
+
+
+def concat(*iterables: Iterable[T]) -> List[T]:
+    return list(chain(*iterables))
 
 
 def to_bin(value: int, size: int) -> List[int]:
@@ -42,7 +41,8 @@ def pick_by(iterable: Iterable[T], predicate: Predicate = identity) -> List[T]:
     elif isinstance(predicate, Iterable):
         return [item for i, item in enumerate(iterable) if i in predicate]
     else:
-        raise TypeError(f'unexpected predicate type: \'{type(predicate).__name__}\'')
+        raise TypeError(
+            f'unexpected predicate type: \'{type(predicate).__name__}\'')
 
 
 def omit_by(iterable: Iterable[T], predicate: Predicate = identity) -> List[T]:
@@ -51,7 +51,8 @@ def omit_by(iterable: Iterable[T], predicate: Predicate = identity) -> List[T]:
     elif isinstance(predicate, Iterable):
         return [item for i, item in enumerate(iterable) if i not in predicate]
     else:
-        raise TypeError(f'unexpected predicate type: \'{type(predicate).__name__}\'')
+        raise TypeError(
+            f'unexpected predicate type: \'{type(predicate).__name__}\'')
 
 
 def slice_by(iterable: Iterable[T], size: int) -> Iterable[Tuple[T]]:
@@ -60,7 +61,8 @@ def slice_by(iterable: Iterable[T], size: int) -> Iterable[Tuple[T]]:
     return iter(lambda: tuple(islice(iterator, size)), ())
 
 
-def split_by(iterable: Iterable[T], predicate: Predicate = identity) -> Tuple[List[T], List[T]]:
+def split_by(iterable: Iterable[T], predicate: Predicate = identity) -> Tuple[
+    List[T], List[T]]:
     left, right = [], []
     for i, item in enumerate(iterable):
         if isinstance(predicate, Callable):
@@ -68,6 +70,7 @@ def split_by(iterable: Iterable[T], predicate: Predicate = identity) -> Tuple[Li
         elif isinstance(predicate, Iterable):
             (left if i in predicate else right).append(item)
         else:
-            raise TypeError(f'unexpected predicate type: \'{type(predicate).__name__}\'')
+            raise TypeError(
+                f'unexpected predicate type: \'{type(predicate).__name__}\'')
 
     return left, right

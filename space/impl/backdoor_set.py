@@ -3,7 +3,6 @@ from typing import Dict, Any, Optional
 from ..abc import Space
 from ..model import Backdoor
 
-from pysatmc.problem import Problem
 from typings.searchable import Vector
 from pysatmc.variables import Variables
 
@@ -22,8 +21,8 @@ class BackdoorSet(Space):
         self.variables = variables
 
     # noinspection PyProtectedMember
-    def get_initial(self, problem: Problem) -> Backdoor:
-        backdoor = self._get_searchable(problem)
+    def get_initial(self) -> Backdoor:
+        backdoor = self._get_searchable()
         if self.by_string is not None:
             var_names = self.by_string.split()
             backdoor._set_vector([
@@ -34,12 +33,16 @@ class BackdoorSet(Space):
             backdoor._set_vector(self.by_vector)
         return backdoor
 
-    def _get_searchable(self, problem: Problem) -> Backdoor:
+    def _get_searchable(self) -> Backdoor:
         return Backdoor(variables=self.variables)
 
     def __config__(self) -> Dict[str, Any]:
-        # todo: add realisation
-        pass
+        return {
+            'slug': self.slug,
+            'by_string': self.by_string,
+            'by_vector': self.by_vector,
+            'variables': self.variables.__config__(),
+        }
 
 
 __all__ = [

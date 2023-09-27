@@ -14,7 +14,7 @@ from typings.searchable import Searchable
 
 def ips_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     space, budget, measure, problem, bytemask = payload
-    searchable, timestamp = space.unpack(problem, bytemask), now()
+    searchable, timestamp = space.unpack(bytemask), now()
 
     times, times2, values, values2 = {}, {}, {}, {}
     formula, statuses = problem.encoding.get_formula(), {}

@@ -14,7 +14,7 @@ from typings.searchable import Searchable
 
 def rho_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     space, budget, measure, problem, bytemask = payload
-    searchable, timestamp = space.unpack(problem, bytemask), now()
+    searchable, timestamp = space.unpack(bytemask), now()
 
     times, times2, values, values2 = {}, {}, {}, {}
     formula, statuses = problem.encoding.get_formula(), {}
@@ -35,9 +35,11 @@ def rho_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
 class RhoFunction(GuessAndDetermine):
     slug = 'function:rho'
 
-    def __init__(self, measure: Measure, penalty_power: float):
+    def __init__(self, measure: Measure, penalty_power: float,
+                 only_solved: bool = False):
         super().__init__(AutoBudget(), measure)
         self.penalty_power = penalty_power
+        self.only_solved = only_solved
 
     def get_worker_fn(self) -> WorkerCallable:
         return rho_worker_fn
@@ -47,8 +49,12 @@ class RhoFunction(GuessAndDetermine):
         time_sum, value_sum = sum(times.values()), sum(values.values())
         power, value = searchable.power(), float('inf')
 
+        solved = statuses.get(Status.SOLVED, 0) + (
+            statuses.get(Status.RESOLVED, 0)
+            if not self.only_solved else 0
+        )
         if stats.count > 0 and self.penalty_power > power:
-            rho_value = float(statuses.get(Status.RESOLVED, 0)) / stats.count
+            rho_value = float(solved) / stats.count
             penalty_value = (1. - rho_value) * self.penalty_power
             value = rho_value * power + penalty_value
 

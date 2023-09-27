@@ -44,7 +44,7 @@ def gad_supplements(args: WorkerArgs, problem: Problem,
 
 def gad_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     space, budget, measure, problem, bytemask = payload
-    searchable, timestamp = space.unpack(problem, bytemask), now()
+    searchable, timestamp = space.unpack(bytemask), now()
 
     # limit = measure.get_limit(budget)
     times, times2, values, values2 = {}, {}, {}, {}
@@ -75,9 +75,9 @@ class GuessAndDetermine(Function):
     def calculate(self, searchable: Searchable, results: Results) -> Estimation:
         times, values, statuses, stats = aggregate_results(results)
         time_sum, value_sum = sum(times.values()), sum(values.values())
-        power, value = searchable.power(), value_sum if stats.count else float(
-            'inf')
 
+        power = searchable.power()
+        value = value_sum if stats.count else float('inf')
         if stats.count > 0 and stats.count != power:
             value = float(value_sum) / stats.count * power
 

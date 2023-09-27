@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Any, TypeVar
 
 
 class Formula:
@@ -9,8 +9,11 @@ class Formula:
         raise NotImplementedError
 
 
+TFormula = TypeVar('TFormula', bound='Formula')
+
+
 class Encoding:
-    def get_formula(self, copy: bool = True) -> Formula:
+    def get_formula(self, copy: bool = True) -> TFormula:
         raise NotImplementedError
 
     def __config__(self) -> Dict[str, Any]:

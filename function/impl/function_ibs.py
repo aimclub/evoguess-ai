@@ -34,7 +34,7 @@ def ibs_supplements(args: WorkerArgs, problem: Problem,
 
 def ibs_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     space, budget, measure, problem, bytemask = payload
-    backdoor, timestamp = space.unpack(problem, bytemask), now()
+    backdoor, timestamp = space.unpack(bytemask), now()
 
     limit = measure.get_limit(budget)
     times, times2, values, values2 = {}, {}, {}, {}

@@ -1,6 +1,7 @@
 from pysat import formula
 from typing import Any, List, Dict
 
+from .cnf import CNF
 from ..encoding import Encoding
 
 wcnf_data = {}
@@ -35,7 +36,15 @@ class WCNF(Encoding):
             comment_lead=self.comment_lead
         )
 
-    def __copy__(self):
+    def from_hard(self) -> CNF:
+        return CNF(
+            from_file=self.from_file,
+            from_string=self.from_string,
+            extract_hard=True,
+            comment_lead=self.comment_lead,
+        )
+
+    def __copy__(self) -> 'WCNF':
         return WCNF(
             from_file=self.from_file,
             from_string=self.from_string,
@@ -54,7 +63,7 @@ class WCNF(Encoding):
 class WCNFPlus(WCNF):
     slug = 'encoding:wcnf+'
 
-    def get_formula(self) -> formula.WCNFPlus:
+    def get_formula(self, copy: bool = True) -> formula.WCNFPlus:
         if self.from_file is not None:
             if self.from_file not in wcnf_data:
                 _formula = formula.WCNFPlus(
@@ -62,7 +71,8 @@ class WCNFPlus(WCNF):
                     comment_lead=self.comment_lead
                 )
                 wcnf_data[self.from_file] = _formula
-            return wcnf_data[self.from_file].copy()
+            return wcnf_data[self.from_file].copy() if \
+                copy else wcnf_data[self.from_file]
 
         return formula.WCNFPlus(
             from_string=self.from_string,
