@@ -1,7 +1,7 @@
 from copy import copy
-from functools import reduce
-from itertools import islice, chain
-from typing import Union, Callable, Iterable, Tuple, List, Any, TypeVar
+from math import ceil
+from itertools import chain
+from typing import Union, Callable, Iterable, Tuple, List, TypeVar
 
 T = TypeVar('T', covariant=True)
 Dimension = Union[int, Iterable]
@@ -55,10 +55,13 @@ def omit_by(iterable: Iterable[T], predicate: Predicate = identity) -> List[T]:
             f'unexpected predicate type: \'{type(predicate).__name__}\'')
 
 
-def slice_by(iterable: Iterable[T], size: int) -> Iterable[Tuple[T]]:
-    iterator = iter(iterable)
-    # todo: refactor this
-    return iter(lambda: tuple(islice(iterator, size)), ())
+def slice_by(sized: List[T], size: int) -> Iterable[List[T]]:
+    for start in range(0, len(sized), size):
+        yield sized[start:start + size]
+
+
+def slice_into(sized: List[T], count: int) -> Iterable[List[T]]:
+    return slice_by(sized, ceil(len(sized) / count))
 
 
 def split_by(iterable: Iterable[T], predicate: Predicate = identity) -> Tuple[

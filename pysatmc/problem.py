@@ -4,7 +4,7 @@ from typing import Any, List, Dict, Union, Optional
 from .solver import Solver, Report
 from .encoding import Encoding, CNF, WCNF
 from .variables.vars import Var, VarMap
-from .variables import Indexes, Variables, Enumerable, Supplements
+from .variables import Indexes, Variables, Enumerable, Supplements, combine
 
 
 class CommentSet:
@@ -28,11 +28,8 @@ class Problem:
     slug = 'problem'
 
     def __init__(
-            self,
-            solver: Solver,
-            encoding: Encoding,
-            input_set: Indexes = None,
-            output_set: Variables = None
+            self, solver: Solver, encoding: Encoding,
+            input_set: Indexes = None, output_set: Variables = None
     ):
         self.solver = solver
         self.encoding = encoding
@@ -43,38 +40,47 @@ class Problem:
                (not input_set and not output_set), \
             'Set both (input and output) sets or neither'
 
-    def resolve(self, decomposition: Optional[Enumerable] = None,
-                with_random_state: Optional[RandomState] = None,
-                with_output_values: Optional[List[int]] = None,
-                with_output_var_map: Optional[VarMap] = None,
-                with_input_values: Optional[List[int]] = None,
-                with_input_var_map: Optional[VarMap] = None) -> Report:
-        formula, supplements = self.encoding.get_formula(), ([], [])
+    def solve(
+            self, decomposition: Optional[Enumerable] = None,
+            with_input_values: Optional[List[int]] = None,
+            with_input_var_map: Optional[VarMap] = None,
+            with_output_values: Optional[List[int]] = None,
+            with_output_var_map: Optional[VarMap] = None,
+            with_random_state: Optional[RandomState] = None,
+    ) -> Report:
+        # todo: add limits
+        formula, o_supplements = self.encoding.get_formula(), ([], [])
         if self.input_set and (with_input_values or with_input_var_map):
             with_output_var_map = self.process_output_var_map(
                 None, with_input_values, with_input_var_map
             )
         if self.output_set and (with_output_values or with_output_var_map):
-            supplements = self.output_set.substitute(
+            o_supplements = self.output_set.substitute(
                 with_output_values, with_output_var_map
             )
 
         if decomposition is None:
-            return self.solver.solve(formula, supplements)
+            return self.solver.solve(formula, o_supplements)
 
         state, stats_sum = with_random_state, {'count': 0}
-        for supplements in decomposition.enumerate(with_random_state=state):
-            status, stats, model = self.solver.solve(formula, supplements)
-            for key in set(stats_sum.keys()).union(stats.keys()):
-                stats_sum[key] = stats_sum.get(key, 0) + (
-                    1 if key == 'count' else stats.get(key, 0)
-                )
-            if status: return Report(status, stats_sum, model)
-        else:
+        with self.solver.get_instance(formula) as solver:
+            for supplements in map(
+                    lambda sups: combine(sups, o_supplements),
+                    decomposition.enumerate(with_random_state=state)
+            ):
+                status, stats, model = solver.solve(supplements)
+                for key in set(stats_sum.keys()).union(stats.keys()):
+                    stats_sum[key] = stats_sum.get(key, 0) + (
+                        1 if key == 'count' else stats.get(key, 0)
+                    )
+                if status: return Report(status, stats_sum, model)
+
             return Report(False, stats_sum, None)
 
-    def evaluate(self, decomposition: Enumerable, sample_length: int,
-                 with_random_state: Optional[RandomState] = None) -> Report:
+    def evaluate(
+            self, decomposition: Enumerable, sample_length: int,
+            with_random_state: Optional[RandomState] = None
+    ) -> Report:
         # todo: add realisation
         pass
 
@@ -115,6 +121,7 @@ class Problem:
     def __config__(self) -> Dict[str, Any]:
         return {
             'slug': self.slug,
+            'solver': self.solver.__config__(),
             'encoding': self.encoding.__config__(),
             'input_set': self.input_set.__config__(),
             'output_set': self.output_set.__config__()

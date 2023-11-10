@@ -15,6 +15,7 @@ class Report(NamedTuple):
     status: Optional[bool]
     stats: Dict[str, float]
     model: Optional[Assumptions]
+    weight: Optional[int] = None
 
 
 class _Solver:

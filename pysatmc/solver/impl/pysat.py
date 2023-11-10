@@ -140,8 +140,8 @@ def _solve(solver: AnySolver, assumptions: Assumptions, limit: KeyLimit,
             stats = {**solver.accum_stats(), 'time': timer.value()}
 
     return Report(
-        status, stats, solver.get_model() if
-        extract_model and status else None
+        status, stats, solver.get_model()
+        if extract_model and status else None
     )
 
 
@@ -241,17 +241,17 @@ class _PySatSolver(_Solver):
             value - self._last_stats.get(key, 0)
             for key, value in report.stats.items()
         }
-        status, self.last_stats, model = report
-        return Report(status, fixed_stats, model)
+        status, self.last_stats, model, weight = report
+        return Report(status, fixed_stats, model, weight)
 
     def solve(
             self, supplements: Supplements,
             limit: KeyLimit = UNLIMITED,
             extract_model: bool = True
     ) -> Report:
-        report = self._unit_check(supplements)
+        # report = self._unit_check(supplements)
         # print('check', report.status, supplements)
-        if report.status is not None: return report
+        # if report.status is not None: return report
 
         solver, assumptions = self._create(supplements)
         if solver is None: return self._fix_stats(_solve(

@@ -15,11 +15,8 @@ parse_lock = Lock()
 class Variables(Enumerable):
     slug = 'variables'
 
-    def __init__(
-            self,
-            from_file: str = None,
-            from_vars: List[Var] = None
-    ):
+    def __init__(self, from_file: Optional[str] = None,
+                 from_vars: Optional[List[Var]] = None):
         self._vars = from_vars
         self.filepath = from_file
 
@@ -56,11 +53,11 @@ class Variables(Enumerable):
         if not self._var_bases:
             self._var_bases = list(get_var_dims(self.variables()))
         return self._var_bases
-
-    def dependents(self) -> List[AnyVar]:
-        if not self._var_deps:
-            self._var_deps = list(get_var_deps(self.variables()))
-        return self._var_deps
+    #
+    # def dependents(self) -> List[AnyVar]:
+    #     if not self._var_deps:
+    #         self._var_deps = list(get_var_deps(self.variables()))
+    #     return self._var_deps
 
     # def get_deps_dims(self) -> List[int]:
     #     if not self._deps_bases:

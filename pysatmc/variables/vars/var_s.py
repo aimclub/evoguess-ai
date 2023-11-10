@@ -1,7 +1,14 @@
 from typing import Any, Dict, List, Callable
 
 from .var import Var, AnyVar, VarMap
-from .._utility import Supplements, to_bin
+from .._utility import Supplements
+
+
+def to_bin(value: int, size: int) -> List[int]:
+    return [
+        1 if value & (1 << (size - 1 - i))
+        else 0 for i in range(size)
+    ]
 
 
 class Switch(Var):

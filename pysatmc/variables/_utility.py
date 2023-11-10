@@ -5,14 +5,8 @@ Constraints = List[List[int]]
 Supplements = Tuple[Assumptions, Constraints]
 
 
-def to_bin(value: int, size: int) -> List[int]:
-    return [
-        1 if value & (1 << (size - 1 - i))
-        else 0 for i in range(size)
-    ]
-
-
 def combine(*args: Supplements) -> Supplements:
+    # todo: check repeated and delete it
     assumptions, constraints = [], []
     for supplements in args:
         assumptions.extend(supplements[0])
@@ -36,6 +30,5 @@ __all__ = [
     'Supplements',
     # utils
     'prod',
-    'to_bin',
     'combine',
 ]

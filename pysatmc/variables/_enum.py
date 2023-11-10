@@ -31,12 +31,13 @@ class Enumerable:
 
     def enumerate(
             self, offset: int = 0, length: Optional[int] = None,
-            with_random_state: Optional[RandomState] = None,
+            with_random_state: Optional[RandomState] = None
     ) -> Iterable[Supplements]:
         dimension, power = self.dimension(), self.power()
         length = min(length or power - offset, power - offset)
         assert offset >= 0 < length, 'Numbers must be positive!'
 
+        # todo: shuffle only if with_random_state provided!!
         sequence_fn = range if power > self.permutation_limit \
             else (with_random_state or RandomState()).permutation
 

@@ -1,4 +1,3 @@
-from typings.optional import Int
 from ..mutation import Mutation
 
 from util.iterable import to_bin, from_bin
