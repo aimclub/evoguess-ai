@@ -1,8 +1,8 @@
 from copy import copy
 from typing import Optional, List, Dict, TypeVar, Any
 
-from pysatmc.variables.vars import Var, VarMap
-from pysatmc.variables import Supplements, Enumerable
+from lib_satprob.variables.vars import Var, VarMap
+from lib_satprob.variables import Supplements, Enumerable
 
 from util.iterable import concat, list_of, slice_by, to_bin, to_oct
 

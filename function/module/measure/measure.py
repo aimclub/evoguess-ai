@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from function.model import Status
-from pysatmc.solver import Report
+from lib_satprob.solver import Report
 from function.module.budget import Budget, KeyLimit, UNLIMITED
 
 from typings.optional import Float

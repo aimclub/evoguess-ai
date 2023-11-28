@@ -8,7 +8,7 @@ from space.model import Backdoor
 from typings.searchable import Searchable
 from core.model.point import Point, PointSet
 from core.module.comparator import Comparator, comparator_from
-from pysatmc.variables import variables_from
+from lib_satprob.variables import variables_from
 
 
 class Iteration(NamedTuple):

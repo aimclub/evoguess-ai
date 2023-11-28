@@ -15,7 +15,7 @@ from ..static import CORE_CACHE
 from ..module.sampling import Sampling
 from ..module.comparator import Comparator
 
-from pysatmc.problem import Problem
+from lib_satprob.problem import Problem
 from typings.searchable import Searchable
 
 

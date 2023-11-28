@@ -3,9 +3,9 @@ from typing import Dict, Any, Optional
 from ..abc import Space
 from ..model import Interval
 
-from pysatmc.problem import Problem
+from lib_satprob.problem import Problem
 from typings.searchable import Vector
-from pysatmc.variables import Indexes
+from lib_satprob.variables import Indexes
 
 
 class IntervalSet(Space):

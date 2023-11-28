@@ -1,5 +1,8 @@
+Var Model
+=========
+
 Var
-===
+---
 
 An interface for defining different types of variables and the logic to work with them.
 
@@ -20,7 +23,7 @@ An interface for defining different types of variables and the logic to work wit
     The Var also has implementations of methods __str__, __hash__ and __eq__.
 
 Index
-------
+-----
 
 Implementation for creating a boolean variable.
 
@@ -53,7 +56,7 @@ Implementation for creating a virtual toggle variable with **name**. The value o
     var = Switch(name: str, group: List[int], fn: Callable)
 
 XorSwitch
----------
+^^^^^^^^^
 
 Implementation of Switch variable with predefined function **fn** as xor.
 
@@ -64,7 +67,7 @@ Implementation of Switch variable with predefined function **fn** as xor.
     var = Switch(name: str, group: List[int])
 
 MajoritySwitch
---------------
+^^^^^^^^^^^^^^
 
 Implementation of Switch variable with predefined function **fn** as majority.
 
@@ -75,7 +78,7 @@ Implementation of Switch variable with predefined function **fn** as majority.
     var = MajoritySwitch(name: str, group: List[int])
 
 Bent4Switch
------------
+^^^^^^^^^^^
 
 Implementation of Switch variable with predefined function **fn** as bent4.
 

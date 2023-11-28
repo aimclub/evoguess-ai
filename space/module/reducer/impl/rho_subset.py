@@ -3,10 +3,10 @@
 
 from ..reducer import Reducer
 
-from pysatmc.problem import Problem
+from lib_satprob.problem import Problem
 # from function.module.solver import pysat
 # from function.module.measure import Propagations
-from pysatmc.variables import Variables
+from lib_satprob.variables import Variables
 # from instance.module.variables.vars import Index
 
 

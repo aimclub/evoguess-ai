@@ -1,7 +1,7 @@
 from typing import Tuple, NamedTuple, Dict
 
 from space import Space
-from pysatmc.problem import Problem
+from lib_satprob.problem import Problem
 
 from ..model import WorkerCallable, Payload, Results, \
     Status, TimeMap, ValueMap, StatusMap, Estimation

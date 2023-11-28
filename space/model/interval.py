@@ -2,9 +2,9 @@ from math import log2, floor
 from sys import getrecursionlimit, setrecursionlimit
 from typing import Any, List, Dict, Tuple, Optional
 
-from pysatmc.variables import Indexes, \
+from lib_satprob.variables import Indexes, \
     Assumptions, Constraints, Supplements, prod
-from pysatmc.variables.vars import Var, VarMap
+from lib_satprob.variables.vars import Var, VarMap
 
 from util.iterable import to_bin, split_by, from_bin
 from typings.searchable import Searchable, Vector

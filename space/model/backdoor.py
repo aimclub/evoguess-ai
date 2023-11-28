@@ -2,8 +2,8 @@ from itertools import compress
 from util.polyfill import prod
 from typing import Optional, Iterator, List, Dict, Any
 
-from pysatmc.variables import Variables
-from pysatmc.variables.vars import Var, \
+from lib_satprob.variables import Variables
+from lib_satprob.variables.vars import Var, \
     VarMap, get_var_dims, get_var_sups
 
 from typings.searchable import Vector, Searchable, Supplements

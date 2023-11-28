@@ -8,13 +8,13 @@ from typing import Any, List, Dict, Optional, Tuple
 
 from output import Logger
 from executor import Executor
-from pysatmc.encoding import WCNF
+from lib_satprob.encoding import WCNF
 
 from ..abc import Core
 
-from pysatmc.solver import Report
-from pysatmc.problem import Problem
-from pysatmc.variables import Assumptions, Supplements, combine
+from lib_satprob.solver import Report
+from lib_satprob.problem import Problem
+from lib_satprob.variables import Assumptions, Supplements, combine
 
 from function.model import Estimation
 from function.module.measure import Measure
@@ -108,13 +108,6 @@ def grow_worker(easy_tasks: List[Supplements]) -> Tuple[Supplements, float]:
 #
 
 
-def is_sat(clause: List[int], solution: List[int]) -> bool:
-    for literal in clause:
-        if literal in solution:
-            return True
-    return False
-
-
 def is_unsat(clause: List[int], value_map: Dict[int, int]) -> bool:
     size = len(clause)
     for literal in clause:
@@ -126,20 +119,7 @@ def is_unsat(clause: List[int], value_map: Dict[int, int]) -> bool:
     return True if size == 0 else None
 
 
-def calc_count(formula, solution: Assumptions) -> int:
-    return sum([
-        is_sat(clause, solution) for clause in formula.soft
-    ])
-
-
-def calc_weight(formula, solution: Assumptions) -> int:
-    return sum([
-        weight if is_sat(clause, solution) else 0 for
-        weight, clause in zip(formula.wght, formula.soft)
-    ])
-
-
-def calc_unweight(formula, literals: Assumptions) -> int:
+def calc_cost(formula, literals: Assumptions) -> int:
     value_map = {abs(lit): lit for lit in literals}
     return sum([
         weight if is_unsat(clause, value_map) else 0 for
@@ -171,9 +151,9 @@ def prod_worker(
         for acc_hard_task in [combine(*prs) for prs in prod]:
             report = solver.propagate(acc_hard_task)
             if report.status is None or report.status:
-                unweight = 0 if len(report.model) == 0 \
-                    else calc_unweight(formula, report.model)
-                w_acc_hard_task.append((unweight, acc_hard_task))
+                cost = 0 if len(report.model) == 0 \
+                    else calc_cost(formula, report.model)
+                w_acc_hard_task.append((cost, acc_hard_task))
 
     return w_acc_hard_task, now() - _stamp
 
@@ -183,9 +163,7 @@ def limit_worker(
 ) -> Tuple[UnWeightTask, Report]:
     formula = problem.encoding.get_formula(copy=False)
     with problem.solver.get_instance(formula) as solver:
-        status, stats, _, _ = solver.solve(task[1], limit, extract_model=False)
-        # if status: weight = None
-        return task, Report(status, stats, None, None)
+        return task, solver.solve(task[1], limit, extract_model=False)
 
 
 def hard_worker(problem: Problem, hard_task: Assumptions) -> Report:
@@ -194,7 +172,7 @@ def hard_worker(problem: Problem, hard_task: Assumptions) -> Report:
 
 
 class CombineT(Core):
-    slug = 'core:combine'
+    slug = 'core:combine_t'
 
     def __init__(self, logger: Logger, measure: Measure, problem: Problem,
                  executor: Executor, budget: TaskBudget,
@@ -206,14 +184,13 @@ class CombineT(Core):
 
         self.clauses = []
         self.stats_sum = {}
-        self.max_weight = None
-        self.best_model = (0, [])
+        self.best_model = (None, [])
 
     def sifting(self, tasks: List[UnWeightTask]) -> List[UnWeightTask]:
         hard_tasks, limit = [], self.measure.get_limit(self.budget)
         future_all, count = self.executor.submit_all(limit_worker, *(
             (self.problem, task, limit) for task in tasks if
-            self.best_model[0] + task[0] < self.max_weight
+            task[0] is None or task[0] < self.best_model[0]
         )), len(tasks)
         print('weight penalty:', f'{len(tasks)} -> {len(future_all)}')
 
@@ -225,12 +202,10 @@ class CombineT(Core):
                         self.stats_sum.get(key, 0.) + value
 
                 if report.status is None: hard_tasks.append(task)
-                if report.weight and report.weight > self.best_model[0]:
-                    ltm = f'{self.max_weight - report.weight}'
-                    bsu = f'{self.best_model[0]} -> {report.weight}'
-                    self.best_model = (report.weight, report.model)
-                    ratio = round(report.weight / self.max_weight, 4)
-                    print('best solution upd:', bsu, f'({ratio}) -{ltm}')
+                if report.cost and report.cost < self.best_model[0]:
+                    bsu = f'{self.best_model[0]} -> {report.cost}'
+                    self.best_model = (report.cost, report.model)
+                    print('best solution upd:', bsu, f'{report.cost}')
 
                 hrd, left = len(hard_tasks), len(future_all)
                 print(f'{hrd}/{hrd + left}/{count}: {report}')
@@ -292,9 +267,8 @@ class CombineT(Core):
 
     def launch(self, *searchables: Searchable) -> Estimation:
         formula, files = self.problem.encoding.get_formula(), []
-        self.max_weight, start_stamp = sum(formula.wght), now()
-        self.stats_sum['prod_time'] = 0
-        self.stats_sum['grow_time'] = 0
+        self.best_model, start_stamp = (sum(formula.wght), []), now()
+        self.stats_sum['prod_time'], self.stats_sum['grow_time'] = 0, 0
 
         with self.logger:
             all_hard_tasks = self._preprocess(*searchables)
@@ -312,9 +286,20 @@ class CombineT(Core):
                 len(set(map(abs, acc_hard_tasks[0][1][0]))),
                 len(acc_hard_tasks), len(acc_hard_tasks)
             )]
+
+            xx_count = len(acc_hard_tasks)
+            xx_plot_data = [xx_count]
+            for i, hard_tasks in enumerate(all_hard_tasks):
+                xx_count = xx_count * len(hard_tasks)
+                xx_plot_data.append(xx_count)
+                print(xx_plot_data[-1])
+                if i == 46:
+                    print()
+                    print(xx_plot_data)
+                    exit(0)
+
             for i, hard_tasks in enumerate(all_hard_tasks):
                 next_acc_hard_tasks = []
-                # split acc_hard_tasks instead offset and length params
                 prod_size = len(acc_hard_tasks) * len(hard_tasks)
                 for future in self.executor.submit_all(prod_worker, *((
                         self.problem, acc_part_hard_tasks, hard_tasks
@@ -355,7 +340,7 @@ class CombineT(Core):
                     break
 
             print(self.stats_sum)
-            # print(self.best_model)
+            print(self.best_model)
             print('parallel time:', now() - start_stamp)
             print('sequential time:', self.stats_sum['grow_time'] +
                   self.stats_sum['time'] + self.stats_sum['prod_time'])
@@ -409,7 +394,7 @@ class CombineT(Core):
         #             if max_wght_solution[0] < model_weight:
         #                 max_wght_solution = (model_weight, model)
         #                 print('best solution:', max_wght_solution)
-        # 
+        #
         # result = {
         #     'value': time_sum,
         #     'time_sum': time_sum,

@@ -66,8 +66,3 @@ Learned literals
 
 .. note::
     The **budget** argument of Learned literals measure doesn't support in available solvers!
-
-Other function modules
-----------------------
-
-* `Solver <solver.module.html>`_

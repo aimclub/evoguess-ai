@@ -1,8 +1,8 @@
 import unittest
 
-from pysatmc.encoding import CNF
-from pysatmc.variables import Indexes
-from pysatmc.problem import SatProblem
+from lib_satprob.encoding import CNF
+from lib_satprob.variables import Indexes
+from lib_satprob.problem import SatProblem
 
 from function.model import ChunkResult
 from function.impl import InversePolynomialSets

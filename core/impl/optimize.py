@@ -18,7 +18,7 @@ from ..module.comparator import Comparator
 from ..module.limitation import Limitation
 
 from util.iterable import omit_by
-from pysatmc.problem import Problem
+from lib_satprob.problem import Problem
 
 Await = Tuple[PointSet, List[Handle]]
 

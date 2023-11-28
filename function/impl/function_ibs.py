@@ -3,8 +3,8 @@ from time import time as now
 from typing import Iterable
 from numpy.random import RandomState
 
-from pysatmc.problem import Problem
-from pysatmc.variables import combine
+from lib_satprob.problem import Problem
+from lib_satprob.variables import combine
 
 from ..model import WorkerArgs, WorkerResult, \
     WorkerCallable, Payload, Results, Estimation, Status

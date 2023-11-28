@@ -1,7 +1,7 @@
 import unittest
 
 from function.model import Status
-from pysatmc.solver import Report
+from lib_satprob.solver import Report
 
 from function.module.budget import TaskBudget
 from function.module.measure import SolvingTime, \

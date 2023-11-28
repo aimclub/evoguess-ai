@@ -1,7 +1,7 @@
 import unittest
 
 from space.model import Backdoor
-from pysatmc.variables import Range
+from lib_satprob.variables import Range
 
 from algorithm.module.crossover import OnePoint, TwoPoint, Uniform
 

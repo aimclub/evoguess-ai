@@ -139,10 +139,9 @@ def _solve(solver: AnySolver, assumptions: Assumptions, limit: KeyLimit,
             status = solver.solve_limited(assumptions, True)
             stats = {**solver.accum_stats(), 'time': timer.value()}
 
-    return Report(
-        status, stats, solver.get_model()
-        if extract_model and status else None
-    )
+    cost = solver.cost if status and isinstance(solver, _RC2) else None
+    model = solver.get_model() if extract_model and status else None
+    return Report(status, stats, model, cost)
 
 
 #

@@ -1,6 +1,6 @@
 import unittest
 
-from pysatmc.variables import Indexes
+from lib_satprob.variables import Indexes
 from space.impl import BackdoorSet, IntervalSet
 
 

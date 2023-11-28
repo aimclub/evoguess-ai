@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict, Tuple
 
 from space import Space
-from pysatmc.problem import Problem
+from lib_satprob.problem import Problem
 
 from . import worker_t
 from .worker_t import *

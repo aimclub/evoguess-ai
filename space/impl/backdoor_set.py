@@ -4,7 +4,7 @@ from ..abc import Space
 from ..model import Backdoor
 
 from typings.searchable import Vector
-from pysatmc.variables import Variables
+from lib_satprob.variables import Variables
 
 
 class BackdoorSet(Space):

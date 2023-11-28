@@ -3,7 +3,7 @@ from copy import copy
 
 from space.model import Interval
 
-from pysatmc.variables import Range, Indexes
+from lib_satprob.variables import Range, Indexes
 
 
 class TestInterval(unittest.TestCase):

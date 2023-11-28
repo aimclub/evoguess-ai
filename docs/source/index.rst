@@ -54,10 +54,15 @@ Calculating
 
 .. toctree::
     :maxdepth: 1
+    :caption: Internal Libs
+
+    internal_libs/lib_satprob
+
+.. toctree::
+    :maxdepth: 1
     :caption: User manual
 
     user_manual/core
-    user_manual/instance
     user_manual/function
     user_manual/algorithm
     user_manual/executor

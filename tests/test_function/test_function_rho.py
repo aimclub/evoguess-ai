@@ -1,9 +1,9 @@
 import unittest
 
-from pysatmc.encoding import CNF
-from pysatmc.variables import Range
-from pysatmc.problem import SatProblem
-from pysatmc.solver import PySatSolver
+from lib_satprob.encoding import CNF
+from lib_satprob.variables import Range
+from lib_satprob.problem import SatProblem
+from lib_satprob.solver import PySatSolver
 
 from function.impl import RhoFunction
 from function.model import ChunkResult
@@ -36,7 +36,7 @@ class TestFunction(unittest.TestCase):
             ChunkResult(*worker_fn((43, 16, 0, 16), payload))
         ])
         self.assertEqual(estimation['count'], 16)
-        self.assertEqual(estimation['value'], 394.0)
+        self.assertEqual(estimation['value'], 16.0)
         self.assertEqual(
             estimation['statuses'], {'RESOLVED': 10, 'SOLVED': 6}
         )

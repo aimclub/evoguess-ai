@@ -8,7 +8,7 @@ from util.iterable import pick_by
 from ..static import CORE_CACHE
 from ..module.sampling import Sampling
 
-from pysatmc.problem import Problem
+from lib_satprob.problem import Problem
 from typings.searchable import Searchable
 from function.model import Estimation, Results, WorkerArgs
 

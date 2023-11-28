@@ -4,7 +4,7 @@ from copy import copy
 from pysat import formula as fml
 
 from util.work_path import WorkPath
-from pysatmc.encoding import CNF, WCNF
+from lib_satprob.encoding import CNF, WCNF
 
 
 class TestEncodings(unittest.TestCase):

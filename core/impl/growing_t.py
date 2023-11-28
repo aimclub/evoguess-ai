@@ -4,10 +4,10 @@ from typing import List, Optional, Tuple
 from output import Logger
 from executor import Executor
 
-from pysatmc.solver import Report
-from pysatmc.problem import Problem
+from lib_satprob.solver import Report
+from lib_satprob.problem import Problem
 from typings.searchable import Searchable
-from pysatmc.variables import Assumptions, Supplements, combine
+from lib_satprob.variables import Assumptions, Supplements, combine
 from util.iterable import split_by
 
 from ..abc import Core
@@ -165,8 +165,8 @@ class GrowingT(Core):
                         self.stats_sum.get(key, 0.) + value
 
                 if report.status is False: easy_tasks.append(task)
-                if report.weight and report.weight > self.best_model[0]:
-                    self.best_model = (report.weight, report.model)
+                if report.cost and report.cost > self.best_model[0]:
+                    self.best_model = (report.cost, report.model)
                 print(f'{count - len(future_all)}/{count}: {report}')
 
         return easy_tasks

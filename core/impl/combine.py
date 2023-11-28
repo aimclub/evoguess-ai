@@ -11,9 +11,9 @@ from ..abc import Core
 from function.module.measure import Measure
 from function.model import Status, Estimation
 
-from pysatmc.problem import Problem
-from pysatmc.variables import Assumptions
-from pysatmc.solver import Solver, _Solver, Report
+from lib_satprob.problem import Problem
+from lib_satprob.variables import Assumptions
+from lib_satprob.solver import Solver, _Solver, Report
 
 from typings.searchable import Searchable
 from util.iterable import concat, slice_by

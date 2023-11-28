@@ -3,8 +3,8 @@ from copy import copy
 
 from space.model import Backdoor
 
-from pysatmc.variables import Range, Indexes, Variables
-from pysatmc.variables.vars import Index, Domain, XorSwitch, get_var_deps
+from lib_satprob.variables import Range, Indexes, Variables
+from lib_satprob.variables.vars import Index, Domain, XorSwitch, get_var_deps
 
 
 class TestBackdoor(unittest.TestCase):

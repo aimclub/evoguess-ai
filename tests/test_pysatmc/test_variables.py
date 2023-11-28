@@ -1,7 +1,7 @@
 import unittest
 
-from pysatmc.variables import Range, Indexes
-from pysatmc.variables.vars import Index, Domain, \
+from lib_satprob.variables import Range, Indexes
+from lib_satprob.variables.vars import Index, Domain, \
     XorSwitch, Bent4Switch, MajoritySwitch
 
 

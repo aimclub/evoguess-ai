@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 from numpy.random import randint, RandomState
 
 from output import Logger
-from pysatmc.problem import Problem
+from lib_satprob.problem import Problem
 
 from ..static import DEBUGGER
 

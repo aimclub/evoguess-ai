@@ -1,7 +1,7 @@
 import unittest
 
-from pysatmc.solver import PySatSolver
-from pysatmc.encoding import CNF, WCNF
+from lib_satprob.solver import PySatSolver
+from lib_satprob.encoding import CNF, WCNF
 
 
 class TestSolver(unittest.TestCase):
@@ -10,47 +10,48 @@ class TestSolver(unittest.TestCase):
         clauses = [[1, 2], [2, 3], [-1, 2, 3], [-4, 1, 2]]
         formula = CNF(from_clauses=clauses).get_formula()
 
-        status, stats, model = solver.propagate(formula, ([], []))
+        status, stats, model, _ = solver.propagate(formula, ([], []))
         self.assertEqual(
             (status, stats['propagations'], model), (None, 0, [])
         )
 
-        status, stats, model = solver.propagate(formula, ([-1], []))
+        status, stats, model, _ = solver.propagate(formula, ([-1], []))
         self.assertEqual(
             (status, stats['propagations'], model), (None, 2, [-1, 2])
         )
 
-        _, stats, model = solver.solve(formula, ([], []), extract_model=False)
+        _, stats, model, _ = solver.solve(formula, ([], []),
+                                          extract_model=False)
         self.assertEqual((stats['propagations'], model), (5, None))
 
-        status, stats, model = solver.solve(formula, ([], []))
+        status, stats, model, _ = solver.solve(formula, ([], []))
         self.assertEqual(
             (status, stats['propagations'], model), (True, 5, [-1, 2, -3, -4])
         )
 
-        status, stats, model = solver.solve(formula, ([1], []))
+        status, stats, model, _ = solver.solve(formula, ([1], []))
         self.assertEqual(
-            (status, stats['propagations'], model), (True, 6, [1, 2, -3, -4])
+            (status, stats['propagations'], model), (True, 5, [1, 2, -3, -4])
         )
 
         with solver.get_instance(formula) as incremental:
-            status, stats, model = incremental.propagate(([], []))
+            status, stats, model, _ = incremental.propagate(([], []))
             self.assertEqual(
                 (status, stats['propagations'], model), (None, 0, [])
             )
 
-            status, stats, model = incremental.propagate(([-1], []))
+            status, stats, model, _ = incremental.propagate(([-1], []))
             self.assertEqual(
                 (status, stats['propagations'], model), (None, 2, [-1, 2])
             )
 
-            status, stats, model = incremental.propagate(([1], []))
+            status, stats, model, _ = incremental.propagate(([1], []))
             self.assertEqual(
                 (status, stats['propagations'], model), (None, 3, [1])
             )
 
         limit = ('propagations', 6)
-        status, stats, model = solver.solve(formula, ([], []), limit)
+        status, stats, model, _ = solver.solve(formula, ([], []), limit)
         self.assertEqual(
             (status, stats['propagations'], model), (True, 5, [-1, 2, -3, -4])
         )

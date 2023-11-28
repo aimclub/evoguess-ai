@@ -2,10 +2,10 @@ from algorithm.impl import LogSearch
 from algorithm.module.mutation import LogDiv
 from algorithm.module.selection import Roulette
 
-from pysatmc.encoding import CNF
-from pysatmc.variables import Range
-from pysatmc.solver import PySatSolver
-from pysatmc.problem import SatProblem
+from lib_satprob.encoding import CNF
+from lib_satprob.variables import Range
+from lib_satprob.solver import PySatSolver
+from lib_satprob.problem import SatProblem
 
 from function.impl import GuessAndDetermine
 from function.module.budget import AutoBudget
