@@ -6,17 +6,16 @@ from algorithm.module.selection import Roulette
 
 # function module imports
 from function.impl import RhoFunction
-from function.module.solver import pysat
 from function.module.measure import Propagations
 
-# instance module imports
-from instance.impl import Instance
-from instance.module.encoding import CNF
-from typings.work_path import WorkPath
+# satprob lib imports
+from lib_satprob.encoding import CNF
+from lib_satprob.variables import Range
+from lib_satprob.solver import PySatSolver
+from lib_satprob.problem import SatProblem
 
-# space submodule imports
-from core.module.space import RhoSubset
-from instance.module.variables import Interval
+# space module imports
+from space.impl import RhoSubset
 
 # executor module imports
 from executor.impl import ProcessExecutor
@@ -27,6 +26,7 @@ from core.module.limitation import WallTime
 
 # other imports
 from core.impl import Optimize
+from util.work_path import WorkPath
 from output.impl import OptimizeLogger
 from core.module.comparator import MinValueMaxSize
 
@@ -39,22 +39,27 @@ if __name__ == '__main__':
         selection=Roulette(),
         min_update_size=6
     )
+
     function = RhoFunction(
         penalty_power=2 ** 20,
         measure=Propagations(),
-        solver=pysat.Glucose3()
     )
+
     root_path = WorkPath('examples')
     data_path = root_path.to_path('data')
     cnf_file = data_path.to_file('pvs_4_7.cnf', 'sort')
-    instance = Instance(
-        encoding=CNF(from_file=cnf_file)
+
+    problem = SatProblem(
+        encoding=CNF(from_file=cnf_file),
+        solver=PySatSolver(sat_name='g3'),
     )  # read from file './examples/data/sort/pvs_4_7.cnf
+
     space = RhoSubset(
-        by_mask=[],
         of_size=100,
-        variables=Interval(start=1, length=1213)
+        by_vector=[],
+        variables=Range(start=1, length=1213)
     )  # reduce to subset of 100 “off” var
+
     executor = ProcessExecutor(max_workers=16)
     sampling = Const(size=1024, split_into=256)
     limitation = WallTime(from_string='04:00:00')
@@ -62,7 +67,7 @@ if __name__ == '__main__':
     logs_path = root_path.to_path('logs', 'pvs_4_7')
     solution = Optimize(
         space=space,
-        instance=instance,
+        problem=problem,
         executor=executor,
         sampling=sampling,
         function=function,

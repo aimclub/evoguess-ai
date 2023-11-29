@@ -1,17 +1,16 @@
-# function submodule imports
-from function.module.solver import pysat
-from function.module.measure import SolvingTime
-
-# instance module imports
-from instance.impl import Instance
-from instance.module.encoding import CNF
-from instance.module.variables import Indexes, make_backdoor
+# satprob lib imports
+from lib_satprob.encoding import CNF
+from lib_satprob.variables import Indexes
+from lib_satprob.solver import PySatSolver
+from lib_satprob.problem import SatProblem
 
 # other imports
 from core.impl import Combine
+from space.model import Backdoor
 from output.impl import OptimizeLogger
-from typings.work_path import WorkPath
 from executor.impl import ProcessExecutor
+
+from util.work_path import WorkPath
 
 if __name__ == '__main__':
     str_backdoors = [
@@ -22,23 +21,22 @@ if __name__ == '__main__':
         '6 7 10 136 137 138 139 140',
     ]
     backdoors = [
-        make_backdoor(Indexes(from_string=str_vars))
-        for str_vars in str_backdoors
+        Backdoor(variables=Indexes(
+            from_string=str_vars
+        )) for str_vars in str_backdoors
     ]
 
     root_path = WorkPath('examples')
     data_path = root_path.to_path('data')
     cnf_file = data_path.to_file('sgen_150.cnf')
     logs_path = root_path.to_path('logs', 'sgen_150_comb')
-    combine = Combine(
-        instance=Instance(
+    estimation = Combine(
+        problem=SatProblem(
+            solver=PySatSolver(sat_name='g3'),
             encoding=CNF(from_file=cnf_file)
         ),
-        measure=SolvingTime(),
-        solver=pysat.Glucose3(),
         logger=OptimizeLogger(logs_path),
         executor=ProcessExecutor(max_workers=4)
-    )
+    ).launch(*backdoors)
 
-    estimation = combine.launch(*backdoors)
     print(estimation)

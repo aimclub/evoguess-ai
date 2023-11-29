@@ -287,17 +287,6 @@ class CombineT(Core):
                 len(acc_hard_tasks), len(acc_hard_tasks)
             )]
 
-            xx_count = len(acc_hard_tasks)
-            xx_plot_data = [xx_count]
-            for i, hard_tasks in enumerate(all_hard_tasks):
-                xx_count = xx_count * len(hard_tasks)
-                xx_plot_data.append(xx_count)
-                print(xx_plot_data[-1])
-                if i == 46:
-                    print()
-                    print(xx_plot_data)
-                    exit(0)
-
             for i, hard_tasks in enumerate(all_hard_tasks):
                 next_acc_hard_tasks = []
                 prod_size = len(acc_hard_tasks) * len(hard_tasks)
