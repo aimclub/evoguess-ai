@@ -240,7 +240,7 @@ class _PySatSolver(_Solver):
             value - self._last_stats.get(key, 0)
             for key, value in report.stats.items()
         }
-        status, self.last_stats, model, weight = report
+        status, self._last_stats, model, weight = report
         return Report(status, fixed_stats, model, weight)
 
     def solve(

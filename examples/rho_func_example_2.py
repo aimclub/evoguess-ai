@@ -15,7 +15,8 @@ from lib_satprob.solver import PySatSolver
 from lib_satprob.problem import SatProblem
 
 # space module imports
-from space.impl import RhoSubset
+from space import rho_subset
+from space.impl import BackdoorSet
 
 # executor module imports
 from executor.impl import ProcessExecutor
@@ -54,10 +55,13 @@ if __name__ == '__main__':
         solver=PySatSolver(sat_name='g3'),
     )  # read from file './examples/data/sort/pvs_4_7.cnf
 
-    space = RhoSubset(
-        of_size=100,
+    space = BackdoorSet(
         by_vector=[],
-        variables=Range(start=1, length=1213)
+        variables=rho_subset(
+            problem,
+            Range(start=1, length=1213),
+            of_size=100
+        )
     )  # reduce to subset of 100 “off” var
 
     executor = ProcessExecutor(max_workers=16)

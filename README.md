@@ -42,21 +42,26 @@ root_path = WorkPath('examples')
 data_path = root_path.to_path('data')
 cnf_file = data_path.to_file('pvs_4_7.cnf', 'sort')
 logs_path = root_path.to_path('logs', 'pvs_4_7')
+
+problem = SatProblem(
+    encoding=CNF(from_file=cnf_file),
+    solver=PySatSolver(sat_name='g3'),
+)
 solution = Optimize(
-    space=RhoSubset(
-        by_mask=[],
-        of_size=200,
-        variables=Interval(start=1, length=1213)
-    ),
-    instance=Instance(
-        encoding=CNF(from_file=cnf_file)
+    problem=problem,
+    space=BackdoorSet(
+        by_vector=[],
+        variables=rho_subset(
+            problem,
+            Range(start=1, length=1213),
+            of_size=200
+        )
     ),
     executor=ProcessExecutor(max_workers=16),
     sampling=Const(size=8192, split_into=2048),
     function=RhoFunction(
         penalty_power=2 ** 20,
         measure=Propagations(),
-        solver=pysat.Glucose3()
     ),
     algorithm=Elitism(
         elites_count=2,
@@ -80,11 +85,10 @@ data_path = root_path.to_path('data')
 cnf_file = data_path.to_file('pvs_4_7.cnf', 'sort')
 logs_path = root_path.to_path('logs', 'pvs_4_7_comb')
 estimation = Combine(
-    instance=Instance(
-        encoding=CNF(from_file=cnf_file)
+    problem=SatProblem(
+        encoding=CNF(from_file=cnf_file),
+        solver=PySatSolver(sat_name='g3'),
     ),
-    measure=SolvingTime(),
-    solver=pysat.Glucose3(),
     logger=OptimizeLogger(logs_path),
     executor=ProcessExecutor(max_workers=16)
 ).launch(*backdoors)
