@@ -1,55 +1,46 @@
 from math import ceil
 from time import time as now
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, Optional
 
+from space import Space
 from output import Logger
 from executor import Executor
 from function import Function
-from instance import Instance
 from algorithm import Algorithm
 
 from ..abc import Estimate
 from ..static import CORE_CACHE
-from ..model.point import Vector
+from ..model.point import PointSet
 from ..model.handle import Handle, n_completed
 
-from ..module.space import Space
 from ..module.sampling import Sampling
 from ..module.comparator import Comparator
 from ..module.limitation import Limitation
 
-from typings.optional import Int
 from util.iterable import omit_by
+from lib_satprob.problem import Problem
 
-Await = Tuple[Vector, List[Handle]]
+Await = Tuple[PointSet, List[Handle]]
 
 
 class Optimize(Estimate):
     slug = 'core:optimize'
 
-    def __init__(self,
-                 space: Space,
-                 logger: Logger,
-                 executor: Executor,
-                 instance: Instance,
-                 sampling: Sampling,
-                 function: Function,
-                 algorithm: Algorithm,
-                 comparator: Comparator,
-                 limitation: Limitation,
-                 random_seed: Int = None):
+    def __init__(self, space: Space, logger: Logger, problem: Problem,
+                 executor: Executor, sampling: Sampling, function: Function,
+                 comparator: Comparator, algorithm: Algorithm,
+                 limitation: Limitation, random_seed: Optional[int] = None):
         self.algorithm = algorithm
         self.limitation = limitation
-        super().__init__(space, logger, instance, executor,
+        super().__init__(space, logger, problem, executor,
                          sampling, function, comparator, random_seed)
 
         self.optimization_trace = []
-        CORE_CACHE.best_point = None
 
-    def launch(self, *args, **kwargs) -> Vector:
+    def launch(self, *args, **kwargs) -> PointSet:
         start_stamp = now()
         with self.logger:
-            initial = self.space.get_initial(self.instance)
+            initial = self.space.get_initial()
             self.logger.meta(initial, self.comparator)
             # todo: search root estimation in cache
             point, handles = self.estimate(initial).result(), []
@@ -82,6 +73,7 @@ class Optimize(Estimate):
         return [h.result() for h in done], not_done
 
     def __config__(self) -> Dict[str, Any]:
+        # todo: add realisation
         return {}
 
 

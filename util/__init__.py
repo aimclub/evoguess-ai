@@ -1,7 +1,7 @@
 from operator import getitem
 from functools import reduce
 
-from . import iterable, lazy_file
+from . import polyfill, iterable, lazy_file, work_path
 
 
 def _key(function):
@@ -13,7 +13,7 @@ def load_modules(modules=(()), **kwargs):
     for key, value in kwargs.items():
         if isinstance(value, dict):
             slug = value.pop('slug')
-            print(f'load: {key} with {value}')
+            # print(f'load: {key} with {value}')
             value = modules[slug](**load_modules(modules, **value))
         if isinstance(value, str) and '@' in value:
             references = value[1:].split('.')
@@ -32,8 +32,10 @@ def build(structure, **kwargs):
 
 
 __all__ = [
+    'polyfill',
     'iterable',
     'lazy_file',
+    'work_path',
     #
     'build',
     'load_modules',

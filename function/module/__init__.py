@@ -1,6 +1,5 @@
-from . import measure, solver
+from . import measure
 
 modules = {
-    **solver.solvers,
     **measure.measures,
 }

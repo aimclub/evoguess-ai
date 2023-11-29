@@ -4,7 +4,7 @@ from ..selection import *
 from typings.optional import Int
 
 if TYPE_CHECKING:
-    from core.model.point import Vector
+    from core.model.point import PointSet
 
 
 class Tournament(Selection):
@@ -14,7 +14,7 @@ class Tournament(Selection):
         self.rounds = rounds
         super().__init__(random_seed)
 
-    def select(self, population: Vector, size: int) -> Vector:
+    def select(self, population: PointSet, size: int) -> PointSet:
         pass
 
     def __info__(self):

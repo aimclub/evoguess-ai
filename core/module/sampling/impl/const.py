@@ -1,7 +1,7 @@
 from typing import Dict, Any
 
 from ..sampling import Sampling
-from function.models import Results
+from function.model import Results
 
 
 class Const(Sampling):

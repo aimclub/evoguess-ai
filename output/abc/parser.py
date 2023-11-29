@@ -3,10 +3,10 @@ import json
 
 from typing import Iterable, Any
 
-from .output import Output, Config, LogFormat
-
-from typings.work_path import WorkPath
+from util.work_path import WorkPath
 from typings.error import OutputSessionError
+
+from .output import Output, Config, LogFormat
 
 
 class Parser(Output):

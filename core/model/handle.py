@@ -1,8 +1,9 @@
 from typing import Optional
 
-from function.models import Results
 from .point import Point
 from .job import Job, n_completed as nc
+
+from function.model import Results
 
 from typings.future import Timeout
 from typings.error import CancelledError
@@ -55,6 +56,11 @@ class JobHandle(Handle):
 
         results = self._await_results(timeout)
         estimation = self.context.get_estimation(results)
+
+        # if CORE_CACHE.best_point is None or \
+        #         CORE_CACHE.best_point > estimated:
+        #     CORE_CACHE.best_point = estimated
+
         return self.point.set(**estimation)
 
 

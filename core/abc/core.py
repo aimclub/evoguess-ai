@@ -1,23 +1,19 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+from numpy.random import randint, RandomState
 
 from output import Logger
-from instance import Instance
+from lib_satprob.problem import Problem
 
 from ..static import DEBUGGER
-
-from typings.optional import Int
-from numpy.random import randint, RandomState
 
 
 class Core:
     slug = None
 
-    def __init__(self,
-                 logger: Logger,
-                 instance: Instance,
-                 random_seed: Int = None):
+    def __init__(self, logger: Logger, problem: Problem,
+                 random_seed: Optional[int] = None):
         self.logger = logger
-        self.instance = instance
+        self.problem = problem
 
         DEBUGGER.initialize(logger)
         self.random_seed = random_seed or randint(2 ** 32 - 1)

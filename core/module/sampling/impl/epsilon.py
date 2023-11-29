@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 from ..sampling import Sampling
 from util.iterable import concat
-from function.models import Results
+from function.model import Results
 
 
 class Epsilon(Sampling):

@@ -1,16 +1,19 @@
 from itertools import combinations
 
-from instance import Instance
-from core.impl import Combine
-from instance.module.variables import make_backdoor, Indexes
+# lib_satprob module imports
+from lib_satprob.encoding import CNF
+from lib_satprob.problem import SatProblem
+from lib_satprob.solver import PySatSolver
+from lib_satprob.variables import Indexes
 
+# other imports
+from core.impl import Combine
+from space.model import Backdoor
 from output.impl import OptimizeLogger
 from executor.impl import ProcessExecutor
-from typings.work_path import WorkPath
-
-from function.module.solver import pysat
 from function.module.measure import SolvingTime
-from instance.module.encoding import CNF
+
+from util.work_path import WorkPath
 
 if __name__ == '__main__':
     root_path = WorkPath('examples', root='..')
@@ -18,19 +21,19 @@ if __name__ == '__main__':
     cnf_file = data_path.to_file('pvs_4_7.cnf', 'sort')
 
     measure = SolvingTime()
-    solver = pysat.Glucose3()
-    encoding = CNF(from_file=cnf_file)
+    problem = SatProblem(
+        solver=PySatSolver(sat_name='g3'),
+        encoding=CNF(from_file=cnf_file)
+    )
 
     logs_path = root_path.to_path('logs', 'pvs_4_7_s')
     combine = Combine(
-        solver=solver,
-        measure=measure,
+        problem=problem,
         logger=OptimizeLogger(logs_path),
-        instance=Instance(encoding=encoding),
         executor=ProcessExecutor(max_workers=16)
     )
 
-    full_time = solver.solve(encoding.get_data(), measure, ([], [])).value
+    full_time = problem.solve().stats['time']
 
     str_backdoors = [
         '348 470 682 684 686 687 702 706 708 710 715',
@@ -45,8 +48,9 @@ if __name__ == '__main__':
         for count in range(6, 7):
             for combination in combinations(str_backdoors, count):
                 backdoors = [
-                    make_backdoor(Indexes(from_string=str_vars))
-                    for str_vars in combination
+                    Backdoor(variables=Indexes(
+                        from_string=str_vars
+                    )) for str_vars in str_backdoors
                 ]
                 estimation = combine.launch(*backdoors)
                 handle._format({

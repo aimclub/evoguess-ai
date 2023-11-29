@@ -1,7 +1,7 @@
 from numpy.random import randint, RandomState
 
 from typings.optional import Int
-from instance.module.variables import Backdoor
+from typings.searchable import Searchable
 
 
 class Mutation:
@@ -17,7 +17,7 @@ class Mutation:
             if min_prob <= 0 or min_prob > min(distribution):
                 return distribution
 
-    def mutate(self, individual: Backdoor) -> Backdoor:
+    def mutate(self, individual: Searchable) -> Searchable:
         raise NotImplementedError
 
     def __info__(self):

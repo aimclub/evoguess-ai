@@ -5,7 +5,7 @@ from ..module.mutation import Mutation
 from ..module.selection import Selection
 
 from typings.optional import Int
-from core.model.point import Vector
+from core.model.point import PointSet
 from util.iterable import pick_by, omit_by
 
 
@@ -18,7 +18,7 @@ class MuPlusLambda(Evolution):
         self.mu_size, self.lambda_size = mu_size, lambda_size
         super().__init__(min_update_size, max_queue_size, mutation, selection)
 
-    def join(self, parents: Vector, offspring: Vector) -> Vector:
+    def join(self, parents: PointSet, offspring: PointSet) -> PointSet:
         mu_indexes = argsort(parents)[:self.mu_size]
         additional_size = max(0, self.lambda_size - len(offspring))
         additional_lmbda = omit_by(parents, mu_indexes)[:additional_size]

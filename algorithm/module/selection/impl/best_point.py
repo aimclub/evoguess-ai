@@ -4,7 +4,7 @@ from ..selection import *
 from typings.optional import Int
 
 if TYPE_CHECKING:
-    from core.model.point import Vector
+    from core.model.point import PointSet
 
 
 class BestPoint(Selection):
@@ -14,7 +14,7 @@ class BestPoint(Selection):
         self.best_count = best_count
         super().__init__(random_seed)
 
-    def select(self, population: 'Vector', size: int) -> 'Vector':
+    def select(self, population: 'PointSet', size: int) -> 'PointSet':
         mx = min(self.best_count, len(population))
         return [
             sorted(population)[i % mx] for i in

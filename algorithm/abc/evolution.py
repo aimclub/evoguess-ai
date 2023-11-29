@@ -6,10 +6,10 @@ from ..module.mutation import Mutation
 from ..module.selection import Selection
 
 from typings.optional import Int
+from typings.searchable import Searchable
 
 if TYPE_CHECKING:
-    from core.model.point import Vector, Point
-    from instance.module.variables import Backdoor
+    from core.model.point import Point, PointSet
 
 
 class Evolution(Algorithm):
@@ -21,19 +21,19 @@ class Evolution(Algorithm):
         self.selection = selection
         self.mutation = mutation
 
-    def update(self, vector: 'Vector', *points: 'Point') -> 'Vector':
+    def update(self, vector: 'PointSet', *points: 'Point') -> 'PointSet':
         return self.join(vector, list(points))
 
-    def join(self, parents: 'Vector', offspring: 'Vector') -> 'Vector':
+    def join(self, parents: 'PointSet', offspring: 'PointSet') -> 'PointSet':
         raise NotImplementedError
 
-    def tweak(self, selected: List['Backdoor']) -> List['Backdoor']:
+    def tweak(self, selected: List[Searchable]) -> List[Searchable]:
         return list(map(self.mutation.mutate, selected))
 
-    def next(self, vector: 'Vector', count: int) -> List['Backdoor']:
+    def next(self, vector: 'PointSet', count: int) -> List[Searchable]:
         count = self.tweak_size * ceil(count / self.tweak_size)
         selected = self.selection.select(vector, count)
-        return self.tweak([p.backdoor for p in selected])
+        return self.tweak([p.searchable for p in selected])
 
     def __info__(self):
         return {

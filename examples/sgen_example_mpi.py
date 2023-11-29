@@ -1,39 +1,47 @@
 from core.impl import Optimize
-from core.module.space import InputSet
 from core.module.sampling import Const
 from core.module.limitation import WallTime
 from core.module.comparator import MinValueMaxSize
 
+from space.impl import BackdoorSet
 from output.impl import OptimizeLogger
 from executor.impl import MPIExecutor
 
-from instance.impl import Instance
-from instance.module.encoding import CNF
+from lib_satprob.encoding import CNF
+from lib_satprob.variables import Range
+from lib_satprob.solver import PySatSolver
+from lib_satprob.problem import SatProblem
 
 from function.impl import GuessAndDetermine
+from function.module.budget import AutoBudget
 from function.module.measure import SolvingTime
-from function.module.solver.impl.pysat import Glucose3
 
 from algorithm.impl import Elitism
 from algorithm.module.mutation import Doer
 from algorithm.module.crossover import TwoPoint
 from algorithm.module.selection import Roulette
 
-from typings.work_path import WorkPath
+from util.work_path import WorkPath
 
 if __name__ == '__main__':
-    data_path = WorkPath('examples', 'data')
-    logs_path = WorkPath('examples', 'logs')
+    root_path = WorkPath('examples')
+    data_path = root_path.to_path('data')
+    cnf_file = data_path.to_file('sgen_150.cnf')
+    log_path = root_path.to_path('logs', 'sgen150')
 
     solution = Optimize(
-        space=InputSet(),
+        space=BackdoorSet(
+            by_vector=[],
+            variables=Range(start=1, length=150)
+        ),
         executor=MPIExecutor(),
         sampling=Const(size=4096, split_into=256),
-        instance=Instance(
-            encoding=CNF(from_file=data_path.to_file('sgen_150.cnf'))
+        problem=SatProblem(
+            encoding=CNF(from_file=cnf_file),
+            solver=PySatSolver(sat_name='g3'),
         ),
         function=GuessAndDetermine(
-            solver=Glucose3(),
+            budget=AutoBudget(),
             measure=SolvingTime()
         ),
         algorithm=Elitism(
@@ -44,7 +52,7 @@ if __name__ == '__main__':
             selection=Roulette(),
         ),
         comparator=MinValueMaxSize(),
-        logger=OptimizeLogger(logs_path),
+        logger=OptimizeLogger(log_path),
         limitation=WallTime(from_string='00:20:00')
     ).launch()
 

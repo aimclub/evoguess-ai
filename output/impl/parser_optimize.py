@@ -4,22 +4,24 @@ from typing import Any, Dict, Iterable, NamedTuple, Tuple, Callable
 
 from ..abc import Parser
 
-from core.model.point import Point, Vector
+from space.model import Backdoor
+from typings.searchable import Searchable
+from core.model.point import Point, PointSet
 from core.module.comparator import Comparator, comparator_from
-from instance.module.variables import Backdoor, variables_from
+from lib_satprob.variables import variables_from
 
 
 class Iteration(NamedTuple):
     index: int
     spent: float
-    points: Vector
+    points: PointSet
 
 
-def get_deserialize(backdoor: Backdoor, comparator: Comparator) -> Callable:
+def get_deserialize(backdoor: Searchable, comparator: Comparator) -> Callable:
     def deserialize(point: Dict[str, Any]) -> Point:
-        mask = Backdoor.unpack(b85decode(point['backdoor']))
+        mask = Searchable.unpack(b85decode(point['backdoor']))
         return Point(
-            backdoor=backdoor.get_copy(mask),
+            backdoor=backdoor.make_copy(mask),
             comparator=comparator
         ).set(**point['estimation'])
 
@@ -29,9 +31,10 @@ def get_deserialize(backdoor: Backdoor, comparator: Comparator) -> Callable:
 class OptimizeParser(Parser):
     slug = 'parser:optimize'
 
-    def meta(self) -> Tuple[Backdoor, Comparator]:
+    def meta(self) -> Tuple[Searchable, Comparator]:
         [initial, comparator] = self._read_json('meta.json')
-        return variables_from(initial), comparator_from(comparator)
+        backdoor = Backdoor(variables=variables_from(initial))
+        return backdoor, comparator_from(comparator)
 
     def parse(self, *args, **kwargs) -> Iterable[Iteration]:
         deserialize = get_deserialize(*self.meta())

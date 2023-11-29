@@ -1,7 +1,7 @@
 from math import ceil
 from typing import List, Tuple, Dict, Any
 
-from function.models import Results, ChunkOffset, ChunkLength
+from function.model import Results, ChunkOffset, ChunkLength
 
 SampleChunk = Tuple[ChunkOffset, ChunkLength]
 

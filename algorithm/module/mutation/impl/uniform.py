@@ -1,7 +1,7 @@
 from ..mutation import Mutation
 
 from typings.optional import Int
-from instance.module.variables import Backdoor
+from typings.searchable import Searchable
 
 
 class Uniform(Mutation):
@@ -11,17 +11,17 @@ class Uniform(Mutation):
         self.flip_scale = flip_scale
         super().__init__(random_seed)
 
-    def mutate(self, individual: Backdoor) -> Backdoor:
-        mask = individual.get_mask()
-        prob = self.flip_scale / len(mask)
+    def mutate(self, individual: Searchable) -> Searchable:
+        vector = individual.get_vector()
+        prob = self.flip_scale / len(vector)
 
         # todo: move _distribution to tool funcs
-        distribution = self._distribution(prob, len(mask))
+        distribution = self._distribution(prob, len(vector))
         for i, value in enumerate(distribution):
             if prob > value:
-                mask[i] = not mask[i]
+                vector[i] = not vector[i]
 
-        return individual.get_copy(mask)
+        return individual.make_copy(vector)
 
     def __info__(self):
         return {

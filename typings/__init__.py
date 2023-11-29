@@ -1,9 +1,9 @@
-from . import error, future, optional, ordered, work_path
+from . import error, future, optional, ordered, searchable
 
 __all__ = [
     'error',
     'future',
     'ordered',
     'optional',
-    'work_path'
+    'searchable',
 ]
