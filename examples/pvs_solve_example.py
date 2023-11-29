@@ -1,4 +1,4 @@
-# lib_satprob module imports
+# satprob lib imports
 from lib_satprob.encoding import CNF
 from lib_satprob.problem import SatProblem
 from lib_satprob.solver import PySatSolver

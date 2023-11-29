@@ -270,130 +270,74 @@ class CombineT(Core):
         self.best_model, start_stamp = (sum(formula.wght), []), now()
         self.stats_sum['prod_time'], self.stats_sum['grow_time'] = 0, 0
 
-        with self.logger:
-            all_hard_tasks = self._preprocess(*searchables)
-            [acc_hard_tasks, *all_hard_tasks] = all_hard_tasks
+        all_hard_tasks = self._preprocess(*searchables)
+        [acc_hard_tasks, *all_hard_tasks] = all_hard_tasks
 
-            with NTFile(delete=False) as wcnf_file:
-                formula.extend(self.clauses)
-                formula.to_file(wcnf_file.name)
-                files.append(wcnf_file.name)
-                self.problem.encoding = WCNF(
-                    from_file=wcnf_file.name
-                )
+        with NTFile(delete=False) as wcnf_file:
+            formula.extend(self.clauses)
+            formula.to_file(wcnf_file.name)
+            files.append(wcnf_file.name)
+            self.problem.encoding = WCNF(
+                from_file=wcnf_file.name
+            )
 
-            plot_data = [(
-                len(set(map(abs, acc_hard_tasks[0][1][0]))),
-                len(acc_hard_tasks), len(acc_hard_tasks)
-            )]
+        plot_data = [(
+            len(set(map(abs, acc_hard_tasks[0][1][0]))),
+            len(acc_hard_tasks), len(acc_hard_tasks)
+        )]
 
-            for i, hard_tasks in enumerate(all_hard_tasks):
-                next_acc_hard_tasks = []
-                prod_size = len(acc_hard_tasks) * len(hard_tasks)
-                for future in self.executor.submit_all(prod_worker, *((
-                        self.problem, acc_part_hard_tasks, hard_tasks
-                ) for acc_part_hard_tasks in slice_into(
-                    acc_hard_tasks, self.executor.max_workers
-                ))).as_complete():
-                    prod_tasks, prod_time = future.result()
-                    self.stats_sum['prod_time'] += prod_time
-                    next_acc_hard_tasks.extend(prod_tasks)
+        for i, hard_tasks in enumerate(all_hard_tasks):
+            next_acc_hard_tasks = []
+            prod_size = len(acc_hard_tasks) * len(hard_tasks)
+            for future in self.executor.submit_all(prod_worker, *((
+                    self.problem, acc_part_hard_tasks, hard_tasks
+            ) for acc_part_hard_tasks in slice_into(
+                acc_hard_tasks, self.executor.max_workers
+            ))).as_complete():
+                prod_tasks, prod_time = future.result()
+                self.stats_sum['prod_time'] += prod_time
+                next_acc_hard_tasks.extend(prod_tasks)
 
-                var_set = sorted(set(map(abs, next_acc_hard_tasks[0][1][0])))
-                print(f'var set ({len(var_set)}):', ' '.join(map(str, var_set)))
-                print('stats:', self.stats_sum)
-                print(f'time ({self.executor.max_workers})',
+            var_set = sorted(set(map(abs, next_acc_hard_tasks[0][1][0])))
+            print(f'var set ({len(var_set)}):', ' '.join(map(str, var_set)))
+            print('stats:', self.stats_sum)
+            print(f'time ({self.executor.max_workers})',
+                  now() - start_stamp)
+
+            print(
+                f'reduced: {prod_size} -> {len(next_acc_hard_tasks)}',
+                f'({round(len(next_acc_hard_tasks) / prod_size, 2)})',
+            )
+            acc_hard_tasks = self.sifting(next_acc_hard_tasks)
+
+            plot_data.append((
+                len(var_set), len(next_acc_hard_tasks), len(acc_hard_tasks)
+            ))
+
+            print(
+                f'sifted: {len(next_acc_hard_tasks)} -> {len(acc_hard_tasks)}',
+                f'({round(len(acc_hard_tasks) / len(next_acc_hard_tasks), 2)})'
+            )
+            if len(acc_hard_tasks) == 0:
+                print(f'total bds: {i + 1}')
+                print('total stats:', self.stats_sum)
+                print(f'total time ({self.executor.max_workers})',
                       now() - start_stamp)
+                print(f'total var set ({len(var_set)}):',
+                      ' '.join(map(str, var_set)))
+                break
 
-                print(
-                    f'reduced: {prod_size} -> {len(next_acc_hard_tasks)}',
-                    f'({round(len(next_acc_hard_tasks) / prod_size, 2)})',
-                )
-                acc_hard_tasks = self.sifting(next_acc_hard_tasks)
+        print(self.stats_sum)
+        print(self.best_model)
+        print('parallel time:', now() - start_stamp)
+        print('sequential time:', self.stats_sum['grow_time'] +
+              self.stats_sum['time'] + self.stats_sum['prod_time'])
 
-                plot_data.append((
-                    len(var_set), len(next_acc_hard_tasks), len(acc_hard_tasks)
-                ))
+        print('plot data')
+        print(json.dumps(plot_data))
 
-                print(
-                    f'sifted: {len(next_acc_hard_tasks)} -> {len(acc_hard_tasks)}',
-                    f'({round(len(acc_hard_tasks) / len(next_acc_hard_tasks), 2)})'
-                )
-                if len(acc_hard_tasks) == 0:
-                    print(f'total bds: {i + 1}')
-                    print('total stats:', self.stats_sum)
-                    print(f'total time ({self.executor.max_workers})',
-                          now() - start_stamp)
-                    print(f'total var set ({len(var_set)}):',
-                          ' '.join(map(str, var_set)))
-                    break
-
-            print(self.stats_sum)
-            print(self.best_model)
-            print('parallel time:', now() - start_stamp)
-            print('sequential time:', self.stats_sum['grow_time'] +
-                  self.stats_sum['time'] + self.stats_sum['prod_time'])
-
-            print('plot data')
-            print(json.dumps(plot_data))
-
-            [os.remove(file) for file in files]
-
+        [os.remove(file) for file in files]
         return self.stats_sum
-
-        # filename = 'hard_tasks_prod.jsonl'
-        # if self.logger._session is not None:
-        #     filepath = self.logger._session.to_file(filename)
-        #     with open(filepath, 'a+') as handle:
-        #         for hard_task in acc_hard_tasks:
-        #             string = json.dumps({
-        #                 "assumptions": hard_task
-        #             })
-        #             handle.write(f'{string}\n')
-        #
-        # wght_hard_tasks = []
-        # print('max weight:', sum(formula.wght))
-        # print('best solution:', max_wght_solution)
-        # with self.problem.solver.get_instance(formula.hard) as solver:
-        #     for hard_task in acc_hard_tasks:
-        #         penalty_weight = 0
-        #         _, _, literals = solver.propagate((hard_task, []))
-        #         value_map = {abs(lit): lit for lit in literals}
-        #         for weight, clause in zip(formula.wght, formula.soft):
-        #             if is_unsat(clause, value_map):
-        #                 penalty_weight += weight
-        #         wght_hard_tasks.append((penalty_weight, hard_task))
-        #
-        # acc_hard_tasks = sorted(wght_hard_tasks, key=lambda x: x[0])
-        # print(acc_hard_tasks)
-        #
-        # future_all, i = self.executor.submit_all(hard_worker, *(
-        #     (self.problem, hard_task) for _, hard_task in acc_hard_tasks
-        # )), 0
-        # while len(future_all) > 0:
-        #     for future in future_all.as_complete(count=1):
-        #         report = future.result()
-        #         i, (status, _, model) = i + 1, report
-        #         print(f'{i}/{len(acc_hard_tasks)}: {report}')
-        #         tv = self.measure.check_and_get(report, self.budget)
-        #         time_sum, value_sum = time_sum + tv[0], value_sum + tv[1]
-        #
-        #         if status:
-        #             model_weight = calc_weight(formula, model)
-        #             if max_wght_solution[0] < model_weight:
-        #                 max_wght_solution = (model_weight, model)
-        #                 print('best solution:', max_wght_solution)
-        #
-        # result = {
-        #     'value': time_sum,
-        #     'time_sum': time_sum,
-        #     'value_sum': value_sum,
-        #     'real_time': now() - start_stamp,
-        #     'hard_tasks': len(acc_hard_tasks),
-        #     'total_tasks': 2 ** len(total_var_set)
-        # }
-        # self.logger._format(result, filename='result.jsonl')
-        # return result
 
     def __config__(self) -> Dict[str, Any]:
         return {}
