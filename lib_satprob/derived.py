@@ -9,12 +9,12 @@ except ModuleNotFoundError:
     pass
 
 
-def to_dnf_var(lit: int) -> Variable:
+def to_dnf_var(lit: int) -> 'Variable':
     var = exprvar('x', abs(lit))
     return var if lit > 0 else ~var
 
 
-def to_dnf_clause(cube: Supplements) -> AndOp:
+def to_dnf_clause(cube: Supplements) -> 'AndOp':
     return And(*map(to_dnf_var, cube[0]))
 
 
