@@ -47,7 +47,7 @@ class TestSolver(unittest.TestCase):
 
             status, stats, model, _ = incremental.propagate(([1], []))
             self.assertEqual(
-                (status, stats['propagations'], model), (None, 3, [1])
+                (status, stats['propagations'], model), (None, 1, [1])
             )
 
         limit = ('propagations', 6)

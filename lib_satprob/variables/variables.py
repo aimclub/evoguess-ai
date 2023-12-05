@@ -3,10 +3,10 @@ import json
 from threading import Lock
 from typing import Any, List, Dict, Optional
 
-from .vars import Var, AnyVar, VarMap, var_from, \
-    get_var_deps, get_var_dims, get_var_sups
-from ._utility import Supplements, prod
 from ._enum import Enumerable
+from .vars import Var, VarMap, \
+    var_from, get_var_dims, get_var_sups
+from ._utility import Supplements, prod
 
 vars_data = {}
 parse_lock = Lock()
@@ -53,6 +53,7 @@ class Variables(Enumerable):
         if not self._var_bases:
             self._var_bases = list(get_var_dims(self.variables()))
         return self._var_bases
+
     #
     # def dependents(self) -> List[AnyVar]:
     #     if not self._var_deps:

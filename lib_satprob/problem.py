@@ -2,6 +2,7 @@ from numpy.random import RandomState
 from typing import Any, List, Dict, Union, Optional
 
 from .solver import Solver, Report
+from .derived import get_derived_by
 from .encoding import Encoding, CNF, WCNF
 from .variables.vars import Var, VarMap
 from .variables import Indexes, Variables, Enumerable, Supplements, combine
@@ -83,6 +84,15 @@ class Problem:
     ) -> Report:
         # todo: add realisation
         pass
+
+    def get_derived(self, decomposition: Enumerable) -> Supplements:
+        formula, easy = self.encoding.get_formula(), []
+        with self.solver.get_instance(formula) as solver:
+            for supplements in decomposition.enumerate():
+                status, _, _, _ = solver.propagate(supplements)
+                if status is False: easy.append(supplements)
+
+        return get_derived_by(easy)
 
     def process_output_var_map(
             self, with_random_state: Optional[RandomState] = None,

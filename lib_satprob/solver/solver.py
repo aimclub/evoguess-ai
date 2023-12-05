@@ -1,6 +1,5 @@
 from typing import Any, Dict, Tuple, Optional, NamedTuple
 
-from ..encoding import Formula
 from ..variables import Assumptions, Supplements
 
 KeyLimit = Tuple[
@@ -20,8 +19,7 @@ class Report(NamedTuple):
 
 class _Solver:
     def __init__(
-            self,
-            formula: Formula,
+            self, formula: Any,
             use_timer: bool = True
     ):
         self.formula = formula
@@ -50,15 +48,13 @@ class _Solver:
 
 class Solver:
     def get_instance(
-            self,
-            formula: Formula,
+            self, formula: Any,
             use_timer: bool = True
     ) -> _Solver:
         raise NotImplementedError
 
     def solve(
-            self,
-            formula: Formula,
+            self, formula: Any,
             supplements: Supplements,
             limit: KeyLimit = UNLIMITED,
             extract_model: bool = True,
@@ -68,8 +64,7 @@ class Solver:
             return solver.solve(supplements, limit, extract_model)
 
     def propagate(
-            self,
-            formula: Formula,
+            self, formula: Any,
             supplements: Supplements,
             use_timer: bool = True
     ) -> Report:

@@ -1,5 +1,4 @@
-from .cnf import *
-from .wcnf import *
+from .pysat import *
 
 encodings = {
     CNF.slug: CNF,

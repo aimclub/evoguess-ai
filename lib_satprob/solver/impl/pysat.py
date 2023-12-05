@@ -2,14 +2,38 @@ from math import copysign
 from threading import Timer
 from time import time as now
 from typing import Dict, Union, \
-    Tuple, Optional, NamedTuple, Any
+    Any, Tuple, Optional, NamedTuple
 
 from pysat.examples.rc2 import RC2
 from pysat import solvers as slv, formula as fml
 
-from ...encoding import Formula
+from ...encoding import Clauses
 from ...variables import Assumptions, Supplements
 from ..solver import Solver, _Solver, Report, KeyLimit, UNLIMITED
+
+#
+# ==============================================================================
+SatFormula = Union[
+    Clauses,
+    fml.CNF, fml.CNFPlus
+]
+MaxSatFormula = Union[
+    fml.WCNF, fml.WCNFPlus
+]
+PySatFormula = Union[
+    SatFormula, MaxSatFormula
+]
+
+
+def is_sat_formula(formula: PySatFormula) -> bool:
+    return isinstance(formula, list) or \
+           isinstance(formula, fml.CNF) or \
+           isinstance(formula, fml.CNFPlus)
+
+
+def is_max_sat_formula(formula: PySatFormula) -> bool:
+    return isinstance(formula, fml.WCNF) or \
+           isinstance(formula, fml.WCNFPlus)
 
 
 #
@@ -164,7 +188,7 @@ def _propagate(solver: AnySolver, assumptions: Assumptions) -> Report:
 
 #
 # ==============================================================================
-def get_max_sat_alg(settings: PySatSetts, formula: fml.WCNF):
+def get_max_sat_alg(settings: PySatSetts, formula: MaxSatFormula):
     if settings.max_sat_alg == 'rc2':
         return _RC2(formula, settings.sat_name)
 
@@ -176,7 +200,8 @@ class _PySatSolver(_Solver):
     _last_stats = {}
 
     def __init__(
-            self, formula: Formula,
+            self,
+            formula: PySatFormula,
             settings: PySatSetts,
             use_timer: bool = True
     ):
@@ -195,8 +220,7 @@ class _PySatSolver(_Solver):
             self, supplements: Supplements
     ) -> Tuple[Optional[AnySolver], Assumptions]:
         assumptions, constraints = supplements
-        if isinstance(self.formula, fml.CNF) or \
-                isinstance(self.formula, list):
+        if is_sat_formula(self.formula):
             name = self.settings.sat_name
             if len(constraints) > 0:
                 solver = slv.Solver(name, self.formula)
@@ -206,7 +230,7 @@ class _PySatSolver(_Solver):
                 solver = slv.Solver(name, self.formula)
                 self._solver = solver.solver
             return None, assumptions
-        elif isinstance(self.formula, fml.WCNF):
+        elif is_max_sat_formula(self.formula):
             return get_max_sat_alg(
                 self.settings, self.formula
             ).append_formula(constraints + [
@@ -278,7 +302,7 @@ class PySatSolver(Solver):
         self.settings = PySatSetts(sat_name, max_sat_alg)
 
     def get_instance(
-            self, formula: Formula, use_timer: bool = True
+            self, formula: PySatFormula, use_timer: bool = True
     ) -> _PySatSolver:
         return _PySatSolver(formula, self.settings, use_timer)
 
@@ -294,6 +318,7 @@ __all__ = [
     'PySatSolver',
     '_PySatSolver',
     # types
-    'PySatSetts',
     'PySatTimer',
+    'PySatSetts',
+    'PySatFormula'
 ]

@@ -64,8 +64,9 @@ def slice_into(sized: List[T], count: int) -> Iterable[List[T]]:
     return slice_by(sized, ceil(len(sized) / count))
 
 
-def split_by(iterable: Iterable[T], predicate: Predicate = identity) -> Tuple[
-    List[T], List[T]]:
+def split_by(
+        iterable: Iterable[T], predicate: Predicate = identity
+) -> Tuple[List[T], List[T]]:
     left, right = [], []
     for i, item in enumerate(iterable):
         if isinstance(predicate, Callable):
