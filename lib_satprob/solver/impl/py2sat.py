@@ -4,8 +4,10 @@ from ...encoding import Clause
 from ...variables import Supplements
 from ...variables.vars import VarMap
 
-from ..solver import Report, KeyLimit, UNLIMITED
-from .pysat import _PySatSolver, PySatSolver, PySatFormula, PySatSetts
+from .pysat import PySatSetts, \
+    _PySatSolver, PySatSolver
+from ..solver import Report
+from ...encoding import SatFormula
 
 
 def is2clause(clause: Clause, var_map: VarMap) -> bool:
@@ -24,7 +26,7 @@ def is2clause(clause: Clause, var_map: VarMap) -> bool:
 class _Py2SatSolver(_PySatSolver):
     def __init__(
             self,
-            formula: PySatFormula,
+            formula: SatFormula,
             settings: PySatSetts,
             use_timer: bool = True,
             threshold: float = 1.0,
@@ -32,15 +34,13 @@ class _Py2SatSolver(_PySatSolver):
         super().__init__(formula, settings, use_timer)
         self.limit = (1 - threshold) * len(formula.clauses)
 
-    def solve(
+    def propagate(
             self, supplements: Supplements,
-            limit: KeyLimit = UNLIMITED,
-            extract_model: bool = True
+            ignore_constraints: bool = False
     ) -> Report:
-        raise RuntimeError(f'Unsupported method \'solve\'')
-
-    def propagate(self, supplements: Supplements) -> Report:
-        report = super().propagate(supplements)
+        report = super().propagate(
+            supplements, ignore_constraints
+        )
         if report.status is not None: return report
 
         _, stats, literals, cost = report
@@ -66,7 +66,7 @@ class Py2SatSolver(PySatSolver):
         self.threshold = threshold
 
     def get_instance(
-            self, formula: PySatFormula, use_timer: bool = True
+            self, formula: SatFormula, use_timer: bool = True
     ) -> _Py2SatSolver:
         return _Py2SatSolver(formula, self.settings, use_timer)
 

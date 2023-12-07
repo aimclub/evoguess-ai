@@ -4,43 +4,13 @@ from time import time as now
 from typing import Dict, Union, \
     Any, Tuple, Optional, NamedTuple
 
+from pysat import solvers as slv
 from pysat.examples.rc2 import RC2
-from pysat import solvers as slv, formula as fml
 
-from ...encoding import Clauses, wcnf_to_cnf
-from ...variables import Assumptions, Supplements
 from ..solver import Solver, _Solver, Report, KeyLimit, UNLIMITED
-
-#
-# ==============================================================================
-SatFormula = Union[
-    Clauses,
-    fml.CNF, fml.CNFPlus
-]
-MaxSatFormula = Union[
-    fml.WCNF, fml.WCNFPlus
-]
-PySatFormula = Union[
-    SatFormula, MaxSatFormula
-]
-
-
-def is_sat_formula(formula: PySatFormula) -> bool:
-    return isinstance(formula, list) or \
-           isinstance(formula, fml.CNF) or \
-           isinstance(formula, fml.CNFPlus)
-
-
-def is_max_sat_formula(formula: PySatFormula) -> bool:
-    return isinstance(formula, fml.WCNF) or \
-           isinstance(formula, fml.WCNFPlus)
-
-
-def to_sat_formula(formula: PySatFormula) -> SatFormula:
-    if is_max_sat_formula(formula):
-        formula = wcnf_to_cnf(formula)
-
-    return formula
+from ...encoding import SatFormula, PySatFormula, MaxSatFormula, \
+    to_sat_formula, is_sat_formula, is_max_sat_formula
+from ...variables import Assumptions, Supplements
 
 
 #
@@ -50,10 +20,10 @@ class PySatSetts(NamedTuple):
     max_sat_alg: str
 
 
-def is_supports_atms(sat_name: str) -> bool:
-    return sat_name in slv.SolverNames.gluecard3 or \
-           sat_name in slv.SolverNames.gluecard4 or \
-           sat_name in slv.SolverNames.minicard
+# def is_supports_atms(sat_name: str) -> bool:
+#     return sat_name in slv.SolverNames.gluecard3 or \
+#            sat_name in slv.SolverNames.gluecard4 or \
+#            sat_name in slv.SolverNames.minicard
 
 
 #
@@ -243,14 +213,19 @@ class _PySatSolver(_Solver):
             self, supplements: Supplements,
             formula: Optional[PySatFormula] = None
     ) -> Tuple[Optional[AnySolver], Assumptions]:
+        name = self.settings.sat_name
         formula = formula or self.formula
         assumptions, constraints = supplements
 
         if is_sat_formula(formula):
-            name = self.settings.sat_name
-            solver = slv.Solver(name, formula)
-            solver.append_formula(constraints)
-            return solver.solver, assumptions
+            if len(constraints) > 0:
+                solver = slv.Solver(name, formula)
+                solver.append_formula(constraints)
+                return solver.solver, assumptions
+            elif self._solver is None:
+                solver = slv.Solver(name, formula)
+                self._solver = solver.solver
+            return None, assumptions
         elif is_max_sat_formula(formula):
             return get_max_sat_alg(
                 self.settings, formula
@@ -277,22 +252,14 @@ class _PySatSolver(_Solver):
         assumptions, constraints = supplements
         args = (limit, extract_model, self.use_timer)
 
-        if len(constraints) > 0:
-            solver, assumptions = self._init_solver(
-                (assumptions, constraints), self.formula
-            )
-            with solver:
-                return _solve(solver, assumptions, *args)
-
-        if self._solver is None:
-            solver, assumptions = self._init_solver(
-                (assumptions, constraints), self.formula
-            )
-            self._solver = solver
-
-        return self._fix_stats(
+        solver, assumptions = self._init_solver(
+            (assumptions, constraints), self.formula
+        )
+        if not solver: return self._fix_stats(
             _solve(self._solver, assumptions, *args)
         )
+        with solver:
+            return _solve(solver, assumptions, *args)
 
     def propagate(
             self, supplements: Supplements,
@@ -301,24 +268,15 @@ class _PySatSolver(_Solver):
         assumptions, constraints = supplements
         if ignore_constraints: constraints = []
 
-        if len(constraints) > 0:
-            formula = to_sat_formula(self.formula)
-            solver, assumptions = self._init_solver(
-                (assumptions, constraints), formula
-            )
-            with solver:
-                return _propagate(solver, assumptions)
-
-        if self._propagator is None:
-            formula = to_sat_formula(self.formula)
-            solver, assumptions = self._init_solver(
-                (assumptions, constraints), formula
-            )
-            self._propagator = solver
-
-        return self._fix_stats(
-            _propagate(self._propagator, assumptions)
+        formula = to_sat_formula(self.formula)
+        solver, assumptions = self._init_solver(
+            (assumptions, constraints), formula
         )
+        if not solver: return self._fix_stats(
+            _propagate(self._solver, assumptions)
+        )
+        with solver:
+            return _propagate(solver, assumptions)
 
 
 #
@@ -348,5 +306,4 @@ __all__ = [
     # types
     'PySatTimer',
     'PySatSetts',
-    'PySatFormula'
 ]

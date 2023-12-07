@@ -15,6 +15,11 @@ __all__ = [
     # types
     'Clause',
     'Clauses',
+    'SatFormula',
+    'PySatFormula',
+    'MaxSatFormula',
     # utility
-    'wcnf_to_cnf'
+    'to_sat_formula',
+    'is_sat_formula',
+    'is_max_sat_formula'
 ]

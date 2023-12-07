@@ -5,14 +5,29 @@ from ..encoding import Encoding
 from .._readers import PySatReader, CNFReader, \
     CNFPlusReader, WCNFReader, WCNFPlusReader
 
+#
+# ==============================================================================
 Clause = List[int]
 Clauses = List[Clause]
 
+SatFormula = Union[
+    Clauses,
+    fml.CNF, fml.CNFPlus
+]
+MaxSatFormula = Union[
+    fml.WCNF, fml.WCNFPlus
+]
+PySatFormula = Union[
+    SatFormula, MaxSatFormula
+]
 
+
+#
+# ==============================================================================
 def wcnf_to_cnf(
-        wcnf: fml.WCNF,
+        wcnf: MaxSatFormula,
         only_hard: bool = True
-) -> Union[fml.CNF, fml.CNFPlus]:
+) -> SatFormula:
     if isinstance(wcnf, fml.WCNFPlus):
         cnf = fml.CNFPlus()
         cnf.atmosts = wcnf.atms
@@ -26,6 +41,30 @@ def wcnf_to_cnf(
         cnf.clauses += wcnf.soft
 
     return cnf
+
+
+#
+# ==============================================================================
+def is_sat_formula(formula: PySatFormula) -> bool:
+    return isinstance(formula, list) or \
+           isinstance(formula, fml.CNF) or \
+           isinstance(formula, fml.CNFPlus)
+
+
+def is_max_sat_formula(formula: PySatFormula) -> bool:
+    return isinstance(formula, fml.WCNF) or \
+           isinstance(formula, fml.WCNFPlus)
+
+
+def to_sat_formula(formula: PySatFormula) -> SatFormula:
+    if is_max_sat_formula(formula):
+        formula = wcnf_to_cnf(formula)
+
+    return formula
+
+
+#
+# ==============================================================================
 
 
 class PySatEnc(Encoding):
@@ -206,6 +245,11 @@ __all__ = [
     # types
     'Clause',
     'Clauses',
+    'SatFormula',
+    'PySatFormula',
+    'MaxSatFormula',
     # utility
-    'wcnf_to_cnf'
+    'to_sat_formula',
+    'is_sat_formula',
+    'is_max_sat_formula'
 ]
