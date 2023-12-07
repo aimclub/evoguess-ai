@@ -1,5 +1,5 @@
-from pysat import formula
-from typing import Any, List, Dict, Optional
+from pysat import formula as fml
+from typing import Any, List, Dict, Optional, Union
 
 from ..encoding import Encoding
 from .._readers import PySatReader, CNFReader, \
@@ -7,6 +7,25 @@ from .._readers import PySatReader, CNFReader, \
 
 Clause = List[int]
 Clauses = List[Clause]
+
+
+def wcnf_to_cnf(
+        wcnf: fml.WCNF,
+        only_hard: bool = True
+) -> Union[fml.CNF, fml.CNFPlus]:
+    if isinstance(wcnf, fml.WCNFPlus):
+        cnf = fml.CNFPlus()
+        cnf.atmosts = wcnf.atms
+    else:
+        cnf = fml.CNF()
+
+    cnf.nv = wcnf.nv
+    cnf.clauses = wcnf.hard
+    cnf.comments = wcnf.comments
+    if not only_hard:
+        cnf.clauses += wcnf.soft
+
+    return cnf
 
 
 class PySatEnc(Encoding):
@@ -58,24 +77,19 @@ class CNF(PySatEnc):
         return 'h' if self.extract_hard \
             else super()._get_formula_flags()
 
-    def _get_formula(self) -> formula.CNF:
+    def _get_formula(self) -> fml.CNF:
         if self.from_clauses:
-            return formula.CNF(
+            return fml.CNF(
                 from_clauses=self.from_clauses
             )
 
-        _formula = super()._get_formula()
-        if isinstance(_formula, formula.WCNF):
-            cnf = formula.CNF()
-            cnf.nv = _formula.nv
-            cnf.clauses = _formula.hard
-            cnf.comments = _formula.comments
-            if not self.extract_hard:
-                cnf.clauses += _formula.soft
-
-            return cnf
-        elif isinstance(_formula, formula.CNF):
-            return _formula
+        formula = super()._get_formula()
+        if isinstance(formula, fml.WCNF):
+            return wcnf_to_cnf(
+                formula, self.extract_hard
+            )
+        elif isinstance(formula, fml.CNF):
+            return formula
 
     def weighted(self) -> 'WCNF':
         return WCNF().set_reader(self._reader)
@@ -104,20 +118,14 @@ class CNFPlus(PySatEnc):
         return 'h' if self.extract_hard \
             else super()._get_formula_flags()
 
-    def _get_formula(self) -> formula.CNFPlus:
-        _formula = super()._get_formula()
-        if isinstance(_formula, formula.WCNFPlus):
-            cnf = formula.CNFPlus()
-            cnf.nv = _formula.nv
-            cnf.atmosts = _formula.atms
-            cnf.clauses = _formula.hard
-            cnf.comments = _formula.comments
-            if not self.extract_hard:
-                cnf.clauses += _formula.soft
-
-            return cnf
-        elif isinstance(_formula, formula.CNFPlus):
-            return _formula
+    def _get_formula(self) -> fml.CNFPlus:
+        formula = super()._get_formula()
+        if isinstance(formula, fml.WCNFPlus):
+            return wcnf_to_cnf(
+                formula, self.extract_hard
+            )
+        elif isinstance(formula, fml.CNFPlus):
+            return formula
 
     def weighted(self) -> 'WCNFPlus':
         return WCNFPlus().set_reader(self._reader)
@@ -139,11 +147,11 @@ class WCNF(PySatEnc):
             from_file, from_string, comment_lead
         ) if from_file or from_string else None)
 
-    def _get_formula(self) -> formula.WCNF:
+    def _get_formula(self) -> fml.WCNF:
         _formula = super()._get_formula()
-        if isinstance(_formula, formula.CNF):
+        if isinstance(_formula, fml.CNF):
             return _formula.weighted()
-        elif isinstance(_formula, formula.WCNF):
+        elif isinstance(_formula, fml.WCNF):
             return _formula
 
     def from_hard(self) -> 'CNF':
@@ -171,11 +179,11 @@ class WCNFPlus(PySatEnc):
             from_file, from_string, comment_lead
         ) if from_file or from_string else None)
 
-    def _get_formula(self) -> formula.WCNFPlus:
+    def _get_formula(self) -> fml.WCNFPlus:
         _formula = super()._get_formula()
-        if isinstance(_formula, formula.CNFPlus):
+        if isinstance(_formula, fml.CNFPlus):
             return _formula.weighted()
-        elif isinstance(_formula, formula.WCNFPlus):
+        elif isinstance(_formula, fml.WCNFPlus):
             return _formula
 
     def from_hard(self) -> 'CNFPlus':
@@ -197,5 +205,7 @@ __all__ = [
     'WCNFPlus',
     # types
     'Clause',
-    'Clauses'
+    'Clauses',
+    # utility
+    'wcnf_to_cnf'
 ]

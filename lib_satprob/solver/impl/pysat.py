@@ -7,7 +7,7 @@ from typing import Dict, Union, \
 from pysat.examples.rc2 import RC2
 from pysat import solvers as slv, formula as fml
 
-from ...encoding import Clauses
+from ...encoding import Clauses, wcnf_to_cnf
 from ...variables import Assumptions, Supplements
 from ..solver import Solver, _Solver, Report, KeyLimit, UNLIMITED
 
@@ -36,11 +36,31 @@ def is_max_sat_formula(formula: PySatFormula) -> bool:
            isinstance(formula, fml.WCNFPlus)
 
 
+def to_sat_formula(formula: PySatFormula) -> SatFormula:
+    if is_max_sat_formula(formula):
+        formula = wcnf_to_cnf(formula)
+
+    return formula
+
+
 #
 # ==============================================================================
 class PySatSetts(NamedTuple):
     sat_name: str
     max_sat_alg: str
+
+
+def is_supports_atms(sat_name: str) -> bool:
+    return sat_name in slv.SolverNames.gluecard3 or \
+           sat_name in slv.SolverNames.gluecard4 or \
+           sat_name in slv.SolverNames.minicard
+
+
+#
+# ==============================================================================
+class FormulaError(TypeError):
+    def __init__(self, formula: PySatFormula):
+        super().__init__(f'Unknown formula {type(formula)}')
 
 
 #
@@ -91,9 +111,9 @@ class _RC2(RC2):
         super().get_core()
         return self.core
 
-    # todo: remove assumptions
     def solve(self, assumptions=()):
-        self.status = self._compute(assumptions, False)
+        assert not assumptions, 'Not empty assumptions'
+        self.status = self._compute(False)
         return self.status
 
     def get_model(self):
@@ -104,21 +124,23 @@ class _RC2(RC2):
             return sorted(model, key=lambda l: abs(l))
 
     def solve_limited(self, assumptions=(), expect_interrupt=False):
-        self.status = self._compute(assumptions, expect_interrupt, True)
+        assert not assumptions, 'Not empty assumptions'
+        self.status = self._compute(expect_interrupt, True)
         return self.status
 
-    def _compute(self, assumptions, expect_interrupt, limited=False):
+    def _compute(self, expect_interrupt, limited=False):
         if self.adapt:
             self.adapt_am1()
 
-        def _process():
-            _assumptions = assumptions + self.sels + self.sums
-            return self.oracle.solve(_assumptions) if not limited else \
-                self.oracle.solve_limited(_assumptions, expect_interrupt)
-
         _status = False
         while not _status:
-            _status = _process()
+            _status = self.oracle.solve_limited(
+                self.sels + self.sums,
+                expect_interrupt
+            ) if limited else self.oracle.solve(
+                self.sels + self.sums
+            )
+
             if not self.get_core():
                 return _status
             self.process_core()
@@ -198,6 +220,7 @@ def get_max_sat_alg(settings: PySatSetts, formula: MaxSatFormula):
 class _PySatSolver(_Solver):
     _solver = None
     _last_stats = {}
+    _propagator = None
 
     def __init__(
             self,
@@ -216,49 +239,28 @@ class _PySatSolver(_Solver):
             self._solver.delete()
             self._solver = None
 
-    def _create(
-            self, supplements: Supplements
+    def _init_solver(
+            self, supplements: Supplements,
+            formula: Optional[PySatFormula] = None
     ) -> Tuple[Optional[AnySolver], Assumptions]:
+        formula = formula or self.formula
         assumptions, constraints = supplements
-        if is_sat_formula(self.formula):
+
+        if is_sat_formula(formula):
             name = self.settings.sat_name
-            if len(constraints) > 0:
-                solver = slv.Solver(name, self.formula)
-                solver.append_formula(constraints)
-                return solver.solver, assumptions
-            elif self._solver is None:
-                solver = slv.Solver(name, self.formula)
-                self._solver = solver.solver
-            return None, assumptions
-        elif is_max_sat_formula(self.formula):
+            solver = slv.Solver(name, formula)
+            solver.append_formula(constraints)
+            return solver.solver, assumptions
+        elif is_max_sat_formula(formula):
             return get_max_sat_alg(
-                self.settings, self.formula
+                self.settings, formula
             ).append_formula(constraints + [
                 [lit] for lit in assumptions
             ]), []
         else:
-            raise TypeError(f'Unknown formula {type(self.formula)}')
+            raise FormulaError(formula)
 
-    def _unit_check(
-            self, supplements: Supplements
-    ) -> Report:
-        name = self.settings.sat_name
-        assumptions, constraints = supplements
-        if self._solver is None:
-            if isinstance(self.formula, fml.CNF):
-                formula = self.formula
-            elif isinstance(self.formula, fml.WCNF):
-                formula = self.formula.hard
-            else:
-                raise TypeError(f'Unknown formula {type(self.formula)}')
-            solver = slv.Solver(name, formula)
-            self._solver = solver.solver
-
-        return self._fix_stats(
-            _propagate(self._solver, assumptions)
-        )
-
-    def _fix_stats(self, report):
+    def _fix_stats(self, report: Report) -> Report:
         fixed_stats = {
             key: value if key == 'time' else
             value - self._last_stats.get(key, 0)
@@ -270,27 +272,53 @@ class _PySatSolver(_Solver):
     def solve(
             self, supplements: Supplements,
             limit: KeyLimit = UNLIMITED,
-            extract_model: bool = True
+            extract_model: bool = True,
     ) -> Report:
-        # report = self._unit_check(supplements)
-        # print('check', report.status, supplements)
-        # if report.status is not None: return report
+        assumptions, constraints = supplements
+        args = (limit, extract_model, self.use_timer)
 
-        solver, assumptions = self._create(supplements)
-        if solver is None: return self._fix_stats(_solve(
-            self._solver, assumptions, limit, extract_model, self.use_timer
-        ))
-        with solver:
-            return _solve(
-                solver, assumptions, limit, extract_model, self.use_timer
+        if len(constraints) > 0:
+            solver, assumptions = self._init_solver(
+                (assumptions, constraints), self.formula
             )
+            with solver:
+                return _solve(solver, assumptions, *args)
 
-    def propagate(self, supplements: Supplements) -> Report:
-        solver, assumptions = self._create(supplements)
-        if solver is None: return self._fix_stats(
-            _propagate(self._solver, assumptions)
+        if self._solver is None:
+            solver, assumptions = self._init_solver(
+                (assumptions, constraints), self.formula
+            )
+            self._solver = solver
+
+        return self._fix_stats(
+            _solve(self._solver, assumptions, *args)
         )
-        with solver: return _propagate(solver, assumptions)
+
+    def propagate(
+            self, supplements: Supplements,
+            ignore_constraints: bool = False
+    ) -> Report:
+        assumptions, constraints = supplements
+        if ignore_constraints: constraints = []
+
+        if len(constraints) > 0:
+            formula = to_sat_formula(self.formula)
+            solver, assumptions = self._init_solver(
+                (assumptions, constraints), formula
+            )
+            with solver:
+                return _propagate(solver, assumptions)
+
+        if self._propagator is None:
+            formula = to_sat_formula(self.formula)
+            solver, assumptions = self._init_solver(
+                (assumptions, constraints), formula
+            )
+            self._propagator = solver
+
+        return self._fix_stats(
+            _propagate(self._propagator, assumptions)
+        )
 
 
 #

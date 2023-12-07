@@ -14,5 +14,7 @@ __all__ = [
     'WCNFPlus',
     # types
     'Clause',
-    'Clauses'
+    'Clauses',
+    # utility
+    'wcnf_to_cnf'
 ]
