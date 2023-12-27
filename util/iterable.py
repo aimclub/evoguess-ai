@@ -39,10 +39,12 @@ def pick_by(iterable: Iterable[T], predicate: Predicate = identity) -> List[T]:
     if isinstance(predicate, Callable):
         return [item for item in iterable if predicate(item)]
     elif isinstance(predicate, Iterable):
+        predicate = set(predicate)
         return [item for i, item in enumerate(iterable) if i in predicate]
     else:
         raise TypeError(
-            f'unexpected predicate type: \'{type(predicate).__name__}\'')
+            f'unexpected predicate type: \'{type(predicate).__name__}\''
+        )
 
 
 def omit_by(iterable: Iterable[T], predicate: Predicate = identity) -> List[T]:
@@ -65,7 +67,8 @@ def slice_into(sized: List[T], count: int) -> Iterable[List[T]]:
 
 
 def split_by(
-        iterable: Iterable[T], predicate: Predicate = identity
+        iterable: Iterable[T],
+        predicate: Predicate = identity
 ) -> Tuple[List[T], List[T]]:
     left, right = [], []
     for i, item in enumerate(iterable):

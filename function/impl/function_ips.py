@@ -16,8 +16,9 @@ def ips_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     space, budget, measure, problem, bytemask = payload
     searchable, timestamp = space.unpack(bytemask), now()
 
-    times, times2, values, values2 = {}, {}, {}, {}
-    formula, statuses = problem.encoding.get_formula(), {}
+    formula = problem.encoding.get_formula(copy=False)
+    statuses, times, times2, values, values2 = {}, {}, {}, {}, {}
+
     with problem.solver.get_instance(formula) as incremental:
         for supplements in ibs_supplements(args, problem, searchable):
             report = incremental.propagate(supplements)

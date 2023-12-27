@@ -2,173 +2,161 @@ import os
 import json
 
 from time import time as now
-from itertools import product
-from tempfile import NamedTemporaryFile as NTFile
-from typing import Any, List, Dict, Optional, Tuple
+from tempfile import NamedTemporaryFile
+from typing import Any, List, Dict, Optional, Tuple, Iterable
+
+from space.model import Backdoor
+from ..abc import Core
 
 from output import Logger
 from executor import Executor
-from lib_satprob.encoding import WCNF
 
-from ..abc import Core
-
-from lib_satprob.solver import Report
 from lib_satprob.problem import Problem
-from lib_satprob.variables import Assumptions, Supplements, combine
+from lib_satprob.encoding import Clauses
+from lib_satprob.solver import Report, _Solver
+from lib_satprob.derived import get_derived_by
+from lib_satprob.variables import Assumptions, Supplements
 
 from function.model import Estimation
 from function.module.measure import Measure
 from function.module.budget import TaskBudget, KeyLimit
 
+from util.wrapppers import timed
 from typings.searchable import Searchable
 from util.iterable import slice_into, split_by
 
 UnWeightTask = Tuple[int, Supplements]
 
-
 #
+# Formula patching logic (create, load and initialize solver)
+# ==============================================================================
+FORMULAS: Dict[int, Any] = {}
+VERSIONS: Dict[int, Clauses] = {}
+
+
+def create_patch(
+        clauses: Clauses
+) -> Tuple[str, int]:
+    version = max(VERSIONS.keys()) \
+        if len(VERSIONS) > 0 else 1
+    VERSIONS[version] = clauses
+
+    with NamedTemporaryFile(
+            delete=False, mode='w+'
+    ) as handle:
+        json.dump(clauses, handle)
+        return handle.name, version
+
+
+def get_formula(
+        problem: Problem,
+        filename: str,
+        version: int,
+) -> Any:
+    if version not in FORMULAS:
+        print('loading...', version, filename)
+        formula = problem.encoding.get_formula()
+        if filename is not None and version > 0:
+            with open(filename, 'r+') as handle:
+                clauses = json.load(handle)
+            formula.extend(clauses)
+
+        FORMULAS[version] = formula
+
+    return FORMULAS[version]
+
+
+# def get_solver(
+#         problem: Problem,
+#         filename: str,
+#         version: int,
+# ) -> _Solver:
+#     if version not in SOLVERS:
+#         for solver in SOLVERS.values():
+#             solver.__exit__()
+#         SOLVERS.clear()
 #
+#         formula = get_formula(problem, filename, version)
+#         solver = problem.solver.get_instance(formula)
+#         SOLVERS[version] = solver.__enter__()
 #
-def bool2sign(b):
-    return -1 if b else 1
-
-
-def signed(x, s):
-    return bool2sign(s) * x
-
-
-def minimize_dnf(dnf):
-    from pyeda.inter import espresso_exprs
-
-    min_dnf = espresso_exprs(dnf)
-    return min_dnf
-
-
-def cnf_to_clauses(cnf):
-    assert cnf.is_cnf()
-
-    litmap, nvars, clauses = cnf.encode_cnf()
-    result = []
-    for clause in clauses:
-        c = []
-        for lit in clause:
-            v = litmap[abs(lit)].indices[0]  # 1-based variable index
-            s = lit < 0  # sign
-            c.append(signed(v, s))
-        c.sort(key=lambda x: abs(x))
-        result.append(c)
-
-    clauses = result
-    clauses.sort(key=lambda x: (len(x), tuple(map(abs, x))))
-    return clauses
-
-
-def cubes_to_dnf(cubes):
-    from pyeda.inter import exprvar, And, Or
-
-    var_map = dict()
-    cubes_expr = []
-
-    for cube in cubes:
-        lits_expr = []
-        for lit in cube:
-            var = abs(lit)
-            if var not in var_map:
-                var_map[var] = exprvar("x", var)
-            if lit < 0:
-                lits_expr.append(~var_map[var])
-            else:
-                lits_expr.append(var_map[var])
-        cubes_expr.append(And(*lits_expr))
-
-    dnf = Or(*cubes_expr)
-    assert dnf.is_dnf()
-    return dnf
-
-
-def backdoor_to_clauses_via_easy(easy):
-    # Note: here, 'dnf' represents the negation of characteristic function,
-    #       because we use "easy" tasks here.
-    dnf = cubes_to_dnf(easy)
-    (min_dnf,) = minimize_dnf(dnf)
-    min_cnf = (~min_dnf).to_cnf()  # here, we negate the function back
-    clauses = cnf_to_clauses(min_cnf)
-    return clauses
-
-
-def grow_worker(easy_tasks: List[Supplements]) -> Tuple[Supplements, float]:
-    _stamp, easy_cubes = now(), [sups[0] for sups in easy_tasks]
-    clauses = backdoor_to_clauses_via_easy(easy_cubes)
-    constr, one_lit = split_by(clauses, lambda x: len(x) > 1)
-    return ([clause[0] for clause in one_lit], constr), now() - _stamp
+#     return SOLVERS[version]
 
 
 #
-#
-#
+# Hard task product logic (combine, worker)
+# ==============================================================================
+# def is_unsat(clause: List[int], value_map: Dict[int, int]) -> bool:
+#     size = len(clause)
+#     for literal in clause:
+#         value = value_map.get(abs(literal))
+#         if literal == value:
+#             return False
+#         if value is not None:
+#             size -= 1
+#     return True if size == 0 else None
 
 
-def is_unsat(clause: List[int], value_map: Dict[int, int]) -> bool:
-    size = len(clause)
-    for literal in clause:
-        value = value_map.get(abs(literal))
-        if literal == value:
-            return False
-        if value is not None:
-            size -= 1
-    return True if size == 0 else None
+# def calc_cost(formula, literals: Assumptions) -> int:
+#     value_map = {abs(lit): lit for lit in literals}
+#     return sum([
+#         weight if is_unsat(clause, value_map) else 0 for
+#         weight, clause in zip(formula.wght, formula.soft)
+#     ])
 
+def prod_combine(
+        acc_tasks: List[Assumptions], tasks: List[Assumptions]
+) -> Iterable[Supplements]:
+    for assumptions in map(set, tasks):
+        for acc_assumptions in acc_tasks:
+            if sum([
+                -literal in assumptions for
+                literal in acc_assumptions
+            ]) > 0: continue
 
-def calc_cost(formula, literals: Assumptions) -> int:
-    value_map = {abs(lit): lit for lit in literals}
-    return sum([
-        weight if is_unsat(clause, value_map) else 0 for
-        weight, clause in zip(formula.wght, formula.soft)
-    ])
-
-
-def prep_worker(
-        problem: Problem, searchable: Searchable
-) -> Tuple[Searchable, List[Supplements], List[Supplements]]:
-    clauses = problem.encoding.get_formula(copy=False).hard
-    with problem.solver.get_instance(clauses) as solver:
-        easy, hard = split_by(
-            searchable.enumerate(), lambda sups:
-            solver.propagate(sups).status is False
-        )
-        return searchable, easy, hard
+            yield assumptions.union(
+                set(acc_assumptions)
+            ), []
 
 
 def prod_worker(
-        problem: Problem, acc_tasks: List[UnWeightTask],
-        tasks: List[UnWeightTask],
-) -> Tuple[List[UnWeightTask], float]:
-    tasks, acc_tasks = [t[1] for t in tasks], [t[1] for t in acc_tasks]
-    _stamp, formula = now(), problem.encoding.get_formula(copy=False)
-    w_acc_hard_task, prod = [], product(acc_tasks, tasks)
-
-    with problem.solver.get_instance(formula.hard) as solver:
-        for acc_hard_task in [combine(*prs) for prs in prod]:
+        acc_tasks: List[Assumptions], tasks: List[Assumptions],
+        problem: Problem, patch: str, version: int
+) -> Tuple[List[Assumptions], float]:
+    _stamp, prod_hard_task = now(), []
+    formula = get_formula(problem, patch, version)
+    with problem.solver.get_instance(formula, False) as solver:
+        for acc_hard_task in prod_combine(acc_tasks, tasks):
             report = solver.propagate(acc_hard_task)
             if report.status is None or report.status:
-                cost = 0 if len(report.model) == 0 \
-                    else calc_cost(formula, report.model)
-                w_acc_hard_task.append((cost, acc_hard_task))
+                # cost = 0 if len(report.model) == 0 \
+                #     else calc_cost(formula, report.model)
+                prod_hard_task.append(acc_hard_task[0])
 
-    return w_acc_hard_task, now() - _stamp
+    return prod_hard_task, now() - _stamp
 
 
-def limit_worker(
-        problem: Problem, task: UnWeightTask, limit: KeyLimit
-) -> Tuple[UnWeightTask, Report]:
+#
+# ==============================================================================
+def prep_worker(
+        problem: Problem, backdoor: Backdoor
+) -> Tuple[Backdoor, List[Supplements], List[Supplements]]:
     formula = problem.encoding.get_formula(copy=False)
     with problem.solver.get_instance(formula) as solver:
-        return task, solver.solve(task[1], limit, extract_model=False)
+        easy, hard = split_by(
+            backdoor.enumerate(), lambda sups:
+            solver.propagate(sups).status is False
+        )
+        return backdoor, easy, hard
 
 
-def hard_worker(problem: Problem, hard_task: Assumptions) -> Report:
-    formula = problem.encoding.get_formula(copy=False)
-    return problem.solver.solve(formula, (hard_task, []))
+def hard_worker(
+        task: Assumptions, limit: KeyLimit,
+        problem: Problem, patch: str, version: int
+) -> Tuple[Assumptions, Report]:
+    formula = get_formula(problem, patch, version)
+    with problem.solver.get_instance(formula) as solver:
+        return task, solver.solve((task, []), limit)
 
 
 class CombineT(Core):
@@ -183,14 +171,18 @@ class CombineT(Core):
         super().__init__(logger, problem, random_seed)
 
         self.clauses = []
-        self.stats_sum = {}
+        self.stats_sum = {
+            'prod_time': 0.,
+            'grow_time': 0.
+        }
         self.best_model = (None, [])
 
-    def sifting(self, tasks: List[UnWeightTask]) -> List[UnWeightTask]:
+    def sifting(
+            self, tasks: List[Assumptions], patch: str, version: int
+    ) -> List[Assumptions]:
         hard_tasks, limit = [], self.measure.get_limit(self.budget)
-        future_all, count = self.executor.submit_all(limit_worker, *(
-            (self.problem, task, limit) for task in tasks if
-            task[0] is None or task[0] < self.best_model[0]
+        future_all, count = self.executor.submit_all(hard_worker, *(
+            (task, limit, self.problem, patch, version) for task in tasks
         )), len(tasks)
         print('weight penalty:', f'{len(tasks)} -> {len(future_all)}')
 
@@ -212,7 +204,7 @@ class CombineT(Core):
 
         return hard_tasks
 
-    def _preprocess(self, *searchables: Searchable) -> List[List[UnWeightTask]]:
+    def _preprocess(self, *backdoors: Backdoor) -> List[List[Assumptions]]:
         current_var_set, all_hard_tasks = set(), []
         all_assumptions, all_constraints = set(), set()
 
@@ -223,7 +215,7 @@ class CombineT(Core):
             ])
 
         results = [future.result() for future in self.executor.submit_all(
-            prep_worker, *((self.problem, sch) for sch in searchables)
+            prep_worker, *((self.problem, bd) for bd in backdoors)
         ).as_complete()]
         one_hard, results = split_by(results, lambda r: len(r[2]) == 1)
         processed = sorted(results, key=lambda r: len(r[2]))
@@ -239,105 +231,127 @@ class CombineT(Core):
         for searchable, _, hard_tasks in one_hard:
             add_supplements(hard_tasks[0])
 
-        for future in self.executor.submit_all(grow_worker, *(
+        for future in self.executor.submit_all(timed(get_derived_by), *(
                 (easy_tasks,) for _, easy_tasks, _ in processed
         )).as_complete():
-            supplements, grow_time = future.result()
-            self.stats_sum['grow_time'] += grow_time
+            supplements, _time = future.result()
+            self.stats_sum['grow_time'] += _time
             add_supplements(supplements)
 
+        print(all_assumptions)
+
         for searchable, _, hard_tasks in processed:
+            fil_hard_tasks = []
+            for hard_task in hard_tasks:
+                fil_hard_task = []
+                for literal in hard_task[0]:
+                    if -literal in all_assumptions:
+                        break
+                    if literal not in all_assumptions:
+                        fil_hard_task.append(literal)
+                else:
+                    print(hard_task[0], '->', fil_hard_task)
+                    fil_hard_tasks.append((fil_hard_task, []))
+
+            print(searchable, len(hard_tasks), '->', len(fil_hard_tasks))
+
             if var_distance(searchable) > 1:
-                all_hard_tasks.append(hard_tasks)
+                all_hard_tasks.append(fil_hard_tasks)
                 for var in searchable.variables():
                     current_var_set.add(var.name)
 
-        if len(all_assumptions) > 0:
-            assumptions = list(all_assumptions)
-            all_hard_tasks.insert(0, [(assumptions, [])])
+        # if len(all_assumptions) > 0:
+        #     assumptions = list(all_assumptions)
+        #     # all_hard_tasks.insert(0, [(assumptions, [])])
 
-        if len(all_constraints) > 0:
-            constraints = map(list, all_constraints)
-            self.clauses = list(constraints)
+        # if len(all_constraints) > 0:
+        #     constraints = map(list, all_constraints)
+
+        constraints = map(list, all_constraints)
+        self.clauses = list(constraints) + [
+            [lit] for lit in all_assumptions
+        ]
 
         return [
-            [(0, task) for task in tasks]
+            [task[0] for task in tasks]
             for tasks in all_hard_tasks
         ]
 
-    def launch(self, *searchables: Searchable) -> Estimation:
-        formula, files = self.problem.encoding.get_formula(), []
-        self.best_model, start_stamp = (sum(formula.wght), []), now()
-        self.stats_sum['prod_time'], self.stats_sum['grow_time'] = 0, 0
+    def launch(self, *backdoors: Backdoor) -> Estimation:
+        start_stamp, files = now(), []
+        # self.best_model = (sum(formula.wght), [])
+        try:
+            all_hard_tasks = self._preprocess(*backdoors)
+            [acc_hard_tasks, *all_hard_tasks] = all_hard_tasks
 
-        all_hard_tasks = self._preprocess(*searchables)
-        [acc_hard_tasks, *all_hard_tasks] = all_hard_tasks
+            if len(self.clauses) > 0:
+                patch_file, version = create_patch(self.clauses)
+            else:
+                patch_file, version = None, 0
 
-        with NTFile(delete=False) as wcnf_file:
-            formula.extend(self.clauses)
-            formula.to_file(wcnf_file.name)
-            files.append(wcnf_file.name)
-            self.problem.encoding = WCNF(
-                from_file=wcnf_file.name
-            )
+            plot_data = [(
+                len(set(map(abs, acc_hard_tasks[0]))),
+                len(acc_hard_tasks), len(acc_hard_tasks)
+            )]
 
-        plot_data = [(
-            len(set(map(abs, acc_hard_tasks[0][1][0]))),
-            len(acc_hard_tasks), len(acc_hard_tasks)
-        )]
+            for i, hard_tasks in enumerate(all_hard_tasks):
+                next_acc_hard_tasks = []
+                prod_size = len(acc_hard_tasks) * len(hard_tasks)
+                # print(acc_hard_tasks, 'x', hard_tasks)
 
-        for i, hard_tasks in enumerate(all_hard_tasks):
-            next_acc_hard_tasks = []
-            prod_size = len(acc_hard_tasks) * len(hard_tasks)
-            for future in self.executor.submit_all(prod_worker, *((
-                    self.problem, acc_part_hard_tasks, hard_tasks
-            ) for acc_part_hard_tasks in slice_into(
-                acc_hard_tasks, self.executor.max_workers
-            ))).as_complete():
-                prod_tasks, prod_time = future.result()
-                self.stats_sum['prod_time'] += prod_time
-                next_acc_hard_tasks.extend(prod_tasks)
+                for future in self.executor.submit_all(prod_worker, *((
+                        acc_part_hard_tasks, hard_tasks,
+                        self.problem, patch_file, version
+                ) for acc_part_hard_tasks in slice_into(
+                    acc_hard_tasks, self.executor.max_workers
+                ))).as_complete():
+                    prod_tasks, prod_time = future.result()
+                    self.stats_sum['prod_time'] += prod_time
+                    next_acc_hard_tasks.extend(prod_tasks)
 
-            var_set = sorted(set(map(abs, next_acc_hard_tasks[0][1][0])))
-            print(f'var set ({len(var_set)}):', ' '.join(map(str, var_set)))
-            print('stats:', self.stats_sum)
-            print(f'time ({self.executor.max_workers})',
-                  now() - start_stamp)
-
-            print(
-                f'reduced: {prod_size} -> {len(next_acc_hard_tasks)}',
-                f'({round(len(next_acc_hard_tasks) / prod_size, 2)})',
-            )
-            acc_hard_tasks = self.sifting(next_acc_hard_tasks)
-
-            plot_data.append((
-                len(var_set), len(next_acc_hard_tasks), len(acc_hard_tasks)
-            ))
-
-            print(
-                f'sifted: {len(next_acc_hard_tasks)} -> {len(acc_hard_tasks)}',
-                f'({round(len(acc_hard_tasks) / len(next_acc_hard_tasks), 2)})'
-            )
-            if len(acc_hard_tasks) == 0:
-                print(f'total bds: {i + 1}')
-                print('total stats:', self.stats_sum)
-                print(f'total time ({self.executor.max_workers})',
+                var_set = sorted(set(map(abs, next_acc_hard_tasks[0])))
+                print(f'var set ({len(var_set)}):', ' '.join(map(str, var_set)))
+                print('stats:', self.stats_sum)
+                print(f'time ({self.executor.max_workers})',
                       now() - start_stamp)
-                print(f'total var set ({len(var_set)}):',
-                      ' '.join(map(str, var_set)))
-                break
 
-        print(self.stats_sum)
-        print(self.best_model)
-        print('parallel time:', now() - start_stamp)
-        print('sequential time:', self.stats_sum['grow_time'] +
-              self.stats_sum['time'] + self.stats_sum['prod_time'])
+                print(
+                    f'reduced: {prod_size} -> {len(next_acc_hard_tasks)}',
+                    f'({round(len(next_acc_hard_tasks) / prod_size, 2)})',
+                )
+                acc_hard_tasks = self.sifting(
+                    next_acc_hard_tasks, patch_file, version
+                )
 
-        print('plot data')
-        print(json.dumps(plot_data))
+                plot_data.append((
+                    len(var_set), len(next_acc_hard_tasks), len(acc_hard_tasks)
+                ))
 
-        [os.remove(file) for file in files]
-        return self.stats_sum
+                print(
+                    f'sifted: {len(next_acc_hard_tasks)} -> {len(acc_hard_tasks)}',
+                    f'({round(len(acc_hard_tasks) / len(next_acc_hard_tasks), 2)})'
+                )
+                if len(acc_hard_tasks) == 0:
+                    print(f'total bds: {i + 1}')
+                    print('total stats:', self.stats_sum)
+                    print(f'total time ({self.executor.max_workers})',
+                          now() - start_stamp)
+                    print(f'total var set ({len(var_set)}):',
+                          ' '.join(map(str, var_set)))
+                    break
+
+            print(self.stats_sum)
+            print(self.best_model)
+            print('parallel time:', now() - start_stamp)
+            print('sequential time:', self.stats_sum['grow_time'] +
+                  self.stats_sum['time'] + self.stats_sum['prod_time'])
+
+            print('plot data')
+            print(json.dumps(plot_data))
+
+            return self.stats_sum
+        finally:
+            [os.remove(file) for file in files]
 
     def __config__(self) -> Dict[str, Any]:
         return {}

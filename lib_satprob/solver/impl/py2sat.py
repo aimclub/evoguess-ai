@@ -1,13 +1,12 @@
 from time import time as now
 
-from ...encoding import Clause
-from ...variables import Supplements
-from ...variables.vars import VarMap
-
 from .pysat import PySatSetts, \
     _PySatSolver, PySatSolver
+
 from ..solver import Report
-from ...encoding import SatFormula
+from ...variables import Supplements
+from ...variables.vars import VarMap
+from ...encoding import Clause, SatFormula
 
 
 def is2clause(clause: Clause, var_map: VarMap) -> bool:
@@ -47,7 +46,7 @@ class _Py2SatSolver(_PySatSolver):
         stamp, no2clause = now() - stats['time'], 0
         var_map = {abs(lit): lit for lit in literals}
 
-        for clause in self.formula:
+        for clause in self.formula.clauses:
             no2clause += not is2clause(clause, var_map)
             if no2clause > self.limit: break
         else:

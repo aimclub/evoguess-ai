@@ -17,8 +17,9 @@ def tau_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     searchable, timestamp = space.unpack(bytemask), now()
 
     limit = measure.get_limit(budget)
-    times, times2, values, values2 = {}, {}, {}, {}
-    formula, statuses = problem.encoding.get_formula(), {}
+    formula = problem.encoding.get_formula(copy=False)
+    statuses, times, times2, values, values2 = {}, {}, {}, {}, {}
+
     with problem.solver.get_instance(formula) as incremental:
         for supplements in gad_supplements(args, problem, searchable):
             # todo: clear interrupt in incremental

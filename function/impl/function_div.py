@@ -1,35 +1,38 @@
 from os import getpid
 from time import time as now
 
+from util.iterable import list_of
 from ..model import WorkerArgs, WorkerResult, \
-    WorkerCallable, Payload, Results, Estimation, Status
-from ..abc.function import aggregate_results, format_statuses
+    WorkerCallable, Payload, Results, Estimation
 from .function_gad import GuessAndDetermine, gad_supplements
+from ..abc.function import aggregate_results, format_statuses
 
-from ..module.measure import Measure
 from ..module.budget import AutoBudget
+from ..module.measure import SolvingTime
 
 from typings.searchable import Searchable
 
-solvers = {}
 
-
-def rho_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
+def div_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     space, budget, measure, problem, bytemask = payload
     searchable, timestamp = space.unpack(bytemask), now()
 
-    formula = problem.encoding.get_formula(copy=False)
+    _formula = problem.encoding.get_formula(copy=False)
     statuses, times, times2, values, values2 = {}, {}, {}, {}, {}
 
-    key = problem.encoding._get_formula_key()
-    if key not in solvers:
-        test_stamp = now()
-        solvers[key] = problem.solver.get_instance(formula)
-        print('created instance:', now() - test_stamp)
+    hard, soft, vector = [], [], searchable.get_vector()
+    for bit, clause in zip(vector, _formula.clauses):
+        (hard if bit else soft).append(clause)
 
-    # with problem.solver.get_instance(formula) as incremental:
+    # todo: optimize
+    formula = _formula.weighted()
+    formula.wght = list_of(1, soft)
+    formula.topw = len(soft) + 1
+    formula.hard = hard
+    formula.soft = soft
+
     for supplements in gad_supplements(args, problem, searchable):
-        report = solvers[key].propagate(supplements)
+        report = problem.solver.solve(formula, supplements)
         time, value, status = measure.check_and_get(report, budget)
 
         times[status.value] = times.get(status.value, 0.) + time
@@ -38,35 +41,26 @@ def rho_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
 
         times2[status.value] = times2.get(status.value, 0.) + time ** 2
         values2[status.value] = values2.get(status.value, 0.) + value ** 2
-
     return getpid(), now() - timestamp, times, times2, values, values2, statuses, args
 
 
-class RhoFunction(GuessAndDetermine):
-    slug = 'function:rho'
+class DivFunction(GuessAndDetermine):
+    slug = 'function:div'
 
-    def __init__(self, measure: Measure, penalty_power: float,
-                 only_solved: bool = False):
-        super().__init__(AutoBudget(), measure)
-        self.penalty_power = penalty_power
-        self.only_solved = only_solved
+    def __init__(self, budget: AutoBudget):
+        super().__init__(budget, SolvingTime())
 
     def get_worker_fn(self) -> WorkerCallable:
-        return rho_worker_fn
+        return div_worker_fn
 
     def calculate(self, searchable: Searchable, results: Results) -> Estimation:
         times, values, statuses, stats = aggregate_results(results)
         time_sum, value_sum = sum(times.values()), sum(values.values())
-        power, value = searchable.power(), float('inf')
 
-        solved = statuses.get(Status.SOLVED, 0) + (
-            statuses.get(Status.RESOLVED, 0)
-            if not self.only_solved else 0
-        )
-        if stats.count > 0 and self.penalty_power > power:
-            rho_value = float(solved) / stats.count
-            penalty_value = (1. - rho_value) * self.penalty_power
-            value = rho_value * power + penalty_value
+        power = searchable.power()
+        value = value_sum if stats.count else float('inf')
+        if stats.count > 0 and stats.count != power:
+            value = float(value_sum) / stats.count * power
 
         return {
             'power': power,
@@ -84,5 +78,5 @@ class RhoFunction(GuessAndDetermine):
 
 
 __all__ = [
-    'RhoFunction'
+    'DivFunction'
 ]

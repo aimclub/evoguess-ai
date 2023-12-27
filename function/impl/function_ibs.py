@@ -37,8 +37,9 @@ def ibs_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     backdoor, timestamp = space.unpack(bytemask), now()
 
     limit = measure.get_limit(budget)
-    times, times2, values, values2 = {}, {}, {}, {}
-    formula, statuses = problem.encoding.get_formula(), {}
+    formula = problem.encoding.get_formula(copy=False)
+    statuses, times, times2, values, values2 = {}, {}, {}, {}, {}
+
     for supplements in ibs_supplements(args, problem, backdoor):
         report = problem.solver.solve(formula, supplements, limit)
         time, value, status = measure.check_and_get(report, budget)

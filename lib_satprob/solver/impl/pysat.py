@@ -7,10 +7,11 @@ from typing import Dict, Union, \
 from pysat import solvers as slv
 from pysat.examples.rc2 import RC2
 
-from ..solver import Solver, _Solver, Report, KeyLimit, UNLIMITED
-from ...encoding import SatFormula, PySatFormula, MaxSatFormula, \
-    to_sat_formula, is_sat_formula, is_max_sat_formula
+from ..solver import Report, Solver, \
+    _Solver, KeyLimit, UNLIMITED
 from ...variables import Assumptions, Supplements
+from ...encoding import PySatFormula, MaxSatFormula, \
+    to_sat_formula, is_sat_formula, is_max_sat_formula
 
 
 #
@@ -190,7 +191,6 @@ def get_max_sat_alg(settings: PySatSetts, formula: MaxSatFormula):
 class _PySatSolver(_Solver):
     _solver = None
     _last_stats = {}
-    _propagator = None
 
     def __init__(
             self,
@@ -306,4 +306,6 @@ __all__ = [
     # types
     'PySatTimer',
     'PySatSetts',
+    # errors
+    'FormulaError'
 ]
