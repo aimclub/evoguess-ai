@@ -54,7 +54,7 @@ def get_formula(
         version: int,
 ) -> Any:
     if version not in FORMULAS:
-        print('loading...', version, filename)
+        # print('loading...', version, filename)
         formula = problem.encoding.get_formula()
         if filename is not None and version > 0:
             with open(filename, 'r+') as handle:
@@ -184,7 +184,7 @@ class CombineT(Core):
         future_all, count = self.executor.submit_all(hard_worker, *(
             (task, limit, self.problem, patch, version) for task in tasks
         )), len(tasks)
-        print('weight penalty:', f'{len(tasks)} -> {len(future_all)}')
+        # print('weight penalty:', f'{len(tasks)} -> {len(future_all)}')
 
         while len(future_all) > 0:
             for future in future_all.as_complete(count=1):
@@ -194,10 +194,10 @@ class CombineT(Core):
                         self.stats_sum.get(key, 0.) + value
 
                 if report.status is None: hard_tasks.append(task)
-                if report.cost and report.cost < self.best_model[0]:
-                    bsu = f'{self.best_model[0]} -> {report.cost}'
-                    self.best_model = (report.cost, report.model)
-                    print('best solution upd:', bsu, f'{report.cost}')
+                # if report.cost and report.cost < self.best_model[0]:
+                #     bsu = f'{self.best_model[0]} -> {report.cost}'
+                #     self.best_model = (report.cost, report.model)
+                #     print('best solution upd:', bsu, f'{report.cost}')
 
                 hrd, left = len(hard_tasks), len(future_all)
                 print(f'{hrd}/{hrd + left}/{count}: {report}')
@@ -238,7 +238,7 @@ class CombineT(Core):
             self.stats_sum['grow_time'] += _time
             add_supplements(supplements)
 
-        print(all_assumptions)
+        print('derived units:', all_assumptions)
 
         for searchable, _, hard_tasks in processed:
             fil_hard_tasks = []
@@ -250,10 +250,10 @@ class CombineT(Core):
                     if literal not in all_assumptions:
                         fil_hard_task.append(literal)
                 else:
-                    print(hard_task[0], '->', fil_hard_task)
+                    # print(hard_task[0], '->', fil_hard_task)
                     fil_hard_tasks.append((fil_hard_task, []))
 
-            print(searchable, len(hard_tasks), '->', len(fil_hard_tasks))
+            # print(searchable, len(hard_tasks), '->', len(fil_hard_tasks))
 
             if var_distance(searchable) > 1:
                 all_hard_tasks.append(fil_hard_tasks)
@@ -348,6 +348,12 @@ class CombineT(Core):
 
             print('plot data')
             print(json.dumps(plot_data))
+            try:
+                solver_setts = self.problem.solver.settings
+                print('solver:', solver_setts.sat_name)
+                print(self.measure.key, self.budget.value())
+            except Exception:
+                pass
 
             return self.stats_sum
         finally:
