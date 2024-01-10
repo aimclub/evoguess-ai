@@ -1,7 +1,7 @@
 echo "Testing utility module..."
 python -m unittest discover -s ./tests/
-echo "Testing pysatmc module..."
-python -m unittest discover -s ./tests/test_pysatmc/
+echo "Testing satprob module..."
+python -m unittest discover -s ./tests/test_satprob/
 echo "Testing space module..."
 python -m unittest discover -s ./tests/test_space/
 echo "Testing function module..."

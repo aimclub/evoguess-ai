@@ -12,7 +12,7 @@ class Timed(NamedTuple):
 
 
 def _timed(
-        fn: Callable[[Any, ...], R],
+        fn: Callable[..., R],
         *args: Any, **kwargs: Any
 ):
     stamp = time.time()
@@ -23,8 +23,8 @@ def _timed(
 
 
 def timed(
-        fn: Callable[[Any, ...], R]
-) -> Callable[[Any, ...], Timed]:
+        fn: Callable[..., R]
+) -> Callable[..., Timed]:
     return partial(_timed, fn)
 
 
