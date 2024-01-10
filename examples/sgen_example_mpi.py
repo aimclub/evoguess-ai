@@ -13,7 +13,6 @@ from lib_satprob.solver import PySatSolver
 from lib_satprob.problem import SatProblem
 
 from function.impl import GuessAndDetermine
-from function.module.budget import AutoBudget
 from function.module.measure import SolvingTime
 
 from algorithm.impl import Elitism
@@ -32,7 +31,7 @@ if __name__ == '__main__':
     solution = Optimize(
         space=BackdoorSet(
             by_vector=[],
-            variables=Range(start=1, length=150)
+            variables=Range(length=150)
         ),
         executor=MPIExecutor(),
         sampling=Const(size=4096, split_into=256),
@@ -41,7 +40,6 @@ if __name__ == '__main__':
             solver=PySatSolver(sat_name='g3'),
         ),
         function=GuessAndDetermine(
-            budget=AutoBudget(),
             measure=SolvingTime()
         ),
         algorithm=Elitism(

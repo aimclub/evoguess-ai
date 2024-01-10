@@ -11,8 +11,7 @@ class BackdoorSet(Space):
     slug = 'space:backdoor_set'
 
     def __init__(
-            self,
-            variables: Variables,
+            self, variables: Variables,
             by_string: Optional[str] = None,
             by_vector: Optional[Vector] = None
     ):

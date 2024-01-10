@@ -60,7 +60,9 @@ class Optimize(Estimate):
                     spent_time = now() - start_stamp
                     self.logger.write(insertion, spent_time)
                     self.limitation.set('time', spent_time)
-                    # self.limitation.set('iteration', insertion[0])
+
+                    if insertion:
+                        self.limitation.set('iteration', insertion[0])
 
                 [h.cancel() for h in handles]
                 return point_manager.solution()

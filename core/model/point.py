@@ -18,6 +18,9 @@ class Point(Ordered):
     def value(self) -> Optional[float]:
         return self.estimation.get('value')
 
+    def get(self, key: str) -> Optional[float]:
+        return self.estimation.get(key)
+
     def set(self, **estimation: Primitive) -> 'Point':
         if 'value' in self.estimation:
             raise Exception('Estimation already set')

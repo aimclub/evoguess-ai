@@ -66,8 +66,8 @@ def gad_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
 class GuessAndDetermine(Function):
     slug = 'function:gad'
 
-    def __init__(self, budget: AutoBudget, measure: Measure):
-        super().__init__(budget, measure)
+    def __init__(self, measure: Measure):
+        super().__init__(AutoBudget(), measure)
         self.best_estimation = {'value': float('inf')}
 
     def get_worker_fn(self) -> WorkerCallable:

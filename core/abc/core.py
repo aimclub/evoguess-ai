@@ -4,8 +4,6 @@ from numpy.random import randint, RandomState
 from output import Logger
 from lib_satprob.problem import Problem
 
-from ..static import DEBUGGER
-
 
 class Core:
     slug = None
@@ -15,7 +13,6 @@ class Core:
         self.logger = logger
         self.problem = problem
 
-        DEBUGGER.initialize(logger)
         self.random_seed = random_seed or randint(2 ** 32 - 1)
         self.random_state = RandomState(seed=self.random_seed)
 

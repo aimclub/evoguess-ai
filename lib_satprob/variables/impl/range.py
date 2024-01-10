@@ -8,7 +8,7 @@ class Range(Indexes):
 
     def __init__(
             self,
-            start: int = None,
+            start: int = 1,
             length: int = None,
             from_string: str = None
     ):

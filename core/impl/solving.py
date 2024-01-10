@@ -18,6 +18,7 @@ def warn_bad(backdoor: Backdoor):
 class Solving(Core):
     slug = 'core:solving'
 
+    # todo: return iterator[report] instead of report
     def launch(self, *backdoors: Backdoor) -> Report:
         stamp, formula, = now(), self.problem.encoding.get_formula()
         assumptions_set, constraints_set, all_stats = set(), set(), {}

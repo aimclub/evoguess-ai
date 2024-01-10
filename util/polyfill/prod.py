@@ -1,3 +1,4 @@
+# sys.version_info >= (3, 8):
 try:  # for python3.8 and greater
     from math import prod
 except ImportError:  # for python3.7

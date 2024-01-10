@@ -13,6 +13,7 @@ __all__ = [
     'Space',
     # utility
     'rho_subset',
+    'init_partition',
     # builder
     'SpaceBuilder'
 ]

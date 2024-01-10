@@ -58,10 +58,13 @@ class TestEncodings(unittest.TestCase):
             cnf.get_formula(copy=False), cnf.get_formula(copy=False)
         )
 
-    def test_wcnf_from_clause(self):
-        # todo: add test_wcnf_from_clause tests
-        pass
-
     def test_wcnf_from_file(self):
-        # todo: add test_wcnf_from_file tests
-        pass
+        root_path = WorkPath('examples', 'data')
+        wcnf = WCNF(from_file=root_path.to_file('lec_cvk_11.wcnf'))
+
+        formula = wcnf.get_formula()
+        self.assertEqual(formula.nv, 5061)
+        self.assertEqual(len(formula.soft), 89)
+        self.assertEqual(len(formula.hard), 15051)
+        self.assertEqual(formula.hard[0], [23, -2, -12])
+        self.assertEqual(formula.soft[0], [-5040, -1504, -2311])

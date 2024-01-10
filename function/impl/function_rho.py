@@ -7,11 +7,8 @@ from ..abc.function import aggregate_results, format_statuses
 from .function_gad import GuessAndDetermine, gad_supplements
 
 from ..module.measure import Measure
-from ..module.budget import AutoBudget
 
 from typings.searchable import Searchable
-
-solvers = {}
 
 
 def rho_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
@@ -21,23 +18,17 @@ def rho_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
     formula = problem.encoding.get_formula(copy=False)
     statuses, times, times2, values, values2 = {}, {}, {}, {}, {}
 
-    key = problem.encoding._get_formula_key()
-    if key not in solvers:
-        test_stamp = now()
-        solvers[key] = problem.solver.get_instance(formula)
-        print('created instance:', now() - test_stamp)
+    with problem.solver.get_instance(formula) as incremental:
+        for supplements in gad_supplements(args, problem, searchable):
+            report = incremental.propagate(supplements)
+            time, value, status = measure.check_and_get(report, budget)
 
-    # with problem.solver.get_instance(formula) as incremental:
-    for supplements in gad_supplements(args, problem, searchable):
-        report = solvers[key].propagate(supplements)
-        time, value, status = measure.check_and_get(report, budget)
+            times[status.value] = times.get(status.value, 0.) + time
+            values[status.value] = values.get(status.value, 0.) + value
+            statuses[status.value] = statuses.get(status.value, 0) + 1
 
-        times[status.value] = times.get(status.value, 0.) + time
-        values[status.value] = values.get(status.value, 0.) + value
-        statuses[status.value] = statuses.get(status.value, 0) + 1
-
-        times2[status.value] = times2.get(status.value, 0.) + time ** 2
-        values2[status.value] = values2.get(status.value, 0.) + value ** 2
+            times2[status.value] = times2.get(status.value, 0.) + time ** 2
+            values2[status.value] = values2.get(status.value, 0.) + value ** 2
 
     return getpid(), now() - timestamp, times, times2, values, values2, statuses, args
 
@@ -46,10 +37,10 @@ class RhoFunction(GuessAndDetermine):
     slug = 'function:rho'
 
     def __init__(self, measure: Measure, penalty_power: float,
-                 only_solved: bool = False):
-        super().__init__(AutoBudget(), measure)
+                 only_unsat: bool = False):
+        super().__init__(measure)
         self.penalty_power = penalty_power
-        self.only_solved = only_solved
+        self.only_unsat = only_unsat
 
     def get_worker_fn(self) -> WorkerCallable:
         return rho_worker_fn
@@ -57,11 +48,11 @@ class RhoFunction(GuessAndDetermine):
     def calculate(self, searchable: Searchable, results: Results) -> Estimation:
         times, values, statuses, stats = aggregate_results(results)
         time_sum, value_sum = sum(times.values()), sum(values.values())
-        power, value = searchable.power(), float('inf')
+        power, value, rho_value = searchable.power(), float('inf'), 0
 
         solved = statuses.get(Status.SOLVED, 0) + (
             statuses.get(Status.RESOLVED, 0)
-            if not self.only_solved else 0
+            if not self.only_unsat else 0
         )
         if stats.count > 0 and self.penalty_power > power:
             rho_value = float(solved) / stats.count
@@ -71,6 +62,7 @@ class RhoFunction(GuessAndDetermine):
         return {
             'power': power,
             'count': stats.count,
+            'rho_value': rho_value,
             'value': round(value, 2),
             'ptime': round(stats.ptime_sum, 4),
             'time_sum': round(time_sum, 4),

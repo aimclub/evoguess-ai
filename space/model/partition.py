@@ -36,6 +36,9 @@ class Partition(Searchable):
     def __str__(self) -> str:
         return ''.join(map(str, self._vector))
 
+    def __hash__(self) -> int:
+        return hash(tuple(self._vector))
+
     def __repr__(self) -> str:
         return f'[{str(self)}]({sum(self._vector)})'
 

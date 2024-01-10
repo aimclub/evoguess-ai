@@ -7,7 +7,6 @@ from lib_satprob.variables import Indexes, Range
 
 from function.model import ChunkResult
 from function.impl import GuessAndDetermine
-from function.module.budget import AutoBudget
 from function.module.measure import Propagations
 from function.impl.function_gad import gad_worker_fn, gad_supplements
 
@@ -84,12 +83,12 @@ class TestFunction(unittest.TestCase):
             solver=PySatSolver(), encoding=CNF(from_clauses=clauses)
         )
 
+        measure = Propagations()
         backdoor = space.get_initial()
-        budget, measure = AutoBudget(), Propagations()
-        function = GuessAndDetermine(budget, measure)
+        function = GuessAndDetermine(measure)
         payload = function.get_payload(space, problem, backdoor)
         self.assertEqual(
-            payload, (space, budget, measure, problem, backdoor.pack())
+            payload, (space, function.budget, measure, problem, backdoor.pack())
         )
 
         worker_fn = function.get_worker_fn()

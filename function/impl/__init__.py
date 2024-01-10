@@ -18,6 +18,7 @@ functions = {
 __all__ = [
     'functions',
     # impls
+    'DivFunction',
     'RhoFunction',
     'RhoTFunction',
     'GuessAndDetermine',

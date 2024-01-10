@@ -2,24 +2,21 @@ from os import cpu_count
 from typing import List
 
 # algorithm module imports
-from algorithm.impl import Elitism
+from algorithm.impl import MuPlusLambda
 from algorithm.module.mutation import Doer
-from algorithm.module.crossover import TwoPoint
 from algorithm.module.selection import Roulette
 
 # function module imports
-from function.impl import RhoFunction
-from function.module.measure import Propagations
+from function.impl import DivFunction
+from function.module.measure import SolvingTime
 
 # satprob lib imports
-from lib_satprob.encoding import CNF
-from lib_satprob.variables import Range
+from lib_satprob.encoding import WCNF
 from lib_satprob.solver import PySatSolver
-from lib_satprob.problem import SatProblem
+from lib_satprob.problem import MaxSatProblem
 
 # space module imports
-from space import rho_subset
-from space.impl import BackdoorSet
+from space import init_partition
 
 # core module imports
 from core.impl import Optimize
@@ -34,44 +31,35 @@ from output.impl import OptimizeLogger
 from executor.impl import ProcessExecutor
 
 
-def run_pvs_4_7_search() -> List[Point]:
-    algorithm = Elitism(
-        elites_count=2,
-        population_size=6,
+def run_cvk_11_search() -> List[Point]:
+    algorithm = MuPlusLambda(
+        mu_size=1,
+        lambda_size=1,
         mutation=Doer(),
-        crossover=TwoPoint(),
-        selection=Roulette(),
-        min_update_size=6
+        selection=Roulette()
     )
     limitation = WallTime(
         from_string='04:00:00'
     )
 
-    function = RhoFunction(
-        penalty_power=2 ** 20,
-        measure=Propagations(),
+    function = DivFunction(
+        measure=SolvingTime(),
     )
     sampling = Const(
-        size=1024, split_into=256
+        size=64, split_into=16
     )
 
     root_path = WorkPath('examples')
     data_path = root_path.to_path('data')
-    cnf_file = data_path.to_file('pvs_4_7.cnf')
+    wcnf_file = data_path.to_file('blp_k18_del300.wcnf')
 
-    problem = SatProblem(
-        encoding=CNF(from_file=cnf_file),
-        solver=PySatSolver(sat_name='g3'),
-    )  # read from file './examples/data/sort/pvs_4_7.cnf
-
-    space = BackdoorSet(
-        by_vector=[],
-        variables=rho_subset(
-            problem,
-            Range(length=1213),
-            of_size=100
+    problem, space = init_partition(
+        weaken=2 ** 48,
+        problem=MaxSatProblem(
+            encoding=WCNF(from_file=wcnf_file),
+            solver=PySatSolver(sat_name='g3'),
         )
-    )  # reduce to subset of 100 “off” var
+    )
 
     workers = min(cpu_count(), 16)
     executor = ProcessExecutor(
@@ -80,7 +68,7 @@ def run_pvs_4_7_search() -> List[Point]:
     print(f'Running on {workers} threads')
 
     # log process to dir './examples/logs/<date_date>
-    logs_path = root_path.to_path('logs', 'pvs_4_7')
+    logs_path = root_path.to_path('logs', 'blp_k18_del300')
     return Optimize(
         space=space,
         problem=problem,
@@ -95,5 +83,5 @@ def run_pvs_4_7_search() -> List[Point]:
 
 
 __all__ = [
-    'run_pvs_4_7_search'
+    'run_cvk_11_search'
 ]

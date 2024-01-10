@@ -1,3 +1,4 @@
+from os import cpu_count
 from itertools import combinations
 
 # lib_satprob module imports
@@ -9,16 +10,17 @@ from lib_satprob.variables import Indexes
 # other imports
 from core.impl import Combine
 from space.model import Backdoor
-from output.impl import OptimizeLogger
+from output.impl import NoneLogger
 from executor.impl import ProcessExecutor
 from function.module.measure import SolvingTime
 
 from util.work_path import WorkPath
 
-if __name__ == '__main__':
-    root_path = WorkPath('examples', root='..')
+
+def run_pvs_quality():
+    root_path = WorkPath('examples')
     data_path = root_path.to_path('data')
-    cnf_file = data_path.to_file('pvs_4_7.cnf', 'sort')
+    cnf_file = data_path.to_file('pvs_4_7.cnf')
 
     measure = SolvingTime()
     problem = SatProblem(
@@ -26,11 +28,16 @@ if __name__ == '__main__':
         encoding=CNF(from_file=cnf_file)
     )
 
-    logs_path = root_path.to_path('logs', 'pvs_4_7_s')
+    workers = min(cpu_count(), 16)
+    executor = ProcessExecutor(
+        max_workers=workers
+    )
+    print(f'Running on {workers} threads')
+
     combine = Combine(
         problem=problem,
-        logger=OptimizeLogger(logs_path),
-        executor=ProcessExecutor(max_workers=16)
+        executor=executor,
+        logger=NoneLogger(),
     )
 
     full_time = problem.solve().stats['time']
@@ -44,18 +51,17 @@ if __name__ == '__main__':
         '174 438 470 536 537 546 549 551 634 635 1046 1047',
     ]
 
-    with combine.logger as handle:
-        for count in range(6, 7):
-            for combination in combinations(str_backdoors, count):
-                backdoors = [
-                    Backdoor(variables=Indexes(
-                        from_string=str_vars
-                    )) for str_vars in str_backdoors
-                ]
-                estimation = combine.launch(*backdoors)
-                handle._format({
-                    'estimation': estimation,
-                    'combination': combination,
-                }, filename='log.jsonl')
+    for count in range(6, 7):
+        for combination in combinations(str_backdoors, count):
+            backdoors = [
+                Backdoor(variables=Indexes(
+                    from_string=str_vars
+                )) for str_vars in str_backdoors
+            ]
+            _, stats, _, _ = combine.launch(*backdoors)
+            print(stats['time'] / full_time, combination)
 
-                print(estimation['value'] / full_time, combination)
+
+__all__ = [
+    'run_pvs_quality'
+]

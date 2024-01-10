@@ -1,7 +1,7 @@
 from operator import getitem
 from functools import reduce
 
-from . import polyfill, iterable, lazy_file, work_path
+from . import polyfill, iterable, work_path, wrappers
 
 
 def _key(function):
@@ -34,8 +34,8 @@ def build(structure, **kwargs):
 __all__ = [
     'polyfill',
     'iterable',
-    'lazy_file',
     'work_path',
+    'wrappers',
     #
     'build',
     'load_modules',

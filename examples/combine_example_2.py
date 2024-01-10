@@ -7,18 +7,17 @@ from lib_satprob.solver import Report, PySatSolver
 
 # other imports
 from core.impl import Combine
-from space.model import load_backdoors
 from output.impl import NoneLogger
-from executor.impl import ProcessExecutor
-
 from util.work_path import WorkPath
+from space.model import load_backdoors
+from executor.impl import ProcessExecutor
 
 
 def run_pvs_4_7_solve() -> Report:
     root_path = WorkPath('examples')
     data_path = root_path.to_path('data')
 
-    bds_file = data_path.to_file('pvs_4_7_e.bds')
+    bds_file = data_path.to_file('pvs_4_7.bds')
     backdoors = load_backdoors(from_file=bds_file)
 
     cnf_file = data_path.to_file('pvs_4_7.cnf')
@@ -38,3 +37,8 @@ def run_pvs_4_7_solve() -> Report:
         executor=executor,
         logger=NoneLogger(),
     ).launch(*backdoors)
+
+
+__all__ = [
+    'run_pvs_4_7_solve'
+]

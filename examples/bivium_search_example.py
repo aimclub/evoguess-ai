@@ -1,3 +1,5 @@
+from os import cpu_count
+
 # algorithm module imports
 from algorithm.impl import Elitism
 from algorithm.module.mutation import Doer
@@ -14,39 +16,49 @@ from lib_satprob.variables import Range
 from lib_satprob.problem import SatProblem
 from lib_satprob.solver import Py2SatSolver
 
-# space submodule imports
-from space.impl import BackdoorSet
-
-# executor module imports
-from executor.impl import ProcessExecutor
-
 # core submodule imports
-from util.work_path import WorkPath
+from core.impl import Optimize
+from core.model.point import Point
 from core.module.sampling import Const
 from core.module.limitation import WallTime
-
-# other imports
-from core.impl import Optimize
-from output.impl import OptimizeLogger
 from core.module.comparator import MinValueMaxSize
 
-if __name__ == '__main__':
+# other imports
+from space.impl import BackdoorSet
+from util.work_path import WorkPath
+from output.impl import OptimizeLogger
+from executor.impl import ProcessExecutor
+
+
+def run_bivium_search() -> Point:
     root_path = WorkPath('examples')
     data_path = root_path.to_path('data')
+
     logs_path = root_path.to_path('logs', 'bivium')
-    cnf_file = data_path.to_file('bivium-no-200.cnf', 'bivium')
-    solution = Optimize(
+    cnf_file = data_path.to_file('bivium_200.cnf')
+    problem = SatProblem(
+        encoding=CNF(from_file=cnf_file),
+        solver=Py2SatSolver(sat_name='g3'),
+        input_set=Range(start=1, length=177),
+        output_set=Range(start=1838, length=200),
+    )
+
+    workers = min(cpu_count(), 16)
+    executor = ProcessExecutor(
+        max_workers=workers
+    )
+    print(f'Running on {workers} threads')
+
+    return Optimize(
+        problem=problem,
+        executor=executor,
         space=BackdoorSet(
-            variables=Range(start=1, length=177)
+            variables=Range(length=177)
         ),
-        problem=SatProblem(
-            encoding=CNF(from_file=cnf_file),
-            solver=Py2SatSolver(sat_name='g3'),
-            input_set=Range(start=1, length=177),
-            output_set=Range(start=1838, length=200),
+        sampling=Const(
+            size=8192,
+            split_into=2048
         ),
-        executor=ProcessExecutor(max_workers=16),
-        sampling=Const(size=8192, split_into=2048),
         function=InversePolynomialSets(
             measure=Propagations(),
         ),
@@ -58,10 +70,7 @@ if __name__ == '__main__':
             selection=Roulette(),
             min_update_size=6
         ),
-        limitation=WallTime(from_string='12:00:00'),
         comparator=MinValueMaxSize(),
         logger=OptimizeLogger(logs_path),
-    ).launch()
-
-    for point in solution:
-        print(point)
+        limitation=WallTime(from_string='12:00:00'),
+    ).launch()[0]

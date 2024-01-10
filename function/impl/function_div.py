@@ -7,8 +7,7 @@ from ..model import WorkerArgs, WorkerResult, \
 from .function_gad import GuessAndDetermine, gad_supplements
 from ..abc.function import aggregate_results, format_statuses
 
-from ..module.budget import AutoBudget
-from ..module.measure import SolvingTime
+from ..module.measure import Measure
 
 from typings.searchable import Searchable
 
@@ -47,8 +46,8 @@ def div_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:
 class DivFunction(GuessAndDetermine):
     slug = 'function:div'
 
-    def __init__(self, budget: AutoBudget):
-        super().__init__(budget, SolvingTime())
+    def __init__(self, measure: Measure):
+        super().__init__(measure)
 
     def get_worker_fn(self) -> WorkerCallable:
         return div_worker_fn

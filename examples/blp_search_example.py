@@ -11,19 +11,18 @@ from function.impl import RhoFunction
 from function.module.measure import Propagations
 
 # satprob lib imports
-from lib_satprob.encoding import CNF
+from lib_satprob.encoding import WCNF
 from lib_satprob.variables import Range
 from lib_satprob.solver import PySatSolver
-from lib_satprob.problem import SatProblem
+from lib_satprob.problem import MaxSatProblem
 
 # space module imports
-from space import rho_subset
 from space.impl import BackdoorSet
 
 # executor module imports
-from executor.impl import ProcessExecutor
+from executor.impl import ThreadExecutor
 
-# core submodule imports
+# core module imports
 from core.impl import Optimize
 from core.model.point import Point
 from core.module.sampling import Const
@@ -35,24 +34,24 @@ from output.impl import NoneLogger
 from util.work_path import WorkPath
 
 
-def run_pvs_4_7_search(count=6) -> List[Point]:
+def run_blp_18_search(count=500) -> List[Point]:
     root_path = WorkPath('examples')
     data_path = root_path.to_path('data')
+    wcnf_file = data_path.to_file('blp_k18_del300.wcnf')
+
+    problem = MaxSatProblem(
+        encoding=WCNF(from_file=wcnf_file),
+        solver=PySatSolver(sat_name='g3'),
+    )
 
     workers = min(cpu_count(), 16)
-    executor = ProcessExecutor(
+    executor = ThreadExecutor(
         max_workers=workers
     )
     print(f'Running on {workers} threads')
 
-    split_into = 256 // workers
+    split_into = 1024 // workers
     size = split_into * workers
-
-    cnf_file = data_path.to_file('pvs_4_7.cnf')
-    problem = SatProblem(
-        encoding=CNF(from_file=cnf_file),
-        solver=PySatSolver(sat_name='cd15'),
-    )
 
     points = []
     for i in range(count):
@@ -61,11 +60,7 @@ def run_pvs_4_7_search(count=6) -> List[Point]:
             executor=executor,
             space=BackdoorSet(
                 by_vector=[],
-                variables=rho_subset(
-                    problem,
-                    Range(length=1213),
-                    of_size=300
-                )
+                variables=Range(length=767)
             ),
             sampling=Const(
                 size=size,
@@ -82,8 +77,8 @@ def run_pvs_4_7_search(count=6) -> List[Point]:
                 mutation=FixSize(10),
                 selection=Roulette(),
             ),
+            limitation=Iteration(value=3000),
             comparator=MinValueMaxSize(),
-            limitation=Iteration(value=1000)
         ).launch()[0]
         points.append(point)
 
@@ -94,3 +89,8 @@ def run_pvs_4_7_search(count=6) -> List[Point]:
         )
 
     return points
+
+
+__all__ = [
+    'run_blp_18_search'
+]

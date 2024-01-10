@@ -8,8 +8,6 @@ from executor import Executor
 
 from ..abc import Core
 
-from function.model import Estimation
-
 from lib_satprob.solver import Report
 from lib_satprob.problem import Problem
 from lib_satprob.variables import Supplements, combine
@@ -42,16 +40,22 @@ def prod_worker(
 
 
 def hard_worker(problem: Problem, hard_tasks: List[Supplements]) -> Report:
+    hard_status, hard_model, hard_cost = False, None, None
     stats_sum, formula = {}, problem.encoding.get_formula()
     with problem.solver.get_instance(formula) as incremental:
         for i, supplements in enumerate(hard_tasks):
-            status, stats, _, _ = incremental.solve(
+            status, stats, model, cost = incremental.solve(
                 supplements, extract_model=False
             )
             for key, value in stats.items():
                 stats_sum[key] = stats_sum.get(key, 0.) + value
 
-    return Report(True, stats_sum, None)
+            if status:
+                hard_cost = cost
+                hard_model = model
+                hard_status = True
+
+    return Report(hard_status, stats_sum, hard_model, hard_cost)
 
 
 class Combine(Core):
@@ -64,10 +68,8 @@ class Combine(Core):
 
         self.stats_sum = {}
 
-    def launch(self, *searchables: Searchable) -> Estimation:
+    def launch(self, *searchables: Searchable) -> Report:
         total_var_set, start_stamp = set(concat(*searchables)), now()
-        self.stats_sum['prod_time'], self.stats_sum['grow_time'] = 0, 0
-
         results = [future.result() for future in self.executor.submit_all(
             prep_worker, *((self.problem, sch) for sch in searchables)
         ).as_complete()]
@@ -84,27 +86,32 @@ class Combine(Core):
                 acc_hard_tasks, self.executor.max_workers
             ))).as_complete():
                 prod_tasks, prod_time = future.result()
-                self.stats_sum['prod_time'] += prod_time
+                # self.stats_sum['prod_time'] += prod_time
                 next_acc_hard_tasks.extend(prod_tasks)
 
             acc_hard_tasks = next_acc_hard_tasks
             ratio = round(len(acc_hard_tasks) / prod_size, 2)
             print(f'reduced: {prod_size} -> {len(acc_hard_tasks)} (x{ratio})')
 
+        hard_status, hard_model, hard_cost = False, None, None
         split_into = ceil(len(acc_hard_tasks) / self.executor.max_workers)
         for future in self.executor.submit_all(hard_worker, *(
                 (self.problem, hard_tasks) for hard_tasks
                 in slice_by(acc_hard_tasks, split_into)
         )).as_complete():
-            for key, value in future.result().stats.items():
-                self.stats_sum[key] = self.stats_sum.get(key, 0.) + value
+            status, stats, model, cost = future.result()
+            for key, value in stats.items():
+                self.stats_sum[key] = \
+                    self.stats_sum.get(key, 0.) + value
 
-        return {
-            'stats': self.stats_sum,
-            'real_time': now() - start_stamp,
-            'hard_tasks': len(acc_hard_tasks),
-            'total_tasks': 2 ** len(total_var_set)
-        }
+            if status:
+                hard_cost = cost
+                hard_model = model
+                hard_status = True
+
+        self.stats_sum['count'] = len(acc_hard_tasks)
+        self.stats_sum['real_time'] = now() - start_stamp
+        return Report(hard_status, self.stats_sum, hard_model, hard_cost)
 
     def __config__(self) -> Dict[str, Any]:
         return {}

@@ -8,7 +8,6 @@ from lib_satprob.solver import PySatSolver
 from lib_satprob.problem import SatProblem
 
 from function.impl import GuessAndDetermine
-from function.module.budget import AutoBudget
 from function.module.measure import SolvingTime
 
 from space.impl import BackdoorSet
@@ -28,7 +27,7 @@ if __name__ == '__main__':
     logs_path = root_path.to_path('logs')
     solver_path = root_path.to_path('solvers')
 
-    cnf_file = data_path.to_file('pvs_4_7.cnf', 'sort')
+    cnf_file = data_path.to_file('pvs_4_7.cnf')
     solver_file = solver_path.to_file('kissat', 'kissat-rel-3.0.0', 'build')
     solution = Optimize(
         space=BackdoorSet(
@@ -42,7 +41,6 @@ if __name__ == '__main__':
         ),
         function=GuessAndDetermine(
             measure=SolvingTime(),
-            budget=AutoBudget(),
         ),
         algorithm=LogSearch(
             population_size=6,
