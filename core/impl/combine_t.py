@@ -5,11 +5,10 @@ from time import time as now
 from tempfile import NamedTemporaryFile
 from typing import Any, List, Dict, Optional, Tuple, Iterable
 
-from space.model import Backdoor
 from ..abc import Core
-
 from output import Logger
 from executor import Executor
+from space.model import Backdoor
 
 from lib_satprob.problem import Problem
 from lib_satprob.encoding import Clauses
@@ -21,7 +20,7 @@ from function.model import Estimation
 from function.module.measure import Measure
 from function.module.budget import TaskBudget, KeyLimit
 
-from util.wrapppers import timed
+from util.wrappers import timed
 from typings.searchable import Searchable
 from util.iterable import slice_into, split_by
 
