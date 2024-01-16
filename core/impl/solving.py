@@ -1,14 +1,19 @@
 from warnings import warn
-from typing import Dict, Any
 from time import time as now
+from typing import Dict, Any, Optional
 
 from ..abc import Core
+from output import Logger
 from space.model import Backdoor
 
 from lib_satprob.solver import Report
+from lib_satprob.problem import Problem
 from lib_satprob.derived import get_derived_by
 from lib_satprob.encoding import is_sat_formula
 from lib_satprob.variables import Supplements
+
+from function.module.budget import TaskBudget
+from function.module.measure import Measure
 
 
 def warn_bad(backdoor: Backdoor):
@@ -17,6 +22,13 @@ def warn_bad(backdoor: Backdoor):
 
 class Solving(Core):
     slug = 'core:solving'
+
+    def __init__(self, logger: Logger, problem: Problem,
+                 budget: Optional[TaskBudget] = None,
+                 measure: Optional[Measure] = None,
+                 random_seed: Optional[int] = None):
+        super().__init__(logger, problem, random_seed)
+        self.budget, self.measure = budget, measure
 
     # todo: return iterator[report] instead of report
     def launch(self, *backdoors: Backdoor) -> Report:
@@ -51,10 +63,12 @@ class Solving(Core):
             a_len, c_len = len(assumptions_set), len(constraints_set)
             print(f'Derived {a_len} literals and {c_len} clauses')
 
+            limit = self.measure.get_limit(self.budget) if \
+                self.measure and self.budget else (None, None)
             status, stats, model, cost = solver.solve(([], [
                 *([lit] for lit in assumptions_set),
                 *(list(cl) for cl in constraints_set)
-            ]))
+            ]), limit)
             return get_report(status, stats, model, cost)
 
     def __config__(self) -> Dict[str, Any]:

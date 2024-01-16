@@ -1,8 +1,9 @@
 import os
 import re
 
+from threading import Timer
 from time import time as now
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from tempfile import NamedTemporaryFile
 from subprocess import PIPE, Popen, TimeoutExpired
 
@@ -21,11 +22,25 @@ STATUSES = {
 }
 
 
+def communicate(
+        process: Popen, timeout: float = None
+) -> Tuple[bytes, bytes]:
+    timer = Timer(timeout, process.kill, ())
+    try:
+        timer.start()
+        return b''.join(iter(process.stdout.readline, b'')), \
+               b''.join(iter(process.stderr.readline, b''))
+    finally:
+        if timer and timer.is_alive():
+            timer.cancel()
+
+
 class _ExternalSolver(_PySatSolver):
     limits = {}
     statistic = {}
     stdin_file = None
     stdout_file = None
+    launch_payload = []
 
     def __init__(
             self,
@@ -39,10 +54,10 @@ class _ExternalSolver(_PySatSolver):
 
     def _parse_stats(self, output: str) -> Dict[str, int]:
         def get_number(res):
-            return res and int(res.group(1))
+            return res and int(res[-1])
 
         return {
-            key: get_number(p.search(output))
+            key: get_number(p.findall(output))
             for key, p in self.statistic.items()
         }
 
@@ -57,6 +72,7 @@ class _ExternalSolver(_PySatSolver):
         files, source = [], None
         launch_args = [self.from_executable]
         assumptions, constraints = supplements
+        launch_args.extend(self.launch_payload)
 
         str_clauses = [
             *map(str, assumptions),
@@ -115,11 +131,15 @@ class _ExternalSolver(_PySatSolver):
             launch_args.append(self.limits[key] % value)
 
         timestamp, process = now(), Popen(
-            launch_args, stdin=PIPE, stdout=PIPE, stderr=PIPE
+            launch_args, stdout=PIPE, stderr=PIPE,
+            stdin=PIPE if source else None
         )
         try:
             data = None if source is None else source.encode()
-            output, error = process.communicate(data, timeout)
+            if data is None and is_max_sat_formula(self.formula):
+                output, error = communicate(process, timeout)
+            else:
+                output, error = process.communicate(data, timeout)
 
             # todo: handle error
             if self.stdout_file is not None:
@@ -189,9 +209,12 @@ class Kissat(ExternalSolver):
 
 
 class _Loandra(_ExternalSolver):
+    launch_payload = [
+        '-verbosity=1'
+    ]
     stdin_file = '%s'
     statistic = {
-        'cost': re.compile(r'^v (\d*) \d*', re.MULTILINE)
+        'cost': re.compile(r'^o (\d*)', re.MULTILINE)
     }
 
     def _parse_solution(self, output: str) -> List[int]:
