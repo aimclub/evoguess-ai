@@ -1,5 +1,6 @@
-from typing import List, Iterable, Optional, Callable
+from operator import itemgetter
 from numpy.random import RandomState
+from typing import List, Optional, Iterator, Callable
 
 from ._utility import Supplements
 
@@ -30,23 +31,25 @@ class Enumerable:
         raise NotImplementedError
 
     def enumerate(
-            self, offset: int = 0, length: Optional[int] = None,
+            self, from_nums: Optional[Iterator[int]] = None,
             with_random_state: Optional[RandomState] = None
-    ) -> Iterable[Supplements]:
+    ) -> Iterator[Supplements]:
         dimension, power = self.dimension(), self.power()
-        length = min(length or power - offset, power - offset)
-        assert offset >= 0 < length, 'Numbers must be positive!'
+        from_nums = from_nums if from_nums else range(0, power)
+        # length = min(length or power - offset, power - offset)
+        # assert offset >= 0 < length, 'Numbers must be positive!'
 
-        # todo: shuffle only if with_random_state provided!!
-        sequence_fn = range if power > self.permutation_limit \
-            else (with_random_state or RandomState()).permutation
+        shuffle = with_random_state and power <= self.permutation_limit
+        sequence_fn = with_random_state.permutation if shuffle else range
 
         yield from map(self.substitute, map(
-            get_num_to_values_fn(dimension),
-            sequence_fn(power)[offset:offset + length]
+            get_num_to_values_fn(dimension), (
+                number for index, number in
+                enumerate(sequence_fn(power))
+                if index in from_nums
+            )
         ))
 
-
-__all__ = [
-    'Enumerable'
-]
+    __all__ = [
+        'Enumerable'
+    ]

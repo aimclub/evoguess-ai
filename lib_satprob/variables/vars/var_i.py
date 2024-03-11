@@ -1,7 +1,7 @@
 from typing import Any, List, Dict
 
 from .var import Var, AnyVar, VarMap
-from .._utility import Supplements
+from .._utility import Assumptions, Supplements
 
 
 class Index(Var):
@@ -10,6 +10,9 @@ class Index(Var):
     def __init__(self, index: int):
         self.index = index
         super().__init__(2, str(index))
+
+    def sub(self, value: int) -> Assumptions:
+        return [self.index if value else -self.index]
 
     def substitute(self, var_map: VarMap) -> Supplements:
         if self in var_map:

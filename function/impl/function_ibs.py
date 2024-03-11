@@ -25,11 +25,15 @@ def ibs_supplements(args: WorkerArgs, problem: Problem,
     sample_seed, _, offset, length = args
     sample_state = RandomState(sample_seed)
     for index in range(offset + length):
-        var_map = problem.process_output_var_map(sample_state)
-        if index >= offset: yield combine(
-            searchable.substitute(using_var_map=var_map),
-            problem.output_set.substitute(using_var_map=var_map)
-        )
+        if index >= offset:
+            var_map = problem.process_output_var_map(sample_state)
+            yield combine(
+                searchable.substitute(using_var_map=var_map),
+                problem.output_set.substitute(using_var_map=var_map)
+            )
+        else:
+            dimension = problem.input_set.dimension()
+            sample_state.randint(0, dimension)
 
 
 def ibs_worker_fn(args: WorkerArgs, payload: Payload) -> WorkerResult:

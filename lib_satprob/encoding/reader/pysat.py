@@ -1,7 +1,7 @@
 from pysat import formula
 from typing import Any, List, Dict
 
-from .encoding import EncReader
+from ..encoding import EncReader
 
 
 class PySatReader(EncReader):
@@ -29,7 +29,7 @@ class PySatReader(EncReader):
         }
 
 
-class CNFReader(PySatReader):
+class PySatCNFReader(PySatReader):
     slug = 'reader:pysat:cnf'
 
     def read_formula(self) -> formula.CNF:
@@ -40,7 +40,7 @@ class CNFReader(PySatReader):
         )
 
 
-class CNFPlusReader(CNFReader):
+class PySatCNFPlusReader(PySatCNFReader):
     slug = 'reader:pysat:cnf+'
 
     def read_formula(self) -> formula.CNFPlus:
@@ -51,7 +51,7 @@ class CNFPlusReader(CNFReader):
         )
 
 
-class WCNFReader(PySatReader):
+class PySatWCNFReader(PySatReader):
     slug = 'reader:pysat:wcnf'
 
     def read_formula(self) -> formula.WCNF:
@@ -62,7 +62,7 @@ class WCNFReader(PySatReader):
         )
 
 
-class WCNFPlusReader(WCNFReader):
+class PySatWCNFPlusReader(PySatWCNFReader):
     slug = 'reader:pysat:wcnf+'
 
     def read_formula(self) -> formula.WCNFPlus:
@@ -74,10 +74,10 @@ class WCNFPlusReader(WCNFReader):
 
 
 __all__ = [
-    'CNFReader',
-    'WCNFReader',
-    'CNFPlusReader',
-    'WCNFPlusReader',
+    'PySatCNFReader',
+    'PySatWCNFReader',
+    'PySatCNFPlusReader',
+    'PySatWCNFPlusReader',
     # types
     'PySatReader'
 ]

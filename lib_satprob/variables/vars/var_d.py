@@ -1,7 +1,7 @@
 from typing import Any, List, Dict
 
 from .var import Var, AnyVar, VarMap
-from .._utility import Supplements
+from .._utility import Assumptions, Supplements
 
 
 class Domain(Var):
@@ -10,6 +10,12 @@ class Domain(Var):
     def __init__(self, name: str, group: List[int]):
         self.group = group
         super().__init__(len(group), name)
+
+    def sub(self, value: int) -> Assumptions:
+        return [
+            var if value == i else -var
+            for i, var in enumerate(self.group)
+        ]
 
     def substitute(self, var_map: VarMap) -> Supplements:
         if self not in var_map:

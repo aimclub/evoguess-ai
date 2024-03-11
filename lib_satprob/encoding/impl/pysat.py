@@ -1,9 +1,10 @@
 from pysat import formula as fml
 from typing import Any, List, Dict, Optional, Union
 
+from ..patch import SatPatch
 from ..encoding import Encoding
-from .._readers import PySatReader, CNFReader, \
-    CNFPlusReader, WCNFReader, WCNFPlusReader
+from ..reader import PySatReader, PySatCNFReader, \
+    PySatCNFPlusReader, PySatWCNFReader, PySatWCNFPlusReader
 
 #
 # ==============================================================================
@@ -73,8 +74,9 @@ class PySatEnc(Encoding):
     def __init__(self, reader: PySatReader):
         self._reader = reader
 
-    def _get_formula(self) -> Any:
-        return self._reader.read_formula()
+    def _get_formula(self, patch: SatPatch = None) -> Any:
+        formula = self._reader.read_formula()
+        return patch.apply(formula) if patch else formula
 
     def _get_formula_flags(self) -> str:
         return 'o'
@@ -107,7 +109,7 @@ class CNF(PySatEnc):
             from_clauses: Clauses = None,
             comment_lead: List[str] = ('c',)
     ):
-        super().__init__(CNFReader(
+        super().__init__(PySatCNFReader(
             from_file, from_string, comment_lead
         ) if from_file or from_string else None)
         self.from_clauses = from_clauses
@@ -116,13 +118,12 @@ class CNF(PySatEnc):
         return 'h' if self.extract_hard \
             else super()._get_formula_flags()
 
-    def _get_formula(self) -> fml.CNF:
-        if self.from_clauses:
-            return fml.CNF(
-                from_clauses=self.from_clauses
-            )
+    def _get_formula(self, patch: SatPatch = None) -> fml.CNF:
+        if self.from_clauses: return fml.CNF(
+            from_clauses=self.from_clauses
+        )
 
-        formula = super()._get_formula()
+        formula = super()._get_formula(patch)
         if isinstance(formula, fml.WCNF):
             return wcnf_to_cnf(
                 formula, self.extract_hard
@@ -149,7 +150,7 @@ class CNFPlus(PySatEnc):
             from_string: str = None,
             comment_lead: List[str] = ('c',)
     ):
-        super().__init__(CNFPlusReader(
+        super().__init__(PySatCNFPlusReader(
             from_file, from_string, comment_lead
         ) if from_file or from_string else None)
 
@@ -157,8 +158,8 @@ class CNFPlus(PySatEnc):
         return 'h' if self.extract_hard \
             else super()._get_formula_flags()
 
-    def _get_formula(self) -> fml.CNFPlus:
-        formula = super()._get_formula()
+    def _get_formula(self, patch: SatPatch = None) -> fml.CNFPlus:
+        formula = super()._get_formula(patch)
         if isinstance(formula, fml.WCNFPlus):
             return wcnf_to_cnf(
                 formula, self.extract_hard
@@ -182,12 +183,12 @@ class WCNF(PySatEnc):
             from_string: str = None,
             comment_lead: List[str] = ('c',)
     ):
-        super().__init__(WCNFReader(
+        super().__init__(PySatWCNFReader(
             from_file, from_string, comment_lead
         ) if from_file or from_string else None)
 
-    def _get_formula(self) -> fml.WCNF:
-        _formula = super()._get_formula()
+    def _get_formula(self, patch: SatPatch = None) -> fml.WCNF:
+        _formula = super()._get_formula(patch)
         if isinstance(_formula, fml.CNF):
             return _formula.weighted()
         elif isinstance(_formula, fml.WCNF):
@@ -214,12 +215,12 @@ class WCNFPlus(PySatEnc):
             from_string: str = None,
             comment_lead: List[str] = ('c',)
     ):
-        super().__init__(WCNFPlusReader(
+        super().__init__(PySatWCNFPlusReader(
             from_file, from_string, comment_lead
         ) if from_file or from_string else None)
 
-    def _get_formula(self) -> fml.WCNFPlus:
-        _formula = super()._get_formula()
+    def _get_formula(self, patch: SatPatch = None) -> fml.WCNFPlus:
+        _formula = super()._get_formula(patch)
         if isinstance(_formula, fml.CNFPlus):
             return _formula.weighted()
         elif isinstance(_formula, fml.WCNFPlus):

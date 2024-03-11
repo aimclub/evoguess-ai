@@ -1,7 +1,7 @@
 from numpy.random import RandomState
 from typing import Any, List, Dict, Union, Optional
 
-from .solver import Solver, Report
+from .solver import Report, Solver
 from .derived import get_derived_by
 from .encoding import Encoding, CNF, WCNF
 from .variables.vars import Var, VarMap
@@ -77,13 +77,6 @@ class Problem:
                 if status: return Report(status, stats_sum, model)
 
             return Report(False, stats_sum, None)
-
-    def evaluate(
-            self, decomposition: Enumerable, sample_length: int,
-            with_random_state: Optional[RandomState] = None
-    ) -> Report:
-        # todo: add realisation
-        pass
 
     def get_derived(self, decomposition: Enumerable) -> Supplements:
         formula, easy = self.encoding.get_formula(), []

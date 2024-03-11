@@ -1,7 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from typings.ordered import Ordered
-from typings.optional import Primitive
 from typings.searchable import Searchable
 from core.module.comparator import Comparator
 
@@ -18,10 +17,10 @@ class Point(Ordered):
     def value(self) -> Optional[float]:
         return self.estimation.get('value')
 
-    def get(self, key: str) -> Optional[float]:
+    def get(self, key: str) -> Any:
         return self.estimation.get(key)
 
-    def set(self, **estimation: Primitive) -> 'Point':
+    def set(self, **estimation: Any) -> 'Point':
         if 'value' in self.estimation:
             raise Exception('Estimation already set')
         self.estimation.update(estimation)

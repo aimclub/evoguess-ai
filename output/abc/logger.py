@@ -23,6 +23,9 @@ class Logger(Output):
         super().__init__(out_path, log_format)
 
     def __enter__(self):
+        if self._session is not None:
+            raise OutputSessionError()
+
         session = None
         path = str(self.out_path)
         name = f'{date_now()}_?'
@@ -45,7 +48,7 @@ class Logger(Output):
 
     def _write(self, string: str, filename: str) -> 'Logger':
         if self._session is None:
-            raise OutputSessionError
+            raise OutputSessionError()
 
         filepath = self._session.to_file(filename)
         with open(filepath, 'a+') as handle:

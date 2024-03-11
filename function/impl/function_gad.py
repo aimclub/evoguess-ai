@@ -29,7 +29,7 @@ def gad_supplements(args: WorkerArgs, problem: Problem,
                 else problem.process_output_supplements(sample_state)
             substitutions.extend([
                 (supplements, output_supplements) for supplements
-                in searchable.enumerate(0, power, sample_state)
+                in searchable.enumerate(range(power), sample_state)
             ])
 
         substitutions = substitutions[offset:offset + length]

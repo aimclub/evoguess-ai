@@ -1,6 +1,6 @@
 from typing import Any, List, Dict, Union
 
-from .._utility import Supplements
+from .._utility import Assumptions, Supplements
 
 AnyVar = Union['Var', int]
 VarMap = Dict[AnyVar, int]
@@ -23,6 +23,9 @@ class Var:
             return self.name == other.name
         else:
             return False
+
+    def sub(self, value: int) -> Assumptions:
+        raise NotImplementedError
 
     def substitute(self, var_map: VarMap) -> Supplements:
         raise NotImplementedError

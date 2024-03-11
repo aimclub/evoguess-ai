@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Callable
 
 from .var import Var, AnyVar, VarMap
-from .._utility import Supplements
+from .._utility import Assumptions, Supplements
 
 
 def to_bin(value: int, size: int) -> List[int]:
@@ -17,6 +17,9 @@ class Switch(Var):
     def __init__(self, name: str, group: List[int], fn: Callable):
         self.group, self.fn = group, fn
         super().__init__(2, name)
+
+    def sub(self, value: int) -> Assumptions:
+        raise NotImplementedError
 
     def substitute(self, var_map: VarMap) -> Supplements:
         constraints, size = [], len(self.group)
