@@ -6,7 +6,7 @@ from lib_satprob.solver import Report, Loandra
 # other imports
 from core.impl import Solving
 from output.impl import NoneLogger
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 from space.model import load_backdoors
 
 

@@ -11,7 +11,7 @@ from space.model import load_backdoors
 from output.impl import NoneLogger
 from executor.impl import ProcessExecutor
 
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 
 
 def run_pvs_4_7_solve() -> Report:

@@ -1,7 +1,8 @@
 import time
 
 from functools import partial
-from typing import Callable, Any, TypeVar, NamedTuple
+from typing import Any, List, Tuple, \
+    TypeVar, Iterable, Callable, NamedTuple
 
 R = TypeVar('R', covariant=True)
 
@@ -28,6 +29,17 @@ def timed(
     return partial(_timed, fn)
 
 
+def untime(
+        zipped: Iterable[Timed]
+) -> Tuple[List[R], float]:
+    time_sum, results = 0, []
+    for result, _time in zipped:
+        time_sum += _time
+        results.append(result)
+    return results, time_sum
+
+
 __all__ = [
-    'timed'
+    'timed',
+    'untime'
 ]

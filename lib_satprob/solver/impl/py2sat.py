@@ -4,9 +4,9 @@ from .pysat import PySatSetts, \
     _PySatSolver, PySatSolver
 
 from ..solver import Report
-from ...variables import Supplements
+from ...encoding import SatFormula
 from ...variables.vars import VarMap
-from ...encoding import Clause, SatFormula
+from ...variables import Clause, Supplements
 
 
 def is2clause(clause: Clause, var_map: VarMap) -> bool:

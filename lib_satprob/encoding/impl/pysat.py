@@ -6,11 +6,10 @@ from ..encoding import Encoding
 from ..reader import PySatReader, PySatCNFReader, \
     PySatCNFPlusReader, PySatWCNFReader, PySatWCNFPlusReader
 
+from ...variables import Clauses
+
 #
 # ==============================================================================
-Clause = List[int]
-Clauses = List[Clause]
-
 SatFormula = Union[
     Clauses,
     fml.CNF, fml.CNFPlus
@@ -244,8 +243,6 @@ __all__ = [
     'CNFPlus',
     'WCNFPlus',
     # types
-    'Clause',
-    'Clauses',
     'SatFormula',
     'PySatFormula',
     'MaxSatFormula',

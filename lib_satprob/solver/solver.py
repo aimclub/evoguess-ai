@@ -1,6 +1,7 @@
-from typing import Any, Dict, Tuple, Optional, NamedTuple
+from typing import Any, List, Dict, Tuple, Optional, NamedTuple
 
-from ..variables import Assumptions, Supplements
+from ..variables import Supplements
+from ..encoding.patch import SatPatch
 
 KeyLimit = Tuple[
     Optional[str],
@@ -13,7 +14,7 @@ UNLIMITED = (None, None)
 class Report(NamedTuple):
     status: Optional[bool]
     stats: Dict[str, float]
-    model: Optional[Assumptions]
+    model: Optional[List[Any]]
     cost: Optional[int] = None
 
 
@@ -43,6 +44,12 @@ class _Solver:
             self,
             supplements: Supplements
     ) -> Report:
+        raise NotImplementedError
+
+    def apply(
+            self,
+            patch: SatPatch
+    ) -> '_Solver':
         raise NotImplementedError
 
 

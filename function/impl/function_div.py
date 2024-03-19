@@ -1,7 +1,7 @@
 from os import getpid
 from time import time as now
 
-from util.iterable import list_of
+from utility.iterable import list_of
 from ..model import WorkerArgs, WorkerResult, \
     WorkerCallable, Payload, Results, Estimation
 from .function_gad import GuessAndDetermine, gad_supplements

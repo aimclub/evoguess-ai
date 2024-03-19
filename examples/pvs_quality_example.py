@@ -12,9 +12,8 @@ from core.impl import Combine
 from space.model import Backdoor
 from output.impl import NoneLogger
 from executor.impl import ProcessExecutor
-from function.module.measure import SolvingTime
 
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 
 
 def run_pvs_quality():
@@ -22,7 +21,6 @@ def run_pvs_quality():
     data_path = root_path.to_path('data')
     cnf_file = data_path.to_file('pvs_4_7.cnf')
 
-    measure = SolvingTime()
     problem = SatProblem(
         solver=PySatSolver(sat_name='g3'),
         encoding=CNF(from_file=cnf_file)

@@ -1,3 +1,4 @@
+import os
 from math import copysign
 from threading import Timer
 from time import time as now
@@ -7,8 +8,10 @@ from typing import Dict, Union, \
 from pysat import solvers as slv
 from pysat.examples.rc2 import RC2
 
+from ...encoding.patch import SatPatch
 from ..solver import Report, Solver, \
     _Solver, KeyLimit, UNLIMITED
+
 from ...variables import Assumptions, Supplements
 from ...encoding import PySatFormula, MaxSatFormula, \
     to_sat_formula, is_sat_formula, is_max_sat_formula
@@ -277,6 +280,17 @@ class _PySatSolver(_Solver):
         )
         with solver:
             return _propagate(solver, assumptions)
+
+    def apply(
+            self,
+            patch: SatPatch
+    ) -> '_PySatSolver':
+        clauses = patch.clauses
+        self.formula.extend(clauses)
+        if self._solver is not None:
+            self._solver.append_formula(clauses)
+
+        return self
 
 
 #

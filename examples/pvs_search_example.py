@@ -32,7 +32,7 @@ from core.module.comparator import MinValueMaxSize
 
 # other imports
 from output.impl import NoneLogger
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 
 
 def run_pvs_4_7_search(count=6) -> List[Point]:
@@ -51,7 +51,7 @@ def run_pvs_4_7_search(count=6) -> List[Point]:
     cnf_file = data_path.to_file('pvs_4_7.cnf')
     problem = SatProblem(
         encoding=CNF(from_file=cnf_file),
-        solver=PySatSolver(sat_name='cd15'),
+        solver=PySatSolver(sat_name='g3'),
     )
 
     points = []

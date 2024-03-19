@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Dict, Union, Any
 
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 from typings.optional import Primitive
 
 

@@ -7,7 +7,7 @@ from typing import List, Dict, Tuple
 from tempfile import NamedTemporaryFile
 from subprocess import PIPE, Popen, TimeoutExpired
 
-from util.iterable import concat
+from utility.iterable import concat
 from ...variables import Supplements
 
 from .pysat import PySatSetts, \

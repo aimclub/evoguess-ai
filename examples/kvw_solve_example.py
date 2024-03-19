@@ -12,9 +12,8 @@ from lib_satprob.solver import Report, PySatSolver
 # other imports
 from core.impl import CombineT
 from output.impl import NoneLogger
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 from space.model import load_backdoors
-from executor.impl import ProcessExecutor
 
 
 def run_kvw_solve() -> Report:
@@ -31,16 +30,13 @@ def run_kvw_solve() -> Report:
     )
 
     workers = min(cpu_count(), 16)
-    executor = ProcessExecutor(
-        max_workers=workers
-    )
     print(f'Running on {workers} threads')
 
     return CombineT(
         problem=problem,
-        executor=executor,
         measure=Conflicts(),
         logger=NoneLogger(),
+        max_workers=workers,
         budget=TaskBudget(value=20000),
     ).launch(*backdoors)
 

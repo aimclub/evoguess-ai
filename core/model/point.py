@@ -1,4 +1,4 @@
-from typing import List, Optional, Any
+from typing import Any, List, Dict, List, Optional
 
 from typings.ordered import Ordered
 from typings.searchable import Searchable
@@ -31,6 +31,12 @@ class Point(Ordered):
 
     def __str__(self):
         return f'{repr(self.searchable)} by {self.value():.7g}'
+
+    def __config__(self) -> Dict[str, Any]:
+        return {
+            'estimation': self.estimation,
+            'searchable': self.searchable.__config__(),
+        }
 
 
 PointSet = List[Point]

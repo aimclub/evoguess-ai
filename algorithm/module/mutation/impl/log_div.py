@@ -1,6 +1,6 @@
 from ..mutation import Mutation
 
-from util.iterable import to_bin, from_bin
+from utility.iterable import to_bin, from_bin
 
 from typings.optional import Int
 from typings.searchable import Searchable

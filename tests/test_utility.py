@@ -2,7 +2,7 @@ import unittest
 
 from numpy.random import randint
 
-from util.iterable import concat, to_oct, \
+from utility.iterable import concat, to_oct, \
     to_bin, list_of, pick_by, omit_by, split_by
 
 

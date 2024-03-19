@@ -31,7 +31,7 @@ from core.module.comparator import MinValueMaxSize
 
 # other imports
 from output.impl import NoneLogger
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 
 
 def run_blp_18_search(count=500) -> List[Point]:

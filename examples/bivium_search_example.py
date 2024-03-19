@@ -25,7 +25,7 @@ from core.module.comparator import MinValueMaxSize
 
 # other imports
 from space.impl import BackdoorSet
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 from output.impl import OptimizeLogger
 from executor.impl import ProcessExecutor
 

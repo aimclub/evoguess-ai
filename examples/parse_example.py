@@ -1,5 +1,5 @@
 from output.impl import OptimizeParser
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 
 if __name__ == '__main__':
     root_path = WorkPath('examples')

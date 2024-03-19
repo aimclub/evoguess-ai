@@ -1,4 +1,4 @@
-from util.iterable import slice_by, concat
+from utility.iterable import slice_by, concat
 from typing import List, Iterable, Tuple, TYPE_CHECKING
 
 from .evolution import Evolution

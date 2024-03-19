@@ -1,8 +1,8 @@
 from typing import Tuple
 from numpy import argsort
 
-from util.polyfill import prod
-from util.iterable import pick_by, to_bin
+from utility.polyfill import prod
+from utility.iterable import pick_by, to_bin
 
 from lib_satprob.problem import Problem, SatProblem
 from lib_satprob.encoding import WCNF, is_sat_formula

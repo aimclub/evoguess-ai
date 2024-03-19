@@ -126,8 +126,8 @@ class Problem:
             'slug': self.slug,
             'solver': self.solver.__config__(),
             'encoding': self.encoding.__config__(),
-            'input_set': self.input_set.__config__(),
-            'output_set': self.output_set.__config__()
+            'input_set': self.input_set and self.input_set.__config__(),
+            'output_set': self.output_set and self.output_set.__config__()
         }
 
 

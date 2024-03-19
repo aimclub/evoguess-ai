@@ -13,8 +13,6 @@ __all__ = [
     'CNFPlus',
     'WCNFPlus',
     # types
-    'Clause',
-    'Clauses',
     'SatFormula',
     'PySatFormula',
     'MaxSatFormula',

@@ -6,7 +6,7 @@ from .contex import Context
 
 from function.model import ChunkResult, Results
 
-from util.iterable import list_of
+from utility.iterable import list_of
 from typings.error import AlreadyRunning, CancelledError
 from typings.future import Future, Timeout, AcquireFutures
 

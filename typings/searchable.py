@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, TypeVar, Any
 from lib_satprob.variables.vars import Var, VarMap
 from lib_satprob.variables import Supplements, Enumerable
 
-from util.iterable import concat, list_of, slice_by, to_bin, to_oct
+from utility.iterable import concat, list_of, slice_by, to_bin, to_oct
 
 Vector = List[int]
 ByteVector = bytes
@@ -32,7 +32,7 @@ class Searchable(Enumerable):
         raise NotImplementedError
 
     def get_vector(self) -> Vector:
-        return copy(self._vector)
+        return copy(list(map(int, self._vector)))
 
     def make_copy(self, vector: Vector) -> TSearchable:
         return copy(self)._set_vector(vector)

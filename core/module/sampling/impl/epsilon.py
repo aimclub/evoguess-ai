@@ -2,7 +2,7 @@ from math import sqrt, ceil
 from typing import Dict, Any
 
 from ..sampling import Sampling
-from util.iterable import concat
+from utility.iterable import concat
 from function.model import Results
 
 

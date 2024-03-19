@@ -3,7 +3,7 @@ from copy import copy
 
 from pysat import formula as fml
 
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 from lib_satprob.encoding import CNF, WCNF
 
 

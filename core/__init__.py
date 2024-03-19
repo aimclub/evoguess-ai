@@ -2,7 +2,7 @@ from .abc import Core
 from .impl import cores
 from .module import modules
 
-from util import load_modules
+from utility import load_modules
 
 
 def CoreBuilder(configuration, **kwargs):

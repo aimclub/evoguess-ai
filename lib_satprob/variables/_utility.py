@@ -1,8 +1,14 @@
 from typing import List, Tuple
 
+Clause = List[int]
+Clauses = List[Clause]
+
 Assumptions = List[int]
-Constraints = List[List[int]]
-Supplements = Tuple[Assumptions, Constraints]
+Constraints = Clauses
+Supplements = Tuple[
+    Assumptions,
+    Constraints
+]
 
 
 def combine(*args: Supplements) -> Supplements:
@@ -25,6 +31,8 @@ except ImportError:  # for python3.7
         return reduce(mul, _list, 1)
 
 __all__ = [
+    'Clause',
+    'Clauses',
     'Assumptions',
     'Constraints',
     'Supplements',

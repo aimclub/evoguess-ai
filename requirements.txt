@@ -1,2 +1,2 @@
 numpy~=1.21.6
-python-sat~=0.1.8.dev9
+python-sat~=1.8.dev4

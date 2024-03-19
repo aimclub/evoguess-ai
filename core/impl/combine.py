@@ -13,7 +13,7 @@ from lib_satprob.problem import Problem
 from lib_satprob.variables import Supplements, combine
 
 from typings.searchable import Searchable
-from util.iterable import concat, slice_by, slice_into
+from utility.iterable import concat, slice_by, slice_into
 
 
 def prep_worker(problem: Problem, searchable: Searchable) -> List[Supplements]:

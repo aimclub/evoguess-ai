@@ -8,7 +8,7 @@ from lib_satprob.solver import Report, PySatSolver
 # other imports
 from core.impl import Combine
 from output.impl import NoneLogger
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 from space.model import load_backdoors
 from executor.impl import ProcessExecutor
 

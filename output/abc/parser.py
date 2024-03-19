@@ -3,7 +3,7 @@ import json
 
 from typing import Iterable, Any
 
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 from typings.error import OutputSessionError
 
 from .output import Output, Config, LogFormat

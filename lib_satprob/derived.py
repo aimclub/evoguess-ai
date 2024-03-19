@@ -1,7 +1,6 @@
 from typing import List
 
-from lib_satprob.encoding import Clauses
-from lib_satprob.variables import Supplements
+from lib_satprob.variables import Clauses, Supplements
 
 try:
     from pyeda.boolalg.expr import AndOp, Variable

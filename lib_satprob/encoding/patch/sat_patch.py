@@ -5,13 +5,13 @@ from typing import Any, Dict, List
 from tempfile import NamedTemporaryFile
 
 from ..encoding import EncPatch
+from ...variables import Clauses
 
-FORMULAS: Dict[str, Any] = {}
+PATCHES: Dict[str, Any] = {}
 
 
 class SatPatch(EncPatch):
-    def __init__(self, clauses: List[List[int]]):
-        self.clauses = clauses
+    def __init__(self, clauses: Clauses):
         self._filename = None
 
         with NamedTemporaryFile(
@@ -20,22 +20,30 @@ class SatPatch(EncPatch):
             json.dump(clauses, handle)
             self._filename = handle.name
 
-    def apply(self, formula: Any) -> Any:
+    def _load(self) -> Clauses:
         if self._filename is None:
             raise FileNotFoundError
 
-        if self._filename not in FORMULAS:
-            # print('loading...', self._filename)
-            with open(self._filename, 'r+') as handle:
+        if self._filename not in PATCHES:
+            with open(self._filename) as handle:
                 clauses = json.load(handle)
-            formula.extend(clauses)
+            PATCHES[self._filename] = clauses
 
-            FORMULAS[self._filename] = formula
+        return PATCHES[self._filename]
 
-        return FORMULAS[self._filename]
+    @property
+    def clauses(self) -> Clauses:
+        return self._load()
+
+    def apply(self, formula: Any) -> Any:
+        formula.extend(self._load())
+        return formula
+
+    def __eq__(self, other: 'SatPatch') -> bool:
+        if other and isinstance(other, SatPatch):
+            return self._filename == other._filename
 
     def __del__(self):
-        # print('del', self._filename)
         if path.exists(self._filename):
             remove(self._filename)
 

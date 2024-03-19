@@ -1,5 +1,5 @@
 from itertools import compress
-from util.polyfill import prod
+from utility.polyfill import prod
 from typing import Optional, Iterator, List, Dict, Any
 
 from lib_satprob.variables import Variables
@@ -69,9 +69,12 @@ class Backdoor(Searchable):
         return str(self) == str(other)
 
     def __config__(self) -> Dict[str, Any]:
+        variables = self.variables()
         return {
             'slug': self.slug,
-            'variables': self._variables.__config__()
+            'variables': Variables(
+                from_vars=self.variables()
+            ).__config__()
         }
 
 

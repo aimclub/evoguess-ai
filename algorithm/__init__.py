@@ -2,7 +2,7 @@ from .abc import Algorithm
 from .impl import algorithms
 from .module import modules
 
-from util import load_modules
+from utility import load_modules
 
 
 def AlgorithmBuilder(configuration, **kwargs):

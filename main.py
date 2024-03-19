@@ -19,7 +19,7 @@ from core.module.sampling import Const
 from core.module.limitation import WallTime
 from core.module.comparator import MinValueMaxSize
 
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 
 if __name__ == '__main__':
     root_path = WorkPath('examples')

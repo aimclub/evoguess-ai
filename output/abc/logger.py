@@ -5,7 +5,7 @@ from time import sleep
 from typing import Any, Dict
 from datetime import datetime
 
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 from typings.error import OutputSessionError
 
 from .output import Output, LogFormat, Config

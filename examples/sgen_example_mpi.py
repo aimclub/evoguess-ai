@@ -20,7 +20,7 @@ from algorithm.module.mutation import Doer
 from algorithm.module.crossover import TwoPoint
 from algorithm.module.selection import Roulette
 
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 
 if __name__ == '__main__':
     root_path = WorkPath('examples')

@@ -28,7 +28,7 @@ from core.module.limitation import WallTime
 from core.module.comparator import MinValueMaxSize
 
 # other imports
-from util.work_path import WorkPath
+from utility.work_path import WorkPath
 from output.impl import OptimizeLogger
 from executor.impl import ProcessExecutor
 

@@ -2,7 +2,7 @@ from .abc import Function
 from .impl import functions
 from .module import modules
 
-from util import load_modules
+from utility import load_modules
 
 
 def FunctionBuilder(configuration, **kwargs):

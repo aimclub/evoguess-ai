@@ -3,7 +3,7 @@ from executor import Executor
 from function import Function
 
 from typing import List, Optional
-from util.iterable import pick_by
+from utility.iterable import pick_by
 
 from ..static import CORE_CACHE
 from ..module.sampling import Sampling

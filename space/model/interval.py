@@ -6,7 +6,7 @@ from lib_satprob.variables import Indexes, \
     Assumptions, Constraints, Supplements, prod
 from lib_satprob.variables.vars import Var, VarMap
 
-from util.iterable import to_bin, split_by, from_bin
+from utility.iterable import to_bin, split_by, from_bin
 from typings.searchable import Searchable, Vector
 
 

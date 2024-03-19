@@ -17,7 +17,7 @@ from ..module.sampling import Sampling
 from ..module.comparator import Comparator
 from ..module.limitation import Limitation
 
-from util.iterable import omit_by
+from utility.iterable import omit_by
 from lib_satprob.problem import Problem
 
 Await = Tuple[PointSet, List[Handle]]

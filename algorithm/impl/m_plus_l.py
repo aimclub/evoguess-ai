@@ -6,7 +6,7 @@ from ..module.selection import Selection
 
 from typings.optional import Int
 from core.model.point import PointSet
-from util.iterable import pick_by, omit_by
+from utility.iterable import pick_by, omit_by
 
 
 class MuPlusLambda(Evolution):

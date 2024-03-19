@@ -1,6 +1,6 @@
 from .abc import Logger, Parser
 from .impl import outputs
-from util import load_modules
+from utility import load_modules
 
 
 def OutputBuilder(configuration, **kwargs):
