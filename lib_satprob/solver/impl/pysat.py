@@ -52,6 +52,7 @@ class PySatTimer:
     def interrupt(self):
         if self._solver:
             self._solver.interrupt()
+            self._solver.clear_interrupt()
 
     def __enter__(self):
         if self.limit is not None:
@@ -224,10 +225,11 @@ class _PySatSolver(_Solver):
             if len(constraints) > 0:
                 solver = slv.Solver(name, formula)
                 solver.append_formula(constraints)
-                return solver.solver, assumptions
+                return solver, assumptions
             elif self._solver is None:
                 solver = slv.Solver(name, formula)
                 self._solver = solver.solver
+                solver.solver = None
             return None, assumptions
         elif is_max_sat_formula(formula):
             return get_max_sat_alg(

@@ -13,7 +13,7 @@ class Core:
         self.logger = logger
         self.problem = problem
 
-        self.random_seed = random_seed or randint(2 ** 32 - 1)
+        self.random_seed = random_seed or randint(2 ** 31)
         self.random_state = RandomState(seed=self.random_seed)
 
     def launch(self, *args, **kwargs) -> Any:

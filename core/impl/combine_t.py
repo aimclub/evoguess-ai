@@ -94,10 +94,10 @@ def prod_fn(
 ) -> List[Supplements]:
     solver = get_process_state().solver
     cur_patch = get_process_state().patch
+    # todo: reload solver if patch changed
     if patch and cur_patch != patch:
         solver = solver.apply(patch)
         get_process_state().patch = patch
-
     # cost = 0 if len(report.model) == 0 \
     #     else calc_cost(formula, report.model)
     return [
@@ -120,10 +120,27 @@ def prep_worker(
         return backdoor, easy, hard
 
 
+# def hard_worker(
+#         patch: SatPatch,
+#         task: Supplements,
+#         limit: KeyLimit
+# ) -> Tuple[Supplements, Report]:
+#     solver = get_process_state().solver
+#     cur_patch = get_process_state().patch
+#     # todo: reload solver if patch changed
+#     if patch and cur_patch != patch:
+#         solver = solver.apply(patch)
+#         get_process_state().patch = patch
+#
+#     return task, solver.solve(task, limit)
+
+
 def hard_worker(
-        problem: Problem, patch: SatPatch,
-        task: Supplements, limit: KeyLimit,
+        patch: SatPatch,
+        task: Supplements,
+        limit: KeyLimit,
 ) -> Tuple[Supplements, Report]:
+    problem = get_process_state().problem
     formula = problem.encoding.get_formula(patch=patch)
     with problem.solver.get_instance(formula) as solver:
         return task, solver.solve(task, limit)
@@ -161,7 +178,7 @@ class CombineT(Core):
         with tqdm(**tqdm_kwargs) as progress:
             limit = UNLIMITED if is_last_iter else limit
             for task, report in executor.map(hard_worker, *zip(*(
-                    (self.problem, patch, task, limit) for task in tasks
+                    (patch, task, limit) for task in tasks
             ))):
                 for key, value in report.stats.items():
                     self.stats_sum[key] = \

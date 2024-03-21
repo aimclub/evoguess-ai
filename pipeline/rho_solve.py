@@ -61,14 +61,28 @@ def run_alg(size: int, seed: int) -> List[Point]:
     initial = space._get_searchable()
     initial._set_vector(list(vector))
 
-    point = rho_evaluate(initial)
+    best_value, point = 1, rho_evaluate(initial)
+    same_value = {str(point.searchable): point}
     with algorithm.start(point) as pm:
         for iteration in range(ITER_COUNT):
             backdoor = pm.collect(0, 1)[0]
             point = rho_evaluate(backdoor)
-            _, [best, *_] = pm.insert(point)
+            _, population = pm.insert(point)
 
-        return [rho_fn_ext(best.searchable)]
+            for point in population:
+                _value = point.get('value')
+                _key = str(point.searchable)
+                if _value == best_value:
+                    if _key not in same_value:
+                        same_value[_key] = point
+                elif _value < best_value:
+                    same_value = {_key: point}
+                    best_value = _value
+
+        return [
+            rho_fn_ext(point.searchable)
+            for point in same_value.values()
+        ]
 
 
 def solve(
@@ -128,7 +142,10 @@ def solve(
     sum_time = round(phase_1_time + phase_2_time, 2)
     printc('', f'Summary time: {sum_time} sec.')
 
-    return report
+    return Report(report.status, {
+        **report.stats,
+        'sum_time': sum_time
+    }, report.model, report.cost)
 
 
 __all__ = [
