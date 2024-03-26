@@ -4,6 +4,7 @@ from .external import *
 
 solvers = {
     Kissat.slug: Kissat,
+    Cadical.slug: Cadical,
     Loandra.slug: Loandra,
     PySatSolver.slug: PySatSolver,
     Py2SatSolver.slug: Py2SatSolver,
@@ -11,6 +12,7 @@ solvers = {
 
 __all__ = [
     'Kissat',
+    'Cadical',
     'Loandra',
     'PySatSolver',
     'Py2SatSolver',

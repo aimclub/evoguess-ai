@@ -233,9 +233,45 @@ class Loandra(ExternalSolver):
         )
 
 
+class _Cadical(_ExternalSolver):
+    launch_payload = [
+        '--no-colors'
+    ]
+    limits = {
+        'time': '-t %d',
+        'conflicts': '-c %d',
+        'decisions': '-d %d',
+    }
+    statistic = {
+        'restarts': re.compile(r'^c restarts:\s+(\d+)', re.MULTILINE),
+        'conflicts': re.compile(r'^c conflicts:\s+(\d+)', re.MULTILINE),
+        'decisions': re.compile(r'^c decisions:\s+(\d+)', re.MULTILINE),
+        'propagations': re.compile(r'^c propagations:\s+(\d+)', re.MULTILINE)
+    }
+
+    def _parse_solution(self, output: str) -> List[int]:
+        return concat(*(
+            [int(var) for var in line.split()] for line in
+            re.findall(r'^v ([-\d ]*)', output, re.MULTILINE)
+        ))
+
+
+class Cadical(ExternalSolver):
+    slug = 'solver:external:cadical'
+
+    def get_instance(
+            self, formula: SatFormula, use_timer: bool = True
+    ) -> _Cadical:
+        return _Cadical(
+            formula, self.settings, self.from_executable, use_timer
+        )
+
+
 __all__ = [
     'Kissat',
     '_Kissat',
+    'Cadical',
+    '_Cadical',
     'Loandra',
     '_Loandra',
     # types
