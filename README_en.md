@@ -32,6 +32,72 @@ mpiexec -n <workers> -perhost <perhost> python3 -m mpi4py.futures main.py
 
 where **perhost** is MPI workers processes on one node, and **workers** is a total MPI workers processes on all dedicated nodes.
 
+## Rho-backdoors
+
+EvoGuessAI supports the use of rho-backdoors to solve SAT and MaxSAT in relation to СNF.
+
+Rho-backdoor, in short, is a backdoor that allows you to decompose the original CNF into two subsets of subtasks. The first will consist of subtasks that the SAT oracle solves for a certain limitation by some measure (most often, time or number of conflicts), the second of all other subtasks. The proportion of the first subset is (rho), the second is (1-rho).
+
+In practice (and in EvoGuessAI), such backdoors are sought to maximize rho. Accordingly, each backdoor will generate a small number of complex subtasks (also called _hardtasks_). However, we can use the hardtasks received from different backdoors together.
+
+EvoGuessAI is able to build backdoors while maximizing the rho value. Then the iterative process of filtering out hardtasks is started. At each iteration, the Cartesian product of hardtacks from different rho backdoors is built and then it is filtered to find new hardtacks. At some point, all the hard tasks begin to be solved for the set limit to some extent. If the rho backdoors for building Cartesian products end earlier, then the restriction is disabled and all remaining tasks are completed as usual.
+
+### Requirements
+
+Optional:
+1. tqdm – package for logging the process.
+```shell
+pip install tqdm
+```
+
+[//]: # (Требуемые пакеты, опциональные и обязательные, и тд)
+
+[//]: # ()
+[//]: # (&#40;заглушка для tqdm надо доделать, желательно&#41;)
+
+### Rho-backdoors mode command line parameters
+
+1. '-cnf', '--cnffilename' – file with cnf, is a required parameter;
+2. '-s', '--solvername' – short name of the SAT solver used as the SAT oracle. Available names: g3 -- Glucose 3; cd, cd 15, cd19 -- different versions of Cadical (see PySAT docs);
+3. '-nr', '--nofearuns' – the number of runs of the evolutionary algorithm for searching for rho backdoors. Each launch can result in the generation of several rho backdoors if they have the same rho;
+4. '-seed', '--seedinitea' – initializing seed for the evolutionary algorithm;
+5. '-np', '--nofprocesses' – the number of available processes for multithreading;
+6. '-bds', '--backdoorsize' – the size of the rho backdoors being searched;
+7. '-tl', '--timelimit' – time limit for the SAT oracle when solving hard tasks;
+8. '-cl', '--conflictlimit' – limit on the number of conflicts for the SAT oracle when solving hardtacks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set.
+
+[//]: # (Надо посомтреть форматы записи параметров и сделать по-красоте)
+
+[//]: # ()
+[//]: # (Стоит добавить функционал для SAT-задач.)
+
+[//]: # ()
+[//]: # (Можно добавить &#40;в документции&#41; доп параметры для advanced использования, которые будут уже не в командной строке, а внутри main_p. К примеру параметр перезапуска екзекьютора)
+
+Default run:
+```shell
+python3 ./main_p.py -cnf ./examples/data/lec_sort_PvS_8_3.cnf -s g3 -nr 40 -seed 123 -np 8 -bds 10 -tl 0 -cl 20000
+```
+This command will launch EvoGuessAI in the mode of using rho backdoors to solve one of the exemplary CNF (LEC problem for the "pancake" and "selection" sorting algorithms for eight 3-bit numbers). 8 processes will be used in the solution. The evolutionary algorithm will be run 40 times with a "123" seed, while looking for rho backdoors of length 10. Hardtacks will be solved with a limit of 20,000 conflicts per hardtask.
+
+[//]: # (Нужен эффективный пример)
+
+[//]: # (Показать примеры работы прям тут с пояснениями и все такое)
+
+[//]: # ()
+[//]: # (Нужно добавить функционал, чтобы если у нас бэкдор с одной хардтаской, то сразу добавляем юниты к кнф через солвер.екстенд)
+
+[//]: # (и бэкдор тогда не доабвляем)
+
+[//]: # ()
+[//]: # (И вообще все сложнее, потому что эти переменные могут быть в бэкдорах, найденных до этого. И ещё из пространтсва поиска надо удалять юниты. А для этого надо чтобы в принципе пространство поиска динамически менялось)
+
+[//]: # ()
+[//]: # (solver._solver.add_clause&#40;[l for l in hardtask]&#41; &#40;только надо ещё проверить что _solver существует&#41;)
+
+[//]: # ()
+[//]: # (Ещё хорошая идея после поиска бэкдоров убивать все солверы и потом их пересоздавать, чтобы чистился кэш)
+
 ## Usage examples
 
 An example of [probabilistic backdoors searching](https://github.com/aimclub/evoguess-ai/blob/master/examples/pvs_search_example.py) to solve the equivalence checking problem of two Boolean schemes that implement different algorithms, using the example of PvS 7x4 encoding (Pancake vs Selection sort).

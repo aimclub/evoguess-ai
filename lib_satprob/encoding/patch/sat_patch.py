@@ -43,9 +43,9 @@ class SatPatch(EncPatch):
         if other and isinstance(other, SatPatch):
             return self._filename == other._filename
 
-    def __del__(self):
-        if path.exists(self._filename):
-            remove(self._filename)
+    # def __del__(self):
+        # if path.exists(self._filename):
+        #     remove(self._filename)
 
 
 __all__ = [

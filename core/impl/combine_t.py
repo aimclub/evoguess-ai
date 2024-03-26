@@ -120,19 +120,19 @@ def prep_worker(
         return backdoor, easy, hard
 
 
-# def hard_worker(
-#         patch: SatPatch,
-#         task: Supplements,
-#         limit: KeyLimit
-# ) -> Tuple[Supplements, Report]:
-#     solver = get_process_state().solver
-#     cur_patch = get_process_state().patch
-#     # todo: reload solver if patch changed
-#     if patch and cur_patch != patch:
-#         solver = solver.apply(patch)
-#         get_process_state().patch = patch
-#
-#     return task, solver.solve(task, limit)
+def hard_worker_inc(
+        patch: SatPatch,
+        task: Supplements,
+        limit: KeyLimit
+) -> Tuple[Supplements, Report]:
+    solver = get_process_state().solver
+    cur_patch = get_process_state().patch
+    # todo: reload solver if patch changed
+    if patch and cur_patch != patch:
+        solver = solver.apply(patch)
+        get_process_state().patch = patch
+
+    return task, solver.solve(task, limit)
 
 
 def hard_worker(
@@ -199,6 +199,11 @@ class CombineT(Core):
                 executor: ProcessPoolExecutor) -> Report:
         workers = executor._max_workers
 
+        if len(hard_order) == 0:
+            formula = self.problem.encoding.get_formula(patch=patch)
+            solver = self.problem.solver.get_instance(formula)
+            return solver.solve(([], []))
+
         [acc_hard_tasks, *hard_order] = hard_order
         var_set = set(map(abs, acc_hard_tasks[0][0]))
         for i, hard_tasks in enumerate(hard_order):
@@ -230,7 +235,10 @@ class CombineT(Core):
                 return Report(status, self.stats_sum, model)
 
         if len(acc_hard_tasks) > 0:
-            raise RuntimeError('Unexpected behavior')
+            self.sifting(patch, acc_hard_tasks, executor, True)
+            status = len(self.solutions) > 0
+            model = self.solutions if status else None
+            return Report(status, self.stats_sum, model)
 
     def launch(self, *backdoors: Backdoor) -> Report:
         workers = self.max_workers or os.cpu_count()

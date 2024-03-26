@@ -3,6 +3,7 @@ from os import cpu_count
 from numpy.random import RandomState
 
 from core.impl import CombineT
+from function.module.measure import Measure
 from output.impl import CombineLogger
 
 from space.model import Backdoor
@@ -16,7 +17,6 @@ from algorithm.module.mutation import FixSize
 from algorithm.module.selection import Roulette
 
 from function.module.budget import TaskBudget
-from function.module.measure import Conflicts
 
 from rho_tool import rho_fn, rho_fn_ext
 from rho_tool.rho_pool import \
@@ -86,8 +86,10 @@ def run_alg(size: int, seed: int) -> List[Point]:
 
 
 def solve(
-        problem: Problem, runs: int, seed_offset: int = 1,
+        problem: Problem, runs: int, measure: Measure,
+        seed_offset: int = 1,
         max_workers: int = 16, bd_size: int = 10,
+        limit: int = 20000,
         log_path: WorkPath = None
 ) -> Report:
     dirs = ('examples', 'logs', 'rho_solve')
@@ -103,7 +105,6 @@ def solve(
             'unit': 'run', 'postfix': '0 bds',
             'desc': 'Searching', 'total': runs
         }
-
         with tqdm(**tqdm_kwargs) as progress:
             for points in executor.map(run_alg, *zip(*(
                     (bd_size, seed_offset + seed)
@@ -115,15 +116,18 @@ def solve(
                     f'{len(all_points)} bds'
                 )
             logger.meta(problem, *all_points)
-
+        # for el in sorted(all_points):
+            # print(el)
         search_stamp, search_time = time_ms(), passed()
         patch, hard_order = rho_preprocess(all_points, executor)
         pre_stamp, derive_time = time_ms(), passed(search_stamp)
         printc(f'Prepared {len(hard_order)} backdoors')
+        # print(hard_order)
+
         phase_1_time = search_time + derive_time
 
         printc('', 'Phase 2 (Solve problem)')
-        measure, budget = Conflicts(), TaskBudget(20000)
+        budget = TaskBudget(limit)
         combine = CombineT(logger, problem, measure, budget)
         report = combine.process(patch, hard_order, executor)
         phase_2_time = passed(pre_stamp)
