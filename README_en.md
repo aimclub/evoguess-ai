@@ -57,14 +57,16 @@ pip install tqdm
 
 ### Rho-backdoors mode command line parameters
 
-1. '-cnf', '--cnffilename' – file with cnf, is a required parameter;
-2. '-s', '--solvername' – short name of the SAT solver used as the SAT oracle. Available names: g3 -- Glucose 3; cd, cd 15, cd19 -- different versions of Cadical (see PySAT docs);
-3. '-nr', '--nofearuns' – the number of runs of the evolutionary algorithm for searching for rho backdoors. Each launch can result in the generation of several rho backdoors if they have the same rho;
-4. '-seed', '--seedinitea' – initializing seed for the evolutionary algorithm;
-5. '-np', '--nofprocesses' – the number of available processes for multithreading;
-6. '-bds', '--backdoorsize' – the size of the rho backdoors being searched;
-7. '-tl', '--timelimit' – time limit for the SAT oracle when solving hard tasks;
-8. '-cl', '--conflictlimit' – limit on the number of conflicts for the SAT oracle when solving hardtacks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set.
+| Argument        | Short name | Description                                                                                                                                                                                                                               |
+|-----------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --formula       | -f         | file with cnf, is a required parameter                                                                                                                                                                                                    |
+| --solvername    | -s         | short name of the SAT solver used as the SAT oracle. Available names: g3 -- Glucose 3; cd, cd 15, cd19 -- different versions of Cadical (see PySAT docs);                                                                                 |
+| --nofearuns     | -nr        | the number of runs of the evolutionary algorithm for searching for rho backdoors. Each launch can result in the generation of several rho backdoors if they have the same rho;                                                            |
+| --seedinitea    | -seed      | initializing seed for the evolutionary algorithm;                                                                                                                                                                                         |
+| --nofprocesses  | -np        | the number of available processes for multithreading;                                                                                                                                                                                     |
+| --backdoorsize  | -bds       | the size of the rho backdoors being searched;                                                                                                                                                                                             |
+| --timelimit     | -tl        | time limit for the SAT oracle when solving hard tasks;                                                                                                                                                                                    |
+| --conflictlimit | -cl        | limit on the number of conflicts for the SAT oracle when solving hardtacks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set. |
 
 [//]: # (Надо посомтреть форматы записи параметров и сделать по-красоте)
 
