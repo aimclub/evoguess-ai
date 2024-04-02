@@ -94,8 +94,8 @@ Command above will launch EvoGuessAI in the mode of using ρ-backdoors to solve 
 
 Result with comments:
 
-[//]: # (сделать такой формат римера, чтобы комментарии подсвечивались)
-```
+[//]: # (сделать такой формат примера, чтобы комментарии выделялись визуально)
+```shell
 00:00:01 ---------------------- Running on 4 threads ----------------------
 00:00:01 -------------------------------------------------------------------
 00:00:01 ------------------- Phase 1 (Prepare backdoors) -------------------
@@ -106,7 +106,7 @@ Result with comments:
 00:03:33 Deriving: 100%|██████████| 608/608 [00:52<00:00, 11.65bd/s, 844 clauses]
 
 # During deriving process from all backdoor 844 additional clauses was extract to the original CNF.
-answe
+
 00:04:25 ---------------------- Prepared 10 backdoors ----------------------
 
 # All backdoors were filtered from useless ones (not carrying new variables). 
@@ -150,8 +150,8 @@ answe
 01:12:23 ------------------- Summary time: 4343.21 sec. -------------------
 
 Process finished with exit code 0
-
 ```
+
 
 [//]: # (Нужен эффективный пример)
 
@@ -170,6 +170,7 @@ Process finished with exit code 0
 
 [//]: # ()
 [//]: # (Ещё хорошая идея после поиска бэкдоров убивать все солверы и потом их пересоздавать, чтобы чистился кэш)
+[//]: # (Ещё нужно сделать, чтобы бэкдоры искались с константным решателем с быстрым пропагейтом, а вот потом уже решение шло на выбранном пользователем решателе)
 
 ## Usage examples
 
