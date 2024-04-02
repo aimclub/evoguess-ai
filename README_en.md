@@ -32,15 +32,15 @@ mpiexec -n <workers> -perhost <perhost> python3 -m mpi4py.futures main.py
 
 where **perhost** is MPI workers processes on one node, and **workers** is a total MPI workers processes on all dedicated nodes.
 
-## Rho-backdoors
+## ρ-Backdoors module
 
-EvoGuessAI supports the use of rho-backdoors to solve SAT and MaxSAT in relation to СNF.
+EvoGuessAI supports the use of ρ-backdoors to solve SAT in relation to СNF and MaxSAT in relation to WCNF.
 
-Rho-backdoor, in short, is a backdoor that allows you to decompose the original CNF into two subsets of subtasks. The first will consist of subtasks that the SAT oracle solves for a certain limitation by some measure (most often, time or number of conflicts), the second of all other subtasks. The proportion of the first subset is (rho), the second is (1-rho).
+ρ-Backdoor, in short, is a backdoor that allows you to decompose the original CNF into two subsets of subtasks. The first will consist of subtasks that the SAT oracle solves for a certain limitation by some measure (most often, time or number of conflicts), the second of all other subtasks. The proportion of the first subset is (ρ), the second is (1-ρ).
 
-In practice (and in EvoGuessAI), such backdoors are sought to maximize rho. Accordingly, each backdoor will generate a small number of complex subtasks (also called _hardtasks_). However, we can use the hardtasks received from different backdoors together.
+In practice (and in EvoGuessAI), such backdoors are sought to maximize ρ. Accordingly, each backdoor will generate a small number of complex subtasks (also called _hard tasks_). However, we can use the hard tasks received from different backdoors together.
 
-EvoGuessAI is able to build backdoors while maximizing the rho value. Then the iterative process of filtering out hardtasks is started. At each iteration, the Cartesian product of hardtacks from different rho backdoors is built and then it is filtered to find new hardtacks. At some point, all the hard tasks begin to be solved for the set limit to some extent. If the rho backdoors for building Cartesian products end earlier, then the restriction is disabled and all remaining tasks are completed as usual.
+EvoGuessAI is able to build backdoors while maximizing the ρ value. Then the iterative process of filtering out hard tasks is started. At each iteration, the Cartesian product of hard tasks from different ρ-backdoors is built and then it is filtered to find new hard tasks. At some point, all the hard tasks begin to be solved for the set limit to some extent. If the ρ-backdoors for building Cartesian products end earlier, then the restriction is disabled and all remaining tasks are completed as usual.
 
 ### Requirements
 
@@ -55,18 +55,24 @@ pip install tqdm
 [//]: # ()
 [//]: # (&#40;заглушка для tqdm надо доделать, желательно&#41;)
 
-### Rho-backdoors mode command line parameters
+### ρ-Backdoor's module documentation
 
-| Argument        | Short name | Description                                                                                                                                                                                                                               |
-|-----------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| --formula       | -f         | file with cnf, is a required parameter                                                                                                                                                                                                    |
-| --solvername    | -s         | short name of the SAT solver used as the SAT oracle. Available names: g3 -- Glucose 3; cd, cd 15, cd19 -- different versions of Cadical (see PySAT docs);                                                                                 |
-| --nofearuns     | -nr        | the number of runs of the evolutionary algorithm for searching for rho backdoors. Each launch can result in the generation of several rho backdoors if they have the same rho;                                                            |
-| --seedinitea    | -seed      | initializing seed for the evolutionary algorithm;                                                                                                                                                                                         |
-| --nofprocesses  | -np        | the number of available processes for multithreading;                                                                                                                                                                                     |
-| --backdoorsize  | -bds       | the size of the rho backdoors being searched;                                                                                                                                                                                             |
-| --timelimit     | -tl        | time limit for the SAT oracle when solving hard tasks;                                                                                                                                                                                    |
-| --conflictlimit | -cl        | limit on the number of conflicts for the SAT oracle when solving hardtacks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set. |
+In the [Markdown](https://en.wikipedia.org/wiki/Markdown) file
+[`index.md`](./docs/rho_docs_en/index.md).
+
+### ρ-Backdoor's module command line parameters
+
+| Argument full name | Short name | Description                                                                                                                                                                                                                               |
+|--------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --formula          | -f         | file with input formula (CNF or WCNF format), is a required parameter                                                                                                                                                                     |
+| --solvername       | -s         | short name of the SAT solver used as the SAT oracle. Available names: g3 -- Glucose 3; cd, cd 15, cd19 -- different versions of Cadical (see PySAT docs)                                                                                  |
+| --nofearuns        | -nr        | the number of runs of the evolutionary algorithm for searching for ρ-backdoors. Each launch can result in the generation of several ρ-backdoors if they have the same ρ                                                                   |
+| --nofprocesses     | -np        | the number of available processes for multithreading                                                                                                                                                                                      |
+| --backdoorsize     | -bds       | the size of the ρ-backdoors being searched                                                                                                                                                                                                |
+| --timelimit        | -tl        | time limit for the SAT oracle when solving hard tasks                                                                                                                                                                                     |
+| --conflictlimit    | -cl        | limit on the number of conflicts for the SAT oracle when solving hard tasks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set |
+
+[//]: # (Мб стоит сид убать в адвансед параметры, всетаки это не особо "осознанный" параметр в плане изменения)
 
 [//]: # (Надо посомтреть форматы записи параметров и сделать по-красоте)
 
@@ -76,11 +82,76 @@ pip install tqdm
 [//]: # ()
 [//]: # (Можно добавить &#40;в документции&#41; доп параметры для advanced использования, которые будут уже не в командной строке, а внутри main_p. К примеру параметр перезапуска екзекьютора)
 
-Default run:
+Template:
 ```shell
-python3 ./main_p.py -cnf ./examples/data/lec_sort_PvS_8_3.cnf -s g3 -nr 40 -seed 123 -np 8 -bds 10 -tl 0 -cl 20000
+python3 ./main_p.py -f <file> [options]
 ```
-This command will launch EvoGuessAI in the mode of using rho backdoors to solve one of the exemplary CNF (LEC problem for the "pancake" and "selection" sorting algorithms for eight 3-bit numbers). 8 processes will be used in the solution. The evolutionary algorithm will be run 40 times with a "123" seed, while looking for rho backdoors of length 10. Hardtacks will be solved with a limit of 20,000 conflicts per hardtask.
+Example:
+```shell
+python3 ./main_p.py -f ./examples/data/lec_sort_PvS_8_3.cnf -s g3 -nr 40 -np 8 -bds 10 -tl 0 -cl 20000
+```
+Command above will launch EvoGuessAI in the mode of using ρ-backdoors to solve one of the exemplary CNF (LEC problem for the "pancake" and "selection" sorting algorithms for eight 3-bit numbers). 8 processes will be used in the solution. The evolutionary algorithm will be run 40 times, while looking for ρ-backdoors of length 10. Hard tasks will be solved with a limit of 20,000 conflicts per hard task.
+
+Result with comments:
+
+[//]: # (сделать такой формат римера, чтобы комментарии подсвечивались)
+```
+00:00:01 ---------------------- Running on 4 threads ----------------------
+00:00:01 -------------------------------------------------------------------
+00:00:01 ------------------- Phase 1 (Prepare backdoors) -------------------
+00:00:01 Searching: 100%|██████████| 40/40 [03:31<00:00,  5.29s/run, 7009 bds]
+
+# In phase 1 7009 backdoors was found. It was bacdoors with maximum rho from every thread
+
+00:03:33 Deriving: 100%|██████████| 608/608 [00:52<00:00, 11.65bd/s, 844 clauses]
+
+# During deriving process from all backdoor 844 additional clauses was extract to the original CNF.
+answe
+00:04:25 ---------------------- Prepared 10 backdoors ----------------------
+
+# All backdoors were filtered from useless ones (not carrying new variables). 
+# 10 backdoors left.
+
+00:04:25 -------------------------------------------------------------------
+00:04:25 --------------------- Phase 2 (Solve problem) ---------------------
+00:04:25 ------------------- Used 2 backdoors (20 vars) -------------------
+00:04:25 Sifting: 100%|██████████| 4/4 [00:04<00:00,  1.06s/task, 4 hard]
+
+# Hard tasks from first two backdoor was used to construct Cortesian product. It's lenght is 4 cubes.
+# When solving these 4 cubes with a constraint, it turned out that all 4 were too difficult. 
+# Therefore, we add the next backdoor (builds the Cartesian product of the current set of cubes 
+# and the hard tasks from the next backdoor).
+
+00:04:29 ------------------- Used 3 backdoors (22 vars) -------------------
+00:04:29 Sifting: 100%|██████████| 8/8 [00:07<00:00,  1.14task/s, 8 hard]
+00:04:36 ------------------- Used 4 backdoors (24 vars) -------------------
+00:04:36 Sifting: 100%|██████████| 16/16 [00:15<00:00,  1.03task/s, 16 hard]
+00:04:52 ------------------- Used 5 backdoors (26 vars) -------------------
+00:04:52 Sifting: 100%|██████████| 32/32 [00:31<00:00,  1.02task/s, 32 hard]
+00:05:23 ------------------- Used 6 backdoors (36 vars) -------------------
+00:05:23 Sifting: 100%|██████████| 64/64 [01:03<00:00,  1.01task/s, 64 hard]
+00:06:27 ------------------- Used 7 backdoors (38 vars) -------------------
+00:06:27 Sifting: 100%|██████████| 128/128 [02:22<00:00,  1.11s/task, 125 hard]
+00:08:49 ------------------- Used 8 backdoors (39 vars) -------------------
+00:08:49 Sifting: 100%|██████████| 250/250 [05:41<00:00,  1.37s/task, 220 hard]
+00:14:31 ------------------- Used 9 backdoors (42 vars) -------------------
+00:14:31 Sifting: 100%|██████████| 440/440 [11:20<00:00,  1.55s/task, 394 hard]
+00:25:51 ------------------- Used 10 backdoors (44 vars) -------------------
+00:25:51 -------------- Disable solver budget (last backdoor) --------------
+00:25:51 Sifting: 100%|██████████| 788/788 [46:31<00:00,  3.54s/task, 0 hard]
+01:12:23 -------------------------------------------------------------------
+01:12:23 ---------------------------- Solution ----------------------------
+01:12:23 -------------------------- UNSATISFIABLE --------------------------
+01:12:23 -------------------------------------------------------------------
+01:12:23 -------------------- Search time: 213.179 sec. --------------------
+01:12:23 -------------------- Derive time: 52.396 sec. --------------------
+01:12:23 ------------------- Solving time: 4077.635 sec. -------------------
+01:12:23 -------------------------------------------------------------------
+01:12:23 ------------------- Summary time: 4343.21 sec. -------------------
+
+Process finished with exit code 0
+
+```
 
 [//]: # (Нужен эффективный пример)
 
@@ -95,7 +166,7 @@ This command will launch EvoGuessAI in the mode of using rho backdoors to solve 
 [//]: # (И вообще все сложнее, потому что эти переменные могут быть в бэкдорах, найденных до этого. И ещё из пространтсва поиска надо удалять юниты. А для этого надо чтобы в принципе пространство поиска динамически менялось)
 
 [//]: # ()
-[//]: # (solver._solver.add_clause&#40;[l for l in hardtask]&#41; &#40;только надо ещё проверить что _solver существует&#41;)
+[//]: # (solver._solver.add_clause&#40;[l for l in hard task]&#41; &#40;только надо ещё проверить что _solver существует&#41;)
 
 [//]: # ()
 [//]: # (Ещё хорошая идея после поиска бэкдоров убивать все солверы и потом их пересоздавать, чтобы чистился кэш)

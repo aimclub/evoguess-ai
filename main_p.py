@@ -3,7 +3,9 @@ import sys
 
 from lib_satprob.solver import PySatSolver
 from lib_satprob.problem import SatProblem
+from lib_satprob.problem import MaxSatProblem
 from lib_satprob.encoding import CNF, WCNF
+
 
 from utility.work_path import WorkPath
 from pipeline.rho_solve import solve
@@ -50,10 +52,34 @@ if __name__ == '__main__':
 
     solver = PySatSolver(sat_name=solver_name)
     # TODO надо чекать расширение файла (или читать хэдер) и если это wcnf то работать с wcnf
-    encoding = CNF(from_file=formula_file)
-    problem = SatProblem(
-        solver, encoding
-    )
+    # problem = encode_problem(formula_file, solver)
+    if formula_file.endswith('.cnf'):
+        encoding = CNF(from_file=formula_file)
+        problem = SatProblem(
+            solver, encoding
+        )
+    elif formula_file.endswith('.wcnf'):
+        encoding = WCNF(from_file=formula_file)
+        problem = MaxSatProblem(
+            solver, encoding
+        )
+    else:
+        with open(formula_file) as f:
+            header = f.readline()
+        if 'p cnf' in header:
+            encoding = CNF(from_file=formula_file)
+            problem = SatProblem(
+                solver, encoding
+            )
+        elif 'p wcnf' in header:
+            encoding = WCNF(from_file=formula_file)
+            problem = MaxSatProblem(
+                solver, encoding
+            )
+        else:
+            print('Wrong file extension:', formula_file)
+            print('CNF or WCNF files supported.')
+            raise Exception('Wrong file extension.')
     report = solve(problem=problem,
                    runs=nof_ea_runs,
                    measure=measure,
