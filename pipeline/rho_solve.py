@@ -64,11 +64,13 @@ def run_alg(size: int, seed: int) -> List[Point]:
     best_value, point = 1, rho_evaluate(initial)
     same_value = {str(point.searchable): point}
     with algorithm.start(point) as pm:
+        # import os
         for iteration in range(ITER_COUNT):
             backdoor = pm.collect(0, 1)[0]
             point = rho_evaluate(backdoor)
+            # print(f'PID: {os.getpid()}, iter {iteration} of {range(ITER_COUNT)}, point {point}')
             _, population = pm.insert(point)
-
+            # TODO гдето тут надо апдейтить пространство поиска если 1 хард таска
             for point in population:
                 _value = point.get('value')
                 _key = str(point.searchable)

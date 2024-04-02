@@ -101,7 +101,7 @@ Result with comments:
 00:00:01 ------------------- Phase 1 (Prepare backdoors) -------------------
 00:00:01 Searching: 100%|██████████| 40/40 [03:31<00:00,  5.29s/run, 7009 bds]
 
-# In phase 1 7009 backdoors was found. It was bacdoors with maximum rho from every thread
+# In phase 1 7009 backdoors was found. It was backdoors with maximum rho from every thread.
 
 00:03:33 Deriving: 100%|██████████| 608/608 [00:52<00:00, 11.65bd/s, 844 clauses]
 
@@ -118,7 +118,7 @@ Result with comments:
 00:04:25 Sifting: 100%|██████████| 4/4 [00:04<00:00,  1.06s/task, 4 hard]
 
 # Hard tasks from first two backdoor was used to construct Cortesian product. It's lenght is 4 cubes.
-# When solving these 4 cubes with a constraint, it turned out that all 4 were too difficult. 
+# When solving these 4 cubes with a limit in conflicts, it turned out that all 4 were too difficult. 
 # Therefore, we add the next backdoor (builds the Cartesian product of the current set of cubes 
 # and the hard tasks from the next backdoor).
 
@@ -138,18 +138,22 @@ Result with comments:
 00:14:31 Sifting: 100%|██████████| 440/440 [11:20<00:00,  1.55s/task, 394 hard]
 00:25:51 ------------------- Used 10 backdoors (44 vars) -------------------
 00:25:51 -------------- Disable solver budget (last backdoor) --------------
+
+# Since backdoor 10 was the last one, remain hard tasks is solved without limit.
+
 00:25:51 Sifting: 100%|██████████| 788/788 [46:31<00:00,  3.54s/task, 0 hard]
 01:12:23 -------------------------------------------------------------------
 01:12:23 ---------------------------- Solution ----------------------------
 01:12:23 -------------------------- UNSATISFIABLE --------------------------
+
+# EvoguessAI proved that formula is unsatisfiable.
+
 01:12:23 -------------------------------------------------------------------
 01:12:23 -------------------- Search time: 213.179 sec. --------------------
 01:12:23 -------------------- Derive time: 52.396 sec. --------------------
 01:12:23 ------------------- Solving time: 4077.635 sec. -------------------
 01:12:23 -------------------------------------------------------------------
 01:12:23 ------------------- Summary time: 4343.21 sec. -------------------
-
-Process finished with exit code 0
 ```
 
 

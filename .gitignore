@@ -6,3 +6,6 @@ tools/
 examples/data
 examples/logs
 examples/solvers
+
+# tmp
+rho_tool/check_formula.py
