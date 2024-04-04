@@ -1,6 +1,6 @@
+# EvoGuessAI
 
-
-# Table of contents 
+## Table of contents <a name="tablecontents"></a>
 1. [Introduction](intro.md)
 2. [Installation](installation.md)
 3. [Preliminaries](theory.md)
@@ -8,4 +8,5 @@
 5. [Advanced usage](advanced.md)
 6. [Templates](templates.md)
 
-# Preliminaries
+## Preliminaries
+
