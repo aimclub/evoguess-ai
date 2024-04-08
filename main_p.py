@@ -28,7 +28,7 @@ def create_parser():
                          help='Size of a single rho-backdoor.')
     parser_.add_argument('-tl', '--timelimit', nargs='?', type=int, default=0,
                          help='Set limit in seconds to solve one hard task. Use this option OR conflicts limit.')
-    parser_.add_argument('-cl', '--conflictlimit', nargs='?', type=int, default=20000,
+    parser_.add_argument('-cl', '--conflictlimit', nargs='?', type=int, default=0,
                          help='Set limit in conflicts to solve one hard task. Use this option OR time limit.')
     return parser_
 
@@ -42,6 +42,10 @@ if __name__ == '__main__':
     seed = namespace.seedinitea
     workers = namespace.nofprocesses
     bds = namespace.backdoorsize
+    if namespace.timelimit == 0 and namespace.conflictlimit == 0:
+        print('None of the hard tasks solution constraints is set. '
+              'It is necessary to set either --timelimit [SECONDS] or --conflictlimit [INT].')
+        raise Exception()
     lim = max(namespace.timelimit, namespace.conflictlimit)
     limtype = 'conflicts' if namespace.conflictlimit > namespace.timelimit else 'time'
     measure = measures.get(f'measure:{limtype}')()
