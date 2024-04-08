@@ -6,43 +6,9 @@
 3. [Preliminaries](theory.md)
 4. [Basic usage](basic.md)
 5. [Advanced usage](advanced.md)
-6. [Templates](templates.md)
+6. [Examples](examples.md)
 
 ## Introduction
-
-[//]: # (One of the capabilities of EvogessAI is the ability to use probabilistic backdoors )
-
-[//]: # (&#40;ρ-backdoors&#41; to solve SAT and MaxSAT problems with respect to CNF and WCNF, respectively.)
-
-[//]: # ()
-[//]: # (ρ-Backdoors, in short, are sets of variables the decomposition by which divides )
-
-[//]: # (the problem into two sets of subproblems: the subproblems in the first set can be )
-
-[//]: # (solved using a polynomial algorithm, while the remaining subproblems )
-
-[//]: # (&#40;called hard tasks&#41; constitute the second set.)
-
-[//]: # ()
-[//]: # (Using hard tasks corresponding to different backdoors we can build longer and )
-
-[//]: # (longer assumptions, and the corresponding subtasks become simpler and simpler. )
-
-[//]: # (In other words, we combine sets of hard tasks from different backdoors into )
-
-[//]: # (a Cartesian product, each time checking whether a task from the new set has )
-
-[//]: # (become solvable within a certain cutoff. If it has, then the set of )
-
-[//]: # (hard tasks has decreased, otherwise it goes to the next iteration, )
-
-[//]: # (where hard tasks from the next backdoor will be added to the Cartesian product, )
-
-[//]: # (and so on. Eventually we either have all tasks start solving for a given cutoff, )
-
-[//]: # (or we run out of backdoors and then the remaining tasks are solved to )
-
-[//]: # (the end without any limitations.)
 
 EvoGuessAI is a library designed for solving combinatorial problems with Boolean constraints, 
 whose main algorithms use so-called probabilistic backdoors. 
@@ -84,6 +50,9 @@ robustness analysis.
 
 For more detailed description of the theoretical 
 background behind EvoGuessAI, see [Preliminaries](theory.md).
+
+
+### References
 
 <a id="1">[1]</a> 
 Williams R., Gomes C., Selman B. 

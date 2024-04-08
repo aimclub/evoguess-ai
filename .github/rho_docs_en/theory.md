@@ -6,7 +6,7 @@
 3. [Preliminaries](theory.md)
 4. [Basic usage](basic.md)
 5. [Advanced usage](advanced.md)
-6. [Templates](templates.md)
+6. [Examples](examples.md)
 
 ## Preliminaries
 
