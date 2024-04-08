@@ -42,12 +42,12 @@ if __name__ == '__main__':
     seed = namespace.seedinitea
     workers = namespace.nofprocesses
     bds = namespace.backdoorsize
-    if namespace.timelimit == 0 and namespace.conflictlimit == 0:
-        print('None of the hard tasks solution constraints is set. '
-              'It is necessary to set either --timelimit [SECONDS] or --conflictlimit [INT].')
-        raise Exception()
-    lim = max(namespace.timelimit, namespace.conflictlimit)
-    limtype = 'conflicts' if namespace.conflictlimit > namespace.timelimit else 'time'
+    timelim = namespace.timelimit
+    conflictlim = namespace.conflictlimit
+    if timelim == 0 and conflictlim == 0:
+        conflictlim = 20000
+    lim = max(timelim, conflictlim)
+    limtype = 'conflicts' if conflictlim > timelim else 'time'
     measure = measures.get(f'measure:{limtype}')()
 
     data_path = WorkPath('examples', 'data')
@@ -55,7 +55,6 @@ if __name__ == '__main__':
     # cnf_file = data_path.to_file('pvs_4_7.cnf')
 
     solver = PySatSolver(sat_name=solver_name)
-    # TODO надо чекать расширение файла (или читать хэдер) и если это wcnf то работать с wcnf
     # problem = encode_problem(formula_file, solver)
     if formula_file.endswith('.cnf'):
         encoding = CNF(from_file=formula_file)
