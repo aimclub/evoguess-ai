@@ -68,9 +68,22 @@ def run_alg(size: int, seed: int) -> List[Point]:
         for iteration in range(ITER_COUNT):
             backdoor = pm.collect(0, 1)[0]
             point = rho_evaluate(backdoor)
+
+            # if point.get('hard') == 1:
+            # то мы берем литералы point.get('first_task'), апдейтим
+            # солвер get_process_state().solver через метод адд_клоз
+            # и вообще собирать эти юниты отдельно, потом в ретёрн добавить всё собранное
+
+            # затем получаем переменные по литералам и
+            # backdoor.variables ---(выкинуть найденные)---> new_variables
+            # get_process_state().space.variables = new_variables
+            # и перезапускаем со строки с space = get_process_state().space (это гдето 59)
+            # и уменьшаем число ITERCOUNT
+
+            # вообщето если у нас хард = 0, то задачу решили
+
             # print(f'PID: {os.getpid()}, iter {iteration} of {range(ITER_COUNT)}, point {point}')
             _, population = pm.insert(point)
-            # TODO гдето тут надо апдейтить пространство поиска если 1 хард таска
             for point in population:
                 _value = point.get('value')
                 _key = str(point.searchable)
@@ -97,6 +110,10 @@ def solve(
     dirs = ('examples', 'logs', 'rho_solve')
     log_path = log_path or WorkPath(*dirs)
 
+    # заменяем в проблем минисатом22 текущий солвер (сохраняя текущий) и используем его при поиске бэкдоров
+    # а потом снова заменяем на сохраненный решатель для решения
+
+
     with CombineLogger(log_path) as logger:
         workers = min(cpu_count(), max_workers)
         printc(f'Running on {workers} threads')
@@ -114,6 +131,8 @@ def solve(
             ))):
                 progress.update()
                 all_points.extend(points)
+                # for points in executor.map(run_alg, *zip(*( ---> for points, lits in executor.map(run_alg, *zip(*(
+                # all_lits.extend(lits)
                 progress.set_postfix_str(
                     f'{len(all_points)} bds'
                 )
@@ -121,7 +140,7 @@ def solve(
         # for el in sorted(all_points):
             # print(el)
         search_stamp, search_time = time_ms(), passed()
-        patch, hard_order = rho_preprocess(all_points, executor)
+        patch, hard_order = rho_preprocess(all_points, executor) # сюда передаем ещё lits, и там их юзаем вместо обработки бэкдоров с одной хардтаской
         pre_stamp, derive_time = time_ms(), passed(search_stamp)
         printc(f'Prepared {len(hard_order)} backdoors')
         # print(hard_order)

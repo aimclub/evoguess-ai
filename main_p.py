@@ -16,12 +16,10 @@ from function.module.measure import measures
 def create_parser():
     parser_ = argparse.ArgumentParser()
     parser_.add_argument('-f', '--formula', required=True)
-    parser_.add_argument('-s', '--solvername', nargs='?', type=str, default='g3',
-                         help='Solver name: g3, cd, cd15, etc (see PySAT Solvers list).')
+    parser_.add_argument('-s', '--solvername', nargs='?', type=str, default='Cadical195',
+                         help='Solver name: cd195, g3, mcb, m22, etc (see PySAT Solvers list).')
     parser_.add_argument('-nr', '--nofearuns', nargs='?', type=int, default=40,
                          help='Number of runs of evolutionary algorithm for finding rho-backdoors.')
-    parser_.add_argument('-seed', '--seedinitea', nargs='?', type=int, default=123,
-                         help='Initialization seed for evolutionary algorithm.')
     parser_.add_argument('-np', '--nofprocesses', nargs='?', type=int, default=4,
                          help='Number of processes.')
     parser_.add_argument('-bds', '--backdoorsize', nargs='?', type=int, default=10,
@@ -39,7 +37,6 @@ if __name__ == '__main__':
     formula_file = namespace.formula
     solver_name = namespace.solvername
     nof_ea_runs = namespace.nofearuns
-    seed = namespace.seedinitea
     workers = namespace.nofprocesses
     bds = namespace.backdoorsize
     timelim = namespace.timelimit
@@ -86,7 +83,7 @@ if __name__ == '__main__':
     report = solve(problem=problem,
                    runs=nof_ea_runs,
                    measure=measure,
-                   seed_offset=seed,
+                   seed_offset=123,
                    max_workers=workers,
                    bd_size=bds,
                    limit=lim)
