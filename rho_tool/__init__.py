@@ -28,7 +28,7 @@ def rho_fn(backdoor: Backdoor) -> Point:
     _, _, rho_value, tasks = _rho_fn(backdoor)
     return Point(backdoor, COMPARATOR).set(
         hard=len(tasks), value=1 - rho_value,
-        hard_nums=list(map(hard_to_num, tasks))
+        first_task=len(tasks) and tasks[0]
     )
 
 
