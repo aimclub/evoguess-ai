@@ -1,4 +1,10 @@
 # EvoGuessAI
+[![SAI](https://github.com/ITMO-NSS-team/open-source-ops/blob/master/badges/SAI_badge_flat.svg)](https://sai.itmo.ru/)
+[![ITMO](https://github.com/ITMO-NSS-team/open-source-ops/blob/master/badges/ITMO_badge_flat_rus.svg)](https://en.itmo.ru/en/)
+
+[![license](https://img.shields.io/github/license/aimclub/evoguess-ai)](https://github.com/aimclub/evoguess-ai/blob/master/LICENSE)
+[![Eng](https://img.shields.io/badge/lang-ru-yellow.svg)](/README.md)
+[![Mirror](https://img.shields.io/badge/mirror-GitLab-orange)](https://gitlab.actcognitive.org/itmo-sai-code/evoguess-ai)
 
 ## Table of contents <a name="tablecontents"></a>
 1. [Introduction](intro.md)
@@ -18,7 +24,7 @@ Maximum Satisfiability Problem (MaxSAT) and 0-1 Integer Linear
 Programming Problem (0-1-ILP). Let us briefly describe the basic concept 
 of applying probabilistic backdoors to solve problems of the described classes.
 
-So, a Strong Backdoor Set (SBS) for a particular combinatorial 
+Strong Backdoor Set (SBS) for a particular combinatorial 
 Constraint Satisfaction Problem (SCP) is a set of variables in 
 the constraint system under consideration, the knowledge of which 
 provides some additional information, often allowing either to 

@@ -90,7 +90,13 @@ Example:
 ```shell
 python3 ./main_p.py -f ./examples/data/lec_sort_PvS_8_3.cnf -s g3 -nr 40 -np 8 -bds 10 -tl 0 -cl 20000
 ```
-Command above will launch EvoGuessAI in the mode of using ρ-backdoors to solve one of the exemplary CNF (LEC problem for the "pancake" and "selection" sorting algorithms for eight 3-bit numbers). 8 processes will be used in the solution. The evolutionary algorithm will be run 40 times, while looking for ρ-backdoors of length 10. Hard tasks will be solved with a limit of 20,000 conflicts per hard task.
+Command above will launch EvoGuessAI in the mode of using 
+ρ-backdoors to solve one of the exemplary CNF 
+(LEC problem for the "pancake" and "selection" sorting 
+algorithms for eight 3-bit numbers). 8 processes will be used 
+in the solution. The evolutionary algorithm will be run 40 
+times, while looking for ρ-backdoors of length 10. Hard tasks 
+will be solved with a limit of 20,000 conflicts per hard task.
 
 Result with comments:
 
