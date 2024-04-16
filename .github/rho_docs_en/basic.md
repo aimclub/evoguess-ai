@@ -116,6 +116,8 @@ For all other parameters, if they are not user-defined,
 the default values are set (the default limit for solving 
 hard tasks is set to 20000 conflicts per hard task).
 
+#### Description of EvoguessAI workflow
+
 EvoguessAI's work in ρ-backdoor's mode 
 is divided into 2 phases: ro-backdoor search and problem solving. 
 
@@ -134,7 +136,30 @@ in order to maximize the ρ-value. After a certain number of iterations
 the backdoor with the maximum ρ-value among those found 
 (or several backdoors, if ρ-value is equal).
 
+[//]: # (Этот сегмент нужно будет переписать под вариант, когда бэкдоры
+с одной хардтаской учитываются уже в процессе поиска.)
 
+After searching for backdoors, trivial deriving is started,
+which is a process where all backdoors with the same hard task 
+are recorded as unit clauses. This fills the set of "covered" 
+variables. Next, useless backdoors that do not expand 
+the set of variables are weeded out.
+
+Next, a full-fledged deriving is started, which includes 
+selection of a backdoor, extraction of easy tasks from it, 
+their subsequent writing as a conjunctive normal form (CNF) 
+and minimisation using the [Espresso tool](https://github.com/Gigantua/Espresso). 
+This process extracts useful information from the backdoors. 
+Sorting the backdoors and their subsequent filtering involves 
+ordering the remaining backdoors according to the RO value. 
+Then a search is made among the sorted backdoors for the one 
+that will add the largest number of variables to the set of 
+variables across all selected backdoors. This process is repeated 
+until no backdoor remains that can add at least one new variable in 
+the set of "covered" variables. 
+
+This forms the order of backdoors for further 
+Cartesian product during phase 2. 
 
 Example of output for Phase 1:
 ```shell
@@ -156,6 +181,69 @@ Example of output for Phase 1:
 # 10 backdoors left.
 ```
 
+Phase 2 consists of solving the problem.
+
+During this process, a Cartesian product is built over 
+the hard tasks from backdoors, according to the order found 
+in phase 1, which increases the length of hard tasks. 
+After adding the hard tasks from each new backdoor to the 
+Cartesian product, we run the subsolver with a budget 
+(limit on the running time or number of conflicts).
+
+All unsolved hard tasks at each stage are sent to the next one, 
+where the Cartesian product is again constructed using them 
+and hard tasks from the next backdoor in the order and the 
+process is repeated.
+
+If the cycle has reached the last backdoor, the budget 
+is switched off and all remaining hard tasks are solved to the end.
+
+Example of output for Phase 2:
+```shell
+00:04:25 -------------------------------------------------------------------
+00:04:25 --------------------- Phase 2 (Solve problem) ---------------------
+00:04:25 ------------------- Used 2 backdoors (20 vars) -------------------
+00:04:25 Sifting: 100%|██████████| 4/4 [00:04<00:00,  1.06s/task, 4 hard]
+
+# Hard tasks from first two backdoor was used to construct Cortesian product. 
+# It's lenght is 4 cubes. When solving these 4 cubes with a limit in conflicts, 
+# it turned out that all 4 were too difficult. Therefore, we add the next 
+# backdoor (builds the Cartesian product of the current set of cubes and 
+# the hard tasks from the next backdoor).
+
+00:04:29 ------------------- Used 3 backdoors (22 vars) -------------------
+00:04:29 Sifting: 100%|██████████| 8/8 [00:07<00:00,  1.14task/s, 8 hard]
+00:04:36 ------------------- Used 4 backdoors (24 vars) -------------------
+00:04:36 Sifting: 100%|██████████| 16/16 [00:15<00:00,  1.03task/s, 16 hard]
+00:04:52 ------------------- Used 5 backdoors (26 vars) -------------------
+00:04:52 Sifting: 100%|██████████| 32/32 [00:31<00:00,  1.02task/s, 32 hard]
+00:05:23 ------------------- Used 6 backdoors (36 vars) -------------------
+00:05:23 Sifting: 100%|██████████| 64/64 [01:03<00:00,  1.01task/s, 64 hard]
+00:06:27 ------------------- Used 7 backdoors (38 vars) -------------------
+00:06:27 Sifting: 100%|██████████| 128/128 [02:22<00:00,  1.11s/task, 125 hard]
+00:08:49 ------------------- Used 8 backdoors (39 vars) -------------------
+00:08:49 Sifting: 100%|██████████| 250/250 [05:41<00:00,  1.37s/task, 220 hard]
+00:14:31 ------------------- Used 9 backdoors (42 vars) -------------------
+00:14:31 Sifting: 100%|██████████| 440/440 [11:20<00:00,  1.55s/task, 394 hard]
+00:25:51 ------------------- Used 10 backdoors (44 vars) -------------------
+00:25:51 -------------- Disable solver budget (last backdoor) --------------
+
+# Since backdoor 10 was the last one, remain hard tasks is solved without limit.
+
+00:25:51 Sifting: 100%|██████████| 788/788 [46:31<00:00,  3.54s/task, 0 hard]
+01:12:23 -------------------------------------------------------------------
+01:12:23 ---------------------------- Solution ----------------------------
+01:12:23 -------------------------- UNSATISFIABLE --------------------------
+
+# EvoguessAI proved that formula is unsatisfiable.
+
+01:12:23 -------------------------------------------------------------------
+01:12:23 -------------------- Search time: 213.179 sec. --------------------
+01:12:23 -------------------- Derive time: 52.396 sec. --------------------
+01:12:23 ------------------- Solving time: 4077.635 sec. -------------------
+01:12:23 -------------------------------------------------------------------
+01:12:23 ------------------- Summary time: 4343.21 sec. -------------------
+```
 
 
 ### References
