@@ -107,7 +107,7 @@ EvoguessAI sets the limit on the number of conflicts to 20000.**
 All basic startup parameters are controlled by command line arguments.
 In general, the startup looks as follows:
 ```
-main_p.py [-h] -f FORMULA [-s [SOLVERNAME]] [-nr [NOFEARUNS]] [-seed [SEEDINITEA]] [-np [NOFPROCESSES]]
+main_p.py [-h] -f FORMULA [-s [SOLVERNAME]] [-nr [NOFEARUNS]] [-np [NOFPROCESSES]]
                  [-bds [BACKDOORSIZE]] [-tl [TIMELIMIT]] [-cl [CONFLICTLIMIT]]
 ```
 
