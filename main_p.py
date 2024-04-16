@@ -1,5 +1,6 @@
 import argparse
 import sys
+import os
 
 from lib_satprob.solver import PySatSolver
 from lib_satprob.problem import SatProblem
@@ -53,6 +54,8 @@ if __name__ == '__main__':
 
     solver = PySatSolver(sat_name=solver_name)
     # problem = encode_problem(formula_file, solver)
+    if not os.path.isfile(formula_file):
+        raise Exception(f'File {formula_file} is not exist.')
     if formula_file.endswith('.cnf'):
         encoding = CNF(from_file=formula_file)
         problem = SatProblem(
@@ -86,5 +89,17 @@ if __name__ == '__main__':
                    seed_offset=123,
                    max_workers=workers,
                    bd_size=bds,
-                   limit=lim)
+                   limit=lim,
+                   log_path=None,
+                   iter_count=3000)
+
+    """
+    адвансед это параметры, которых нет в командной строке
+    
+    файл адвансед:
+    1. список доп параметров с фрагментами кода (в смысле параметры solve()), которыми эти параметры управляют
+    2. как создавать сат максат кнфки, как создаются хард и софт и че это значит
+    пример запуска, в котором будут все параметры использоватся
+    3. ибс
+    """
 
