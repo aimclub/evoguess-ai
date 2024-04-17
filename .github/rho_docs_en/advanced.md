@@ -123,7 +123,7 @@ p cnf 3 2
 1 2 -3 0
 -2 3 0
 ```
-CNF in example contains 2 clauses over the set of 3 variables.
+CNF in example contains `2` clauses over the set of `3` variables.
 
 #### WCNF in DIMACS format
 
@@ -160,12 +160,13 @@ p wcnf 5 4 10
 1 1 2 0
 3 -2 3 -4 0
 4 4 0
-10 -1 0
-10 -1 -2 -3 -4 -5 0
+10 -1 2 3 0
+10 -1 -2 -3 -4 0
 ```
-WCNF in example contains 5 clauses over the set of 4 variables. 
-First 3 clauses is soft ones, with different weights for each.
-Last 2 clauses is hard ones.
+WCNF in example contains `5` clauses over the set of `4` variables. 
+Weight for hard clauses is `10`.
+First 3 clauses are soft ones, with different weights for each (`1`, `3` and `4`).
+Last 2 clauses are hard ones.
 
 
 
