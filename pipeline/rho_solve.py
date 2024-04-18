@@ -69,7 +69,6 @@ def run_alg(size: int, seed: int, iter_count: int) -> (List[Point], list):
         best_value, point = 1, rho_evaluate(initial)
         same_value = {str(point.searchable): point}
         with algorithm.start(point) as pm:
-            # import os
             for iteration in range(remain_iters):
                 backdoor = pm.collect(0, 1)[0]
                 point = rho_evaluate(backdoor)

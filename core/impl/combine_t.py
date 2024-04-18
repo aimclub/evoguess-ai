@@ -245,7 +245,7 @@ class CombineT(Core):
         executor = init_process_pool(self.problem, workers)
         rho_args = (executor, timed(rho_fn_ext), *backdoors)
         points, rho_fn_time = untime(chunked_map(*rho_args))
-        patch, hard_order = rho_preprocess(points, executor)
+        patch, hard_order = rho_preprocess(points, executor, set())
 
         pre_stamp, derive_time = time_ms(), passed()
         self.logger.meta(self.problem, *points)
