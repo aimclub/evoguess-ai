@@ -3,44 +3,168 @@
 [![ITMO](https://github.com/ITMO-NSS-team/open-source-ops/blob/master/badges/ITMO_badge_flat_rus.svg)](https://en.itmo.ru/en/)
 
 [![license](https://img.shields.io/github/license/aimclub/evoguess-ai)](https://github.com/aimclub/evoguess-ai/blob/master/LICENSE)
-[![Eng](https://img.shields.io/badge/lang-ru-yellow.svg)](/README.md)
-[![Mirror](https://img.shields.io/badge/mirror-GitLab-orange)](https://gitlab.actcognitive.org/itmo-sai-code/evoguess-ai)
+[![Eng](https://img.shields.io/badge/lang-en-yellow.svg)](/README_en.md)
+[![Mirror](https://img.shields.io/badge/mirror-github-orange)](https://github.com/aimclub/evoguess-ai)
+
+[//]: # (https://img.shields.io/badge/wiki-documentation-forestgreen)
 
 ## Table of contents <a name="tablecontents"></a>
 1. [Introduction](intro.md)
 2. [Installation](installation.md)
 3. [Preliminaries](theory.md)
-4. [Basic usage](basic.md)
-5. [Advanced usage](advanced.md)
-6. [Examples](examples.md)
+4. [Input formats](inputs.md)
+5. [Basic usage](basic.md)
+6. [Advanced usage](advanced.md)
+   1. [Mode-independent options](#mio) 
+      1. [Input formula](#mio_formula)
+      2. [Solver](#mio_solver)
+      3. [Limits](#mio_limits)
+      4. [Specifying the solving problem (SAT or MaxSAT)](#mio_problem)
+      5. [Specifying path to saving logs](#mio_logs)
+   2. [ρ-Backdoors mode options](#rho_options)
+      1. [MaxSAT problem](#rho_maxsat)
+      2. [Arguments of solve function](#rho_solve)
+   3. [IBS options](#ibs_options)
+   4. [Examples of startup scripts](#examples)
+7. [Examples](examples.md)
 
 ## Advanced usage
 
-### Advanced parameters
+Unlike the [basic usage](basic.md), whose parameters can be controlled 
+from the command line, the advanced usage of EvoguessAI assumes that 
+the user creates his own startup script following the example described 
+below. In this script, the user will have the ability to directly 
+influence the way the input formula is processed and additional 
+solution parameters that are not available from the command line.
 
-EvoguessAI is affected by several parameters controlled from 
-the startup script rather than from the command line.
+Example of startup script can be found at the end of section.
 
-Launching the solution in this script looks as follows:
+
+### Mode-independent options <a name="mio"></a>
+
+Some options are independent of whether ρ-backdoors 
+mode or IBS mode is used. The syntax for them is the same in both cases.
+
+#### Input formula <a name="mio_formula"></a>
+
+There are several ways to specify a CNF for solving SAT problems.
+The first way: directly specifying the path to the input formula in the CNF format.
 ```python
-    report = solve(problem=problem,
-                   runs=nof_ea_runs,
-                   measure=measure,
-                   seed_offset=123,
-                   max_workers=workers,
-                   bd_size=bds,
-                   limit=lim,
-                   log_path=None,
-                   iter_count=3000)
+from lib_satprob.encoding import CNF
+
+encoding = CNF(from_file='./examples/data/pvs_4_7.cnf')
 ```
-Such parameters as `problem`, `runs`, `max_workers`, `bd_size` and 
-`limit` in this fragment of the startup script are command-line 
-controlled and described in [Basic usage](basic.md).
+Another way is that WCNF is given as input, but CNF is constructed from it. 
+This can be done by using all clauses from WCNF without their weights:
+```python
+from lib_satprob.encoding import WCNF
 
-Advanced parameters are set empirically by default, 
-but the user can control them directly by editing the script if needed.
+encoding = WCNF(from_file='./examples/data/lec_cvk_11.wcnf').unweighted()
+```
+or by building CNF only from the hard part of WCNF:
+```python
+from lib_satprob.encoding import WCNF
 
-List of advanced parameters:
+encoding = WCNF(from_file='./examples/data/lec_cvk_11.wcnf').from_hard()
+```
+
+#### Solver <a name="mio_solver"></a>
+
+The creation of the solver instance is done through the `PySatSolver` class:
+```python
+from lib_satprob.solver import PySatSolver
+
+solver = PySatSolver(sat_name='cad195')
+```
+
+#### Limits <a name="mio_limits"></a>
+
+EvoguessAI supports two options for limiting the subsolvers used: 
+1. a limit on the solution time:
+   ```python
+   from function.module.measure import measures
+   
+   measure = measures.get(f'measure:time')()
+   lim = 5
+   ```
+2. or on the number of conflicts:
+      ```python
+   from function.module.measure import measures
+   
+   measure = measures.get(f'measure:conflicts')()
+   lim = 20000
+   ```
+
+#### Specifying the solving problem <a name="mio_problem"></a>
+
+In both modes EvoguessAI can solve the SAT problem.  
+In this case, the `problem` parameter must be set as follows:
+```python
+from lib_satprob.problem import SatProblem
+
+# An instance of the solver must be created and the encoding must contain CNF.
+problem = SatProblem(
+            solver, encoding
+        )
+```
+
+#### Specifying path to saving logs <a name="mio_logs"></a>
+
+User can specify his own directory for saving logs of EvoguessAI functioning. 
+A subdirectory named  
+`*startdate*-*starttime*_*enddate*-*endtime*` will be created in the specified directory for each individual run.
+```python
+from utility.work_path import WorkPath
+
+log_path = WorkPath('examples', 'logs')
+```
+
+### ρ-Backdoors mode options <a name="rho_options"></a>
+
+In addition to the parameters described above, 
+EvoguessAI in ρ-backdoors usage mode depends on a few more.
+
+#### MaxSAT problem <a name="rho_maxsat"></a>
+
+In case the user wants to solve a MaxSAT problem, 
+then he needs to create an instance of `WCNF` class as input 
+formula and define the `problem` parameter as MaxSAT problem.
+```python
+from lib_satprob.problem import MaxSatProblem
+
+# An instance of the solver must be created and the encoding must contain WCNF.
+problem = MaxSatProblem(
+            solver, encoding
+        )
+```
+
+
+#### Arguments of solve function <a name="rho_solve"></a>
+
+Start solving SAT or MaxSAT problems using ρ-backdoors by calling `solve()`. 
+Its syntax looks as follows:
+
+```python
+ report = solve(problem=problem,
+                runs=40,
+                measure=measure,
+                seed_offset=123,
+                max_workers=4,
+                bd_size=10,
+                limit=lim,
+                log_path=log_path,
+                iter_count=3000)
+```
+How to set `problem`, `measure`, `limit` and `log_path` parameters is written above.
+But also `solve()` depends on several other parameters, which are described below:
+
++ `runs` Number of runs of the evolutionary algorithm to search for ρ-backdoors. 
+Each run performs `iter_count` iterations of the evolutionary algorithm,
+ranks all found backdoors by ρ, and returns the backdoor with maximal ρ 
+(or several, in case of equal ρ). When EvoguessAI is multithreaded, 
+all runs are evenly (as much as possible) distributed among different threads.  
+**Default: 40.**
+
 
 + `seed_offset` Initial seed for an evolutionary algorithm. 
 Obviously, this parameter can influence the search for backdoors, 
@@ -51,20 +175,18 @@ and evaluate the resulting effect.
 **Default: 123.**
 
 
-+ `log_path` Path to save the logs of EvoguessAI work. 
-If the parameter is not specified explicitly, the directory 
-**"./examples/logs/rho_solve/*date_time_start_date_time_finish*"**
-is created for each EvoguessAI start (for example: 
-**"./examples/logs/rho_solve/2024.04.10-11&#xb7;25&#xb7;
-40_2024.04.10-11&#xb7;26&#xb7;22/"**). 
-Information about EvoguessAI operation during a particular 
-run is contained in a file named **meta.json** inside 
-the created directory.  
-**Default value: None.**
++ `max_workers` The number of available processes for multiprocessing.   
+**Default: 4.**
 
-[//]: # (Бтв в логах инфа только про найденные бэкдоры, 
-и ничего про дерайвинг и дальнейшее решение. 
-Это надо доработать.)
+
++ `bd_size` The size of the ρ-backdoors being searched for. 
+The longer the ρ-backdoors are, the easier are the potential 
+subproblems based on them. However, the potential number of hard 
+tasks (but not the ρ-value) increases with the ρ-backdoor length. ρ-Backdoors of 
+length 10 are used for most problems, but this number can be increased 
+if the ρ-backdoors found do not have high ρ-value.  
+**Default: 10.**
+
 
 + `iter_count` The number of iterations of the 
 evolutionary algorithm (by iterations we mean mutations). 
@@ -75,99 +197,75 @@ finding backdoors with higher ρ-value.
 The default value was chosen empirically.  
 **Default: 3000.**
 
-[//]: # (Тут нужно добавить, что при нахождении бэкдора с одной 
-хардтаской и выделения из неё юнитов, происходит перезапуск 
-эволюционки \(в рамках того же "запуска"\), но число итераций 
-сохраняется на все такие перезапуски.)
+### IBS mode options <a name="ibs_options"></a>
 
-### Input formulas
+This section needs to be further developed.
 
-EvoguessAI can accept CNF and WCNF in DIMACS format 
-as input formula. The following sections describe what this is.
+### Examples of startup scripts <a name="examples"></a>
 
-#### CNF in DIMACS format
+Example of solving SAT problem with time limit:
+```python
+from lib_satprob.solver import PySatSolver
+from lib_satprob.problem import SatProblem
+from lib_satprob.encoding import CNF
 
-[Conjunctive Normal Form (CNF)](https://en.wikipedia.org/wiki/Conjunctive_normal_form)
-is a way of representing logical expressions in Boolean algebra 
-that uses conjunction (logical `AND`) and disjunction 
-(logical `OR`) of variables and their negations. A CNF is the 
-conjunction of several disjunctions, each containing one 
-or more variables or their negations. In order to express a logical 
-expression into a CNF, the following steps must be performed:
-+ **Convert to a DNF (disjunctive normal form).**
-This is done by applying de Morgan's laws and other conversion rules.
-+ **Simplification of the expression.** 
-Absorption laws and other simplification rules are used.
-+ **Conversion to a CNF.** The final step is to 
-convert each disjunction in parentheses into a 
-conjunction using the law of distributivity.
 
-[**DIMACS**](https://jix.github.io/varisat/manual/0.2.0/formats/dimacs.html) 
-is a textual format for representing formulas 
-in conjunctive normal form, used for Boolean 
-satisfiability problems (SAT). In this format, each 
-line of a file corresponds to one of the following 
-elements:
-+ **Comments**: begin with the character `c` and can be anywhere in the file.
-+ **Header**: is a string of the form  
-`p cnf <number of variables> <number of disjuncts>`.
-+ **Disjuncts (or clauses)**: a sequence of numbers separated by spaces, 
-which are represent a set of literals connected by a logical `OR`. 
-Each literal is represented by a positive integer that corresponds 
-to a variable, or a negative integer that corresponds to the negation 
-of a variable. Each clause is terminated with zero.
+from utility.work_path import WorkPath
+from pipeline.rho_solve import solve
 
-Example of CNF in DIMACS format:
+from function.module.measure import measures
+
+if __name__ == '__main__':
+    encoding = CNF(from_file='./examples/data/pvs_4_7.cnf')
+    solver = PySatSolver(sat_name='cad195')
+    measure = measures.get(f'measure:time')()
+    lim = 5
+    log_path = WorkPath('examples', 'logs')
+    problem = SatProblem(
+                solver, encoding
+            )
+    report = solve(problem=problem,
+                   runs=50,
+                   measure=measure,
+                   seed_offset=321,
+                   max_workers=5,
+                   bd_size=12,
+                   limit=lim,
+                   log_path=log_path,
+                   iter_count=4000)
 ```
-p cnf 3 2
-1 2 -3 0
--2 3 0
+
+Example of solving MaxSAT problem with limit of conflicts:
+```python
+from lib_satprob.solver import PySatSolver
+from lib_satprob.problem import MaxSatProblem
+from lib_satprob.encoding import WCNF
+
+
+from utility.work_path import WorkPath
+from pipeline.rho_solve import solve
+
+from function.module.measure import measures
+
+if __name__ == '__main__':
+    encoding = WCNF(from_file='./examples/data/pvs_4_7.cnf')
+    solver = PySatSolver(sat_name='cad195')
+    measure = measures.get(f'measure:conflicts')()
+    lim = 20000
+    log_path = WorkPath('examples', 'logs')
+    problem = MaxSatProblem(
+                solver, encoding
+            )
+    report = solve(problem=problem,
+                   runs=40,
+                   measure=measure,
+                   seed_offset=123,
+                   max_workers=4,
+                   bd_size=10,
+                   limit=lim,
+                   log_path=log_path,
+                   iter_count=3000)
 ```
-CNF in example contains `2` clauses over the set of `3` variables.
-
-#### WCNF in DIMACS format
-
-WCNF (Weighted Conjunctive Normal Form) is an extension of CNF 
-that adds weights to individual clauses. The weights are used 
-to indicate the importance of each clause in the formula. 
-WCNF is used in optimisation problems where the goal is to 
-find a solution that maximises or minimises the total cost 
-represented by the weights of the clauses.
-
-In practice, when solving a MaxSAT problem, all clauses in the 
-WCNF are divided into two parts: hard clauses, which must be 
-satisfied in any case, and soft clauses, which can be given a weight, 
-and the number (or total weight) of satisfied soft clauses 
-must be maximised when solving the MaxSAT problem.
-
-[WCNF in DIMACS](http://www.maxhs.org/docs/wdimacs.html) format has a little changes compare to CNF: 
-each clause is preceded by its weight, with the particular 
-weight value specified in the header indicating that the 
-clause belongs to the hard part. Sctructure of WCNF file:  
-+ **Comments**: begin with the character `c` and can be anywhere in the file.
-+ **Header**: is a string of the form  
-`p wcnf <number of variables> <number of disjuncts> <hard clauses weight>`.
-+ **Disjuncts (or clauses)**: a sequence of numbers separated by spaces, 
-first of which corresponds to weight of that particular clause, and other are
-represent a set of literals connected by a logical `OR`. 
-Each literal is represented by a positive integer that corresponds 
-to a variable, or a negative integer that corresponds to the negation 
-of a variable. Each clause is terminated with zero.
-
-Example of WCNF in DIMACS format:
-```
-p wcnf 5 4 10
-1 1 2 0
-3 -2 3 -4 0
-4 4 0
-10 -1 2 3 0
-10 -1 -2 -3 -4 0
-```
-WCNF in example contains `5` clauses over the set of `4` variables. 
-Weight for hard clauses is `10`.
-First 3 clauses are soft ones, with different weights for each (`1`, `3` and `4`).
-Last 2 clauses are hard ones.
-
 
 
 <sup>[&uarr;Table of contents](#tablecontents)</sup>
