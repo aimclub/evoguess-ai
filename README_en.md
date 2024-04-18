@@ -84,11 +84,11 @@ In the [Markdown](https://en.wikipedia.org/wiki/Markdown) file
 
 Template:
 ```shell
-python3 ./main_p.py -f <file> [options]
+python3 ./main_rho.py -f <file> [options]
 ```
 Example:
 ```shell
-python3 ./main_p.py -f ./examples/data/lec_sort_PvS_8_3.cnf -s g3 -nr 40 -np 8 -bds 10 -tl 0 -cl 20000
+python3 ./main_rho.py -f ./examples/data/lec_sort_PvS_8_3.cnf -s g3 -nr 40 -np 8 -bds 10 -tl 0 -cl 20000
 ```
 Command above will launch EvoGuessAI in the mode of using 
 ρ-backdoors to solve one of the exemplary CNF 

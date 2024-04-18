@@ -16,7 +16,7 @@ from function.module.measure import measures
 
 def create_parser():
     parser_ = argparse.ArgumentParser()
-    parser_.add_argument('-f', '--formula', required=True)
+    parser_.add_argument('formula', type=str, help='File with input formula.')
     parser_.add_argument('-s', '--solvername', nargs='?', type=str, default='Cadical195',
                          help='Solver name: cd195, g3, mcb, m22, etc (see PySAT Solvers list).')
     parser_.add_argument('-nr', '--nofearuns', nargs='?', type=int, default=40,
@@ -93,13 +93,5 @@ if __name__ == '__main__':
                    log_path=None,
                    iter_count=3000)
 
-    """
-    адвансед это параметры, которых нет в командной строке
-    
-    файл адвансед:
-    1. список доп параметров с фрагментами кода (в смысле параметры solve()), которыми эти параметры управляют
-    2. как создавать сат максат кнфки, как создаются хард и софт и че это значит
-    пример запуска, в котором будут все параметры использоватся
-    3. ибс
-    """
+
 
