@@ -58,7 +58,7 @@ pip install tqdm
 ### ρ-Backdoor's module documentation
 
 In the [Markdown](https://en.wikipedia.org/wiki/Markdown) file
-[`index.md`](rho_docs_en/index.md).
+[`index.md`](rho_docs_en/intro.md).
 
 ### ρ-Backdoor's module command line parameters
 

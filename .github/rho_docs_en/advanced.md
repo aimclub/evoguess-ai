@@ -140,7 +140,7 @@ satisfied in any case, and soft clauses, which can be given a weight,
 and the number (or total weight) of satisfied soft clauses 
 must be maximised when solving the MaxSAT problem.
 
-WCNF in DIMACS format has a little changes compare to CNF: 
+[WCNF in DIMACS](http://www.maxhs.org/docs/wdimacs.html) format has a little changes compare to CNF: 
 each clause is preceded by its weight, with the particular 
 weight value specified in the header indicating that the 
 clause belongs to the hard part. Sctructure of WCNF file:  
