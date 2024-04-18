@@ -3,44 +3,67 @@
 [![ITMO](https://github.com/ITMO-NSS-team/open-source-ops/blob/master/badges/ITMO_badge_flat_rus.svg)](https://en.itmo.ru/en/)
 
 [![license](https://img.shields.io/github/license/aimclub/evoguess-ai)](https://github.com/aimclub/evoguess-ai/blob/master/LICENSE)
-[![Eng](https://img.shields.io/badge/lang-ru-yellow.svg)](/README.md)
-[![Mirror](https://img.shields.io/badge/mirror-GitLab-orange)](https://gitlab.actcognitive.org/itmo-sai-code/evoguess-ai)
+[![Eng](https://img.shields.io/badge/lang-en-yellow.svg)](/README_en.md)
+[![Mirror](https://img.shields.io/badge/mirror-github-orange)](https://github.com/aimclub/evoguess-ai)
 
-## Table of contents  <a name="tablecontents"></a>
+[//]: # (https://img.shields.io/badge/wiki-documentation-forestgreen)
+
+## Table of contents <a name="tablecontents"></a>
 1. [Introduction](intro.md)
 2. [Installation](installation.md)
 3. [Preliminaries](theory.md)
-4. [Basic usage](basic.md)
-5. [Advanced usage](advanced.md)
-6. [Examples](examples.md)
+4. [Input formats](inputs.md)
+5. [Basic usage](basic.md)
+   1. [ρ-Backdoors mode](#rho)
+      1. [Usage](#rho_usage)
+      2. [Options](#rho_options)
+      3. [Description of EvoguessAI workflow in ρ-backdoors mode](#rho_workflow)
+   2. [References](#refs)
+6. [Advanced usage](advanced.md)
+7. [Examples](examples.md)
 
 ## Basic usage
 
-There are two main modes of EvoguessAI functioning: using ρ-backdoors 
+There are two variants of EvoguessAI functioning: using ρ-backdoors 
 and using Inverse Backdoor Sets.
 
-In the following we will describe the command line parameters that control 
-each mode of operation, as well as the default startup options.
+Basic use suggests running the files `main_rho.py` for rho-backdoors mode 
+and `main_ibs.py` for IBS mode, with parameters controlled by command line arguments.
 
-### ρ-Backdoors mode
+[//]: # (TODO ibs mode)
+
+### ρ-Backdoors mode <a name="rho"></a>
 
 The main mode of EvoguessAI is related to the use of ρ-backdoors 
 to solve SAT and MaxSAT problems. 
 
-There are several command line parameters that affect this mode.
+#### Usage <a name="rho_usage"></a>
 
-#### Options
+In general, the startup looks as follows:
+```
+main_rho.py [-h] [-s [SOLVERNAME]] [-nr [NOFEARUNS]] [-np [NOFPROCESSES]] [-bds [BACKDOORSIZE]] [-tl [TIMELIMIT]]
+                 [-cl [CONFLICTLIMIT]]
+                 formula
+```
+
+The only mandatory parameter is the input formula. 
+For all other parameters, if they are not user-defined, 
+the default values are set (the default limit for solving 
+hard tasks is set to 20000 conflicts per hard task).
+
+
+#### Options <a name="rho_options"></a>
 
 + `-h, --help` Print help message.
 
 
-+ `-f, --formula [FILE]` Input file with formula in CNF or WCNF format. Note, that parser is checked
++ `formula` Input file with formula in CNF or WCNF format. Note, that parser is checked
 format of the file firstly by its extension and secondly by header of the file. 
 For example: if file extension is .cnf or .wcnf, Evoguess will start solving SAT 
 and MaxSAT problem w.r.t. input formula respectively (without checking header of file). 
 Otherwise, Evoguess will open file and check first line (header). If header starts with "p cnf" or
 "p wcnf", the solving is started, otherwise the error will be shown.  
-**Mandatory option.**
+**Mandatory positional argument.**
 
 
 + `-s, --solvername [NAME]` The name of the solver to be used as the 
@@ -102,21 +125,8 @@ user is selected at startup.
 **If none of the parameters are specified, 
 EvoguessAI sets the limit on the number of conflicts to 20000.**
 
-#### Usage
 
-All basic startup parameters are controlled by command line arguments.
-In general, the startup looks as follows:
-```
-main_p.py [-h] -f FORMULA [-s [SOLVERNAME]] [-nr [NOFEARUNS]] [-np [NOFPROCESSES]]
-                 [-bds [BACKDOORSIZE]] [-tl [TIMELIMIT]] [-cl [CONFLICTLIMIT]]
-```
-
-The only mandatory parameter is the input formula. 
-For all other parameters, if they are not user-defined, 
-the default values are set (the default limit for solving 
-hard tasks is set to 20000 conflicts per hard task).
-
-#### Description of EvoguessAI workflow
+#### Description of EvoguessAI workflow in ρ-backdoors mode <a name="rho_workflow"></a>
 
 EvoguessAI's work in ρ-backdoor's mode 
 is divided into 2 phases: ro-backdoor search and problem solving. 
@@ -246,7 +256,7 @@ Example of output for Phase 2:
 ```
 
 
-### References
+### References <a name="refs"></a>
 
 <a id="1">[1]</a> 
 Droste, Stefan, Thomas Jansen, and Ingo Wegener. 
