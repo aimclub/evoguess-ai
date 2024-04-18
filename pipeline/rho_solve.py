@@ -1,5 +1,5 @@
 from typing import List
-from os import cpu_count
+from os import cpu_count, getpid
 from numpy.random import RandomState
 
 from core.impl import CombineT
@@ -27,9 +27,10 @@ from utility.polyfill import tqdm
 from utility.work_path import WorkPath
 from utility.format import printc, passed, time_ms
 
+from lib_satprob.encoding.patch import SatPatch
+
 MU_SIZE = 1
 LAMBDA_SIZE = 1
-ITER_COUNT = 3000
 
 
 def rho_evaluate(backdoor: Backdoor) -> Point:
@@ -45,7 +46,7 @@ def rho_evaluate(backdoor: Backdoor) -> Point:
     return point
 
 
-def run_alg(size: int, seed: int) -> List[Point]:
+def run_alg(size: int, seed: int, iter_count: int) -> (List[Point], list):
     state = RandomState(seed=seed)
     mo_seed = state.randint(2 ** 31)
     so_seed = state.randint(2 ** 31)
@@ -56,63 +57,84 @@ def run_alg(size: int, seed: int) -> List[Point]:
         mutation=FixSize(size, mo_seed)
     )
 
-    space = get_process_state().space
-    vector = state.randint(0, 2, size)
-    initial = space._get_searchable()
-    initial._set_vector(list(vector))
+    lits = []
+    remain_iters = iter_count
+    while True:
+        relaunch = False
+        space = get_process_state().space
+        vector = state.randint(0, 2, size)
+        initial = space._get_searchable()
+        initial._set_vector(list(vector))
 
-    best_value, point = 1, rho_evaluate(initial)
-    same_value = {str(point.searchable): point}
-    with algorithm.start(point) as pm:
-        # import os
-        for iteration in range(ITER_COUNT):
-            backdoor = pm.collect(0, 1)[0]
-            point = rho_evaluate(backdoor)
+        best_value, point = 1, rho_evaluate(initial)
+        same_value = {str(point.searchable): point}
+        with algorithm.start(point) as pm:
+            # import os
+            for iteration in range(remain_iters):
+                backdoor = pm.collect(0, 1)[0]
+                point = rho_evaluate(backdoor)
 
-            # if point.get('hard') == 1:
-            # то мы берем литералы point.get('first_task'), апдейтим
-            # солвер get_process_state().solver через метод адд_клоз
-            # и вообще собирать эти юниты отдельно, потом в ретёрн добавить всё собранное
+                # if len(point.get('hard')) == 0:
+                #   задачу решили
 
-            # затем получаем переменные по литералам и
-            # backdoor.variables ---(выкинуть найденные)---> new_variables
-            # get_process_state().space.variables = new_variables
-            # и перезапускаем со строки с space = get_process_state().space (это гдето 59)
-            # и уменьшаем число ITERCOUNT
+                if point.get('hard') == 1:
+                    new_lits = point.get('first_task')
+                    # print(f'New lits: {new_lits}')
+                    new_lits_patch = SatPatch([[x] for x in new_lits])
+                    get_process_state().solver.apply(new_lits_patch)
+                    lits.extend(new_lits)
 
-            # вообщето если у нас хард = 0, то задачу решили
+                    new_variables = []
+                    for var in backdoor._variables:
+                        for y in [abs(k) for k in new_lits]:
+                            if var == y: break
+                        else:
+                            new_variables.append(var)
 
-            # print(f'PID: {os.getpid()}, iter {iteration} of {range(ITER_COUNT)}, point {point}')
-            _, population = pm.insert(point)
-            for point in population:
-                _value = point.get('value')
-                _key = str(point.searchable)
-                if _value == best_value:
-                    if _key not in same_value:
-                        same_value[_key] = point
-                elif _value < best_value:
-                    same_value = {_key: point}
-                    best_value = _value
+                    # print(f'old {len(backdoor._variables)}, new {len(new_variables)}')
+                    get_process_state().space.variables = new_variables
+                    remain_iters = remain_iters - (iteration+1)
+                    relaunch = True
+                    # print(f'PID: {getpid()}. New lits: {new_lits}. Relaunch. Remain iterations: {remain_iters}')
+                    break
+
+                # print(f'PID: {os.getpid()}, iter {iteration} of {range(remain_iters)}, point {point}')
+                _, population = pm.insert(point)
+                for point in population:
+                    _value = point.get('value')
+                    _key = str(point.searchable)
+                    if _value == best_value:
+                        if _key not in same_value:
+                            same_value[_key] = point
+                    elif _value < best_value:
+                        same_value = {_key: point}
+                        best_value = _value
+            if relaunch == True:
+                continue
 
         return [
             rho_fn_ext(point.searchable)
             for point in same_value.values()
-        ]
+        ], lits
 
 
 def solve(
-        problem: Problem, runs: int, measure: Measure,
+        problem: Problem,
+        runs: int,
+        measure: Measure,
         seed_offset: int = 1,
-        max_workers: int = 16, bd_size: int = 10,
+        max_workers: int = 16,
+        bd_size: int = 10,
         limit: int = 20000,
-        log_path: WorkPath = None
+        log_path: WorkPath = None,
+        iter_count: int = 3000
 ) -> Report:
     dirs = ('examples', 'logs', 'rho_solve')
     log_path = log_path or WorkPath(*dirs)
-
-    # заменяем в проблем минисатом22 текущий солвер (сохраняя текущий) и используем его при поиске бэкдоров
-    # а потом снова заменяем на сохраненный решатель для решения
-
+    from lib_satprob.solver import PySatSolver
+    prop_solver = PySatSolver('m22')  # const solver for propagate() (not depend on solver "power")
+    solve_solver = problem.solver  # user defined solver for solve()
+    problem.solver = prop_solver
 
     with CombineLogger(log_path) as logger:
         workers = min(cpu_count(), max_workers)
@@ -121,26 +143,28 @@ def solve(
 
         printc('', 'Phase 1 (Prepare backdoors)')
         all_points, tqdm_kwargs = [], {
-            'unit': 'run', 'postfix': '0 bds',
+            'unit': 'run', 'postfix': '0 bds, 0 units',
             'desc': 'Searching', 'total': runs
         }
+        all_lits = set()
         with tqdm(**tqdm_kwargs) as progress:
-            for points in executor.map(run_alg, *zip(*(
-                    (bd_size, seed_offset + seed)
+            for points, lits in executor.map(run_alg, *zip(*(
+                    (bd_size, seed_offset + seed, iter_count)
                     for seed in range(runs)
             ))):
                 progress.update()
                 all_points.extend(points)
-                # for points in executor.map(run_alg, *zip(*( ---> for points, lits in executor.map(run_alg, *zip(*(
-                # all_lits.extend(lits)
+                all_lits.update(set(lits))
                 progress.set_postfix_str(
-                    f'{len(all_points)} bds'
+                    f'{len(all_points)} bds, {len(all_lits)} units'
                 )
             logger.meta(problem, *all_points)
         # for el in sorted(all_points):
             # print(el)
+        if len(all_lits) != len(set(map(abs, all_lits))):
+            print(f'Complementary literals was found.')
         search_stamp, search_time = time_ms(), passed()
-        patch, hard_order = rho_preprocess(all_points, executor) # сюда передаем ещё lits, и там их юзаем вместо обработки бэкдоров с одной хардтаской
+        patch, hard_order = rho_preprocess(all_points, executor, all_lits)
         pre_stamp, derive_time = time_ms(), passed(search_stamp)
         printc(f'Prepared {len(hard_order)} backdoors')
         # print(hard_order)
@@ -148,6 +172,7 @@ def solve(
         phase_1_time = search_time + derive_time
 
         printc('', 'Phase 2 (Solve problem)')
+        problem.solver = solve_solver
         budget = TaskBudget(limit)
         combine = CombineT(logger, problem, measure, budget)
         report = combine.process(patch, hard_order, executor)
