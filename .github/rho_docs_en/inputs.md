@@ -15,6 +15,8 @@
 2. [Installation](installation.md)
 3. [Preliminaries](theory.md)
 4. [Input formats](inputs.md)
+   1. [CNF in DIMACS format](#cnf)
+   2. [WCNF in DIMACS format](#wcnf)
 5. [Basic usage](basic.md)
 6. [Advanced usage](advanced.md)
 7. [Examples](examples.md)
@@ -24,7 +26,7 @@
 EvoguessAI can accept CNF and WCNF in DIMACS format 
 as input formula. The following sections describe what this is.
 
-#### CNF in DIMACS format
+#### CNF in DIMACS format <a name="cnf"></a>
 
 [Conjunctive Normal Form (CNF)](https://en.wikipedia.org/wiki/Conjunctive_normal_form)
 is a way of representing logical expressions in Boolean algebra 
@@ -64,7 +66,7 @@ p cnf 3 2
 ```
 CNF in example contains `2` clauses over the set of `3` variables.
 
-#### WCNF in DIMACS format
+#### WCNF in DIMACS format  <a name="wcnf"></a>
 
 WCNF (Weighted Conjunctive Normal Form) is an extension of CNF 
 that adds weights to individual clauses. The weights are used 
