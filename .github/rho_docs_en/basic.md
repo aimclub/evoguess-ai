@@ -136,8 +136,8 @@ the 1+1 evolutionary algorithm. Each run starts from
 a random point (a random vector of [BACKDOORSIZE] length 
 over the variables of the original formula) defined by seed, 
 after which, the ρ-value for the given backdoor is computed. 
-ρ-Value in short is the ratio of the number of tasks solved 
-for a given constraint to the total number of tasks 
+ρ-Value in short is the ratio of the number of tasks, 
+for those propagate gives a conflict to the total number of tasks 
 (for detailed information see [Preliminaries](theory.md)).
 
 Then, changes are made in the starting vector according to (1+1)EA 
@@ -146,16 +146,18 @@ in order to maximize the ρ-value. After a certain number of iterations
 the backdoor with the maximum ρ-value among those found 
 (or several backdoors, if ρ-value is equal).
 
-[//]: # (Этот сегмент нужно будет переписать под вариант, когда бэкдоры
-с одной хардтаской учитываются уже в процессе поиска.)
+If a backdoor with a single hard task is searched, 
+unit clauses from it are immediately written to CNF, 
+and the corresponding variables are excluded from 
+the set of variables used to search for backdoors.
 
-After searching for backdoors, trivial deriving is started,
-which is a process where all backdoors with the same hard task 
-are recorded as unit clauses. This fills the set of "covered" 
-variables. Next, useless backdoors that do not expand 
-the set of variables are weeded out.
+[//]: # (After searching for backdoors, trivial deriving is started,
+        which is a process where all backdoors with the same hard task
+        are recorded as unit clauses. This fills the set of "covered"
+        variables. Next, useless backdoors that do not expand
+        the set of variables are weeded out.)
 
-Next, a full-fledged deriving is started, which includes 
+Next, a deriving process is started, which includes 
 selection of a backdoor, extraction of easy tasks from it, 
 their subsequent writing as a conjunctive normal form (CNF) 
 and minimisation using the [Espresso tool](https://github.com/Gigantua/Espresso). 
