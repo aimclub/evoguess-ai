@@ -40,8 +40,8 @@ Requirement packages:
 1. [numpy](https://numpy.org/) (>=1.21.6)
    > pip install numpy
 
-2. [python-sat](https://pysathq.github.io/) (>=1.8.dev4) – PySAT is a toolkit 
-that provides extremely convenient functionality for using SAT oracles. 
+2. [python-sat](https://pysathq.github.io/) (~=1.8.dev4) – PySAT is a toolkit 
+that provides convenient functionality for using SAT oracles. 
    > pip install python-sat
 
 Optional packages:
@@ -339,6 +339,6 @@ in the [Markdown](https://en.wikipedia.org/wiki/Markdown) file [`intro.md`](rho_
 
 Also EvoguessAI supports its use at low level and as a library. 
 In this mode the user can use his own implementations of classes and functions. 
-Documentation for this mode of use is available
+Documentation for this mode is available
 [here](https://evoguess-ai.readthedocs.io/) and includes installation 
 instructions and base usage manual.
