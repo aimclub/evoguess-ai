@@ -9,14 +9,13 @@ impls = impl.encodings
 TEncoding = TypeVar('TEncoding', bound='Encoding')
 
 
-def encodings_from(config: Dict[str, Any]) -> TEncoding:
+def encoding_from(config: Dict[str, Any]) -> TEncoding:
     slug = config.pop('slug')
     return impls[slug](**config)
-
 
 __all__ = [
     *impl.__all__,
     *encoding.__all__,
     # from loader
-    'encodings_from',
+    'encoding_from',
 ]

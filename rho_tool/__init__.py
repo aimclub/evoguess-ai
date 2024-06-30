@@ -20,7 +20,7 @@ def hard_to_num(hard_task: List[int]) -> int:
 
 def _rho_fn(backdoor: Backdoor) -> RhoStats:
     variables = backdoor.variables()
-    solver = get_process_state().solver
+    solver = get_process_state().sub_solver
     return _rho_func_tree(solver, variables)
 
 

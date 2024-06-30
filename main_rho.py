@@ -1,97 +1,92 @@
-import argparse
-import sys
 import os
+import sys
+import argparse
+
+from pipeline.rho_solve import solve
 
 from lib_satprob.solver import PySatSolver
 from lib_satprob.problem import SatProblem
 from lib_satprob.problem import MaxSatProblem
 from lib_satprob.encoding import CNF, WCNF
 
-
-from utility.work_path import WorkPath
-from pipeline.rho_solve import solve
-
-from function.module.measure import measures
+from function.module.budget import TaskBudget
+from function.module.measure import SolvingTime, Conflicts
 
 
-def create_parser():
-    parser_ = argparse.ArgumentParser()
-    parser_.add_argument('formula', type=str, help='File with input formula.')
-    parser_.add_argument('-s', '--solvername', nargs='?', type=str, default='Cadical195',
-                         help='Solver name: cd195, g3, mcb, m22, etc (see PySAT Solvers list).')
-    parser_.add_argument('-nr', '--nofearuns', nargs='?', type=int, default=40,
-                         help='Number of runs of evolutionary algorithm for finding rho-backdoors.')
-    parser_.add_argument('-np', '--nofprocesses', nargs='?', type=int, default=4,
-                         help='Number of processes.')
-    parser_.add_argument('-bds', '--backdoorsize', nargs='?', type=int, default=10,
-                         help='Size of a single rho-backdoor.')
-    parser_.add_argument('-tl', '--timelimit', nargs='?', type=int, default=0,
-                         help='Set limit in seconds to solve one hard task. Use this option OR conflicts limit.')
-    parser_.add_argument('-cl', '--conflictlimit', nargs='?', type=int, default=0,
-                         help='Set limit in conflicts to solve one hard task. Use this option OR time limit.')
-    return parser_
+def get_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('formula', type=str, help='File with input formula.')
+    parser.add_argument('-s', '--solvername', nargs='?', type=str, default='cd195',
+                        help='Solver name: cd195, g3, mcb, m22, etc (see PySAT Solvers list).')
+    parser.add_argument('-nr', '--nofearuns', nargs='?', type=int, default=40,
+                        help='Number of runs of evolutionary algorithm for finding rho-backdoors.')
+    parser.add_argument('-ni', '--nofeaiters', nargs='?', type=int, default=3000,
+                        help='The number of iterations that the evolutionary algorithm completes in one run.')
+    parser.add_argument('-np', '--nofprocesses', nargs='?', type=int, default=12,
+                        help='Number of simultaneously running evolutionary algorithms.')
+    parser.add_argument('-bds', '--backdoorsize', nargs='?', type=int, default=10,
+                        help='Size of a single rho-backdoor that evolutionary algorithms will find.')
+    parser.add_argument('-tl', '--timelimit', nargs='?', type=int, default=None,
+                        help='Set limit in seconds to solve one hard task. Use this option OR conflicts limit.')
+    parser.add_argument('-cl', '--conflictlimit', nargs='?', type=int, default=None,
+                        help='Set limit in conflicts to solve one hard task. Use this option OR time limit.')
+    parser.add_argument('-rs', '--randomseed', nargs='?', type=int, default=1234,
+                        help='Random seed which is used to search for rho-backdoors')
+    return parser
+
+
+def get_encoding(filepath: str):
+    if not os.path.isfile(filepath):
+        raise Exception(f'File {filepath} is not exist.')
+
+    if filepath.endswith('.cnf'):
+        return CNF(from_file=filepath)
+    elif filepath.endswith('.wcnf'):
+        return WCNF(from_file=filepath)
+    else:
+        with open(filepath) as f:
+            header = f.readline()
+
+        if 'p cnf' in header:
+            return CNF(from_file=filepath)
+        elif 'p wcnf' in header:
+            return WCNF(from_file=filepath)
+        else:
+            print('Wrong file extension:', filepath)
+            print('Only CNF or WCNF encodings supported.')
+            raise Exception('Wrong file extension.')
 
 
 if __name__ == '__main__':
-    parser = create_parser()
-    namespace = parser.parse_args(sys.argv[1:])
-    formula_file = namespace.formula
-    solver_name = namespace.solvername
-    nof_ea_runs = namespace.nofearuns
-    workers = namespace.nofprocesses
-    bds = namespace.backdoorsize
-    timelim = namespace.timelimit
-    conflictlim = namespace.conflictlimit
-    if timelim == 0 and conflictlim == 0:
-        conflictlim = 20000
-    lim = max(timelim, conflictlim)
-    limtype = 'conflicts' if conflictlim > timelim else 'time'
-    measure = measures.get(f'measure:{limtype}')()
+    args = get_parser().parse_args(
+        sys.argv[1:]
+    )
 
-    data_path = WorkPath('examples', 'data')
-    # enc_file = data_path.to_file('sgen_150.cnf')
-    # cnf_file = data_path.to_file('pvs_4_7.cnf')
+    encoding = get_encoding(args.formula)
+    solver = PySatSolver(sat_name=args.solvername)
 
-    solver = PySatSolver(sat_name=solver_name)
-    # problem = encode_problem(formula_file, solver)
-    if not os.path.isfile(formula_file):
-        raise Exception(f'File {formula_file} is not exist.')
-    if formula_file.endswith('.cnf'):
-        encoding = CNF(from_file=formula_file)
-        problem = SatProblem(
-            solver, encoding
-        )
-    elif formula_file.endswith('.wcnf'):
-        encoding = WCNF(from_file=formula_file)
-        problem = MaxSatProblem(
-            solver, encoding
-        )
+    problem = SatProblem(solver, encoding) \
+        if encoding.slug == 'encoding:cnf' \
+        else MaxSatProblem(solver, encoding)
+
+    if args.timelimit is not None:
+        limit = args.timelimit
+        measure = SolvingTime()
     else:
-        with open(formula_file) as f:
-            header = f.readline()
-        if 'p cnf' in header:
-            encoding = CNF(from_file=formula_file)
-            problem = SatProblem(
-                solver, encoding
-            )
-        elif 'p wcnf' in header:
-            encoding = WCNF(from_file=formula_file)
-            problem = MaxSatProblem(
-                solver, encoding
-            )
-        else:
-            print('Wrong file extension:', formula_file)
-            print('CNF or WCNF files supported.')
-            raise Exception('Wrong file extension.')
-    report = solve(problem=problem,
-                   runs=nof_ea_runs,
-                   measure=measure,
-                   seed_offset=123,
-                   max_workers=workers,
-                   bd_size=bds,
-                   limit=lim,
-                   log_path=None,
-                   iter_count=3000)
+        limit = args.conflictlimit
+        limit = limit or 20000
+        measure = Conflicts()
 
+    budget = TaskBudget(limit)
 
-
+    report = solve(
+        budget=budget,
+        problem=problem,
+        measure=measure,
+        log_path=None,
+        runs=args.nofearuns,
+        bd_size=args.backdoorsize,
+        iter_count=args.nofeaiters,
+        seed_offset=args.randomseed,
+        max_workers=args.nofprocesses,
+    )

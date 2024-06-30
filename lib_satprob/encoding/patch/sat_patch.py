@@ -1,7 +1,6 @@
 import json
 
-from os import path, remove
-from typing import Any, Dict, List
+from typing import Any, Dict
 from tempfile import NamedTemporaryFile
 
 from ..encoding import EncPatch
@@ -30,6 +29,10 @@ class SatPatch(EncPatch):
             PATCHES[self._filename] = clauses
 
         return PATCHES[self._filename]
+
+    @property
+    def filename(self) -> str:
+        return self._filename
 
     @property
     def clauses(self) -> Clauses:

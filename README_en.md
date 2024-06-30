@@ -78,25 +78,27 @@ is disabled and all remaining tasks are completed as usual.
 ### Usage
 
 ```
-python3 main_rho.py [-h] 
-                    [-s [SOLVERNAME]] [-nr [NOFEARUNS]] 
-                    [-np [NOFPROCESSES]] [-bds [BACKDOORSIZE]] 
-                    [-tl [TIMELIMIT]] [-cl [CONFLICTLIMIT]]
-                    formula
+python3 main_rho.py [-h] [-s [SOLVERNAME]] [-nr [NOFEARUNS]]
+                   [-ni [NOFEAITERS]] [-np [NOFPROCESSES]]
+                   [-bds [BACKDOORSIZE]] [-tl [TIMELIMIT]]
+                   [-cl [CONFLICTLIMIT]] [-rs [RANDOMSEED]]
+                   formula
 ```
 
 
 ### ρ-Backdoor's module command line parameters
 
 | Argument full name | Short name | Description                                                                                                                                                                                                                               |
-|------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| formula          |         | file with input formula (CNF or WCNF format), is a positional parameter                                                                                                                                                                   |
-| --solvername     | -s      | short name of the SAT solver used as the SAT oracle. Available names: g3 -- Glucose 3; cd, cd 15, cd19 -- different versions of Cadical (see PySAT docs)                                                                                  |
-| --nofearuns      | -nr     | the number of runs of the evolutionary algorithm for searching for ρ-backdoors. Each launch can result in the generation of several ρ-backdoors if they have the same ρ                                                                   |
-| --nofprocesses   | -np     | the number of available processes for multithreading                                                                                                                                                                                      |
-| --backdoorsize   | -bds    | the size of the ρ-backdoors being searched                                                                                                                                                                                                |
-| --timelimit      | -tl     | time limit for the SAT oracle when solving hard tasks                                                                                                                                                                                     |
-| --conflictlimit  | -cl     | limit on the number of conflicts for the SAT oracle when solving hard tasks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set |
+|--------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| formula            |            | file with input formula (CNF or WCNF format), is a positional parameter                                                                                                                                                                   |
+| --solvername       | -s         | short name of the SAT solver used as the SAT oracle. Available names: g3 -- Glucose 3; cd, cd 15, cd19 -- different versions of Cadical (see PySAT docs)                                                                                  |
+| --nofearuns        | -nr        | the number of runs of the evolutionary algorithm for searching for ρ-backdoors. Each launch can result in the generation of several ρ-backdoors if they have the same ρ                                                                   |
+| --nofeaiters       | -ni        | the number of iterations that the evolutionary algorithm completes in one run                                                                                                                                                             |
+| --nofprocesses     | -np        | the number of available processes for multithreading                                                                                                                                                                                      |
+| --backdoorsize     | -bds       | the size of the ρ-backdoors being searched                                                                                                                                                                                                |
+| --timelimit        | -tl        | time limit for the SAT oracle when solving hard tasks                                                                                                                                                                                     |
+| --conflictlimit    | -cl        | limit on the number of conflicts for the SAT oracle when solving hard tasks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set |
+| --randomseed       | -rs        | random seed which is used to search for rho-backdoors                                                                                                                                                                                     |
 
 [//]: # (Мб стоит сид убать в адвансед параметры, всетаки это не особо "осознанный" параметр в плане изменения)
 
@@ -184,6 +186,32 @@ Result with comments:
 01:12:23 -------------------------------------------------------------------
 01:12:23 ------------------- Summary time: 4343.21 sec. -------------------
 ```
+
+## ρ-Backdoors mode (Island Model)
+
+
+### Usage
+
+```
+python3 main_rho_im.py [-h] [-s [SOLVERNAME]] [-nl [NOFEALIMIT]]
+                      [-ng [NOFEAGROUPS]] [-np [NOFPROCESSES]]
+                      [-bds [BACKDOORSIZE]] [-tl [TIMELIMIT]]
+                      [-cl [CONFLICTLIMIT]] [-rs [RANDOMSEED]]
+                      formula
+```
+### ρ-Backdoor's module (Island Model) command line parameters
+
+| Argument full name | Short name | Description                                                                                                                                                                                                                               |
+|--------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| formula            |            | file with input formula (CNF or WCNF format), is a positional parameter                                                                                                                                                                   |
+| --solvername       | -s         | short name of the SAT solver used as the SAT oracle. Available names: g3 -- Glucose 3; cd, cd 15, cd19 -- different versions of Cadical (see PySAT docs)                                                                                  |
+| --nofealimit       | -nl        | the number of found ρ-backdoors after which the algorithm will stop searching.                                                                                                                                                            |
+| --nofeagroups      | -ni        | the number of groups with different ρ value that can exist simultaneously.                                                                                                                                                                |
+| --nofprocesses     | -np        | the number of available processes for multithreading                                                                                                                                                                                      |
+| --backdoorsize     | -bds       | the size of the ρ-backdoors being searched                                                                                                                                                                                                |
+| --timelimit        | -tl        | time limit for the SAT oracle when solving hard tasks                                                                                                                                                                                     |
+| --conflictlimit    | -cl        | limit on the number of conflicts for the SAT oracle when solving hard tasks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set |
+| --randomseed       | -rs        | random seed which is used to search for rho-backdoors                                                                                                                                                                                     |
 
 
 [//]: # (## IBS mode)

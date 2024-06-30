@@ -9,3 +9,6 @@ examples/solvers
 
 # tmp
 rho_tool/check_formula.py
+
+w_*
+_old_2023

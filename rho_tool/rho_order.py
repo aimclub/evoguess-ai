@@ -1,4 +1,4 @@
-from typing import List, Optional, NamedTuple
+from typing import Set, List, Optional, NamedTuple
 
 from core.model.point import Point
 
@@ -35,13 +35,10 @@ class RhoPreprocessed(NamedTuple):
 
 
 def rho_preprocess(
-        points: List[Point], executor=None, units: set = None,
+        units: Set[int], points: List[Point], executor=None,
 ) -> RhoPreprocessed:
-    all_assumptions, all_constraints = set(), set()
-    point_order, current_var_set = [], set()
-    # проверяем unit_lits на контрарность (тогда задача ансат) и фильтруем от повторов
-    all_assumptions.update(set(units))
-    current_var_set.update(set(map(abs, units)))
+    all_assumptions, all_constraints = set(units), set()
+    point_order, current_var_set = [], set(map(abs, units))
 
     def var_distance(_point: Point) -> int:
         return sum([
@@ -70,10 +67,8 @@ def rho_preprocess(
         for _index in map(abs, _assumptions):
             current_var_set.add(_index)
 
-
     # add single hard like assumptions
     for point in single_hard:
-        print('blabla')
         backdoor = point.searchable
         num = point.get('hard_nums')[0]
         sups = backdoor.enumerate([num])
@@ -83,6 +78,7 @@ def rho_preprocess(
     points = list(filter(var_distance, points))
     derive_map = executor.map if executor else map
 
+    # todo: sift backdoors using units
     desc, total, unit = 'Deriving', len(points), 'bd'
     with tqdm(total, desc=desc, unit=unit) as progress:
         for supplements in derive_map(derive, points):

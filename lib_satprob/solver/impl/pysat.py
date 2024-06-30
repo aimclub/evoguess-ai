@@ -1,4 +1,3 @@
-import os
 from math import copysign
 from threading import Timer
 from time import time as now
@@ -8,13 +7,12 @@ from typing import Dict, Union, \
 from pysat import solvers as slv
 from pysat.examples.rc2 import RC2
 
-from ...encoding.patch import SatPatch
 from ..solver import Report, Solver, \
     _Solver, KeyLimit, UNLIMITED
 
-from ...variables import Assumptions, Supplements
 from ...encoding import PySatFormula, MaxSatFormula, \
     to_sat_formula, is_sat_formula, is_max_sat_formula
+from ...variables import Assumptions, Supplements, Clause
 
 
 #
@@ -273,6 +271,7 @@ class _PySatSolver(_Solver):
         assumptions, constraints = supplements
         if ignore_constraints: constraints = []
 
+        # todo: make to_sat_formula lazy
         formula = to_sat_formula(self.formula)
         solver, assumptions = self._init_solver(
             (assumptions, constraints), formula
@@ -283,15 +282,14 @@ class _PySatSolver(_Solver):
         with solver:
             return _propagate(solver, assumptions)
 
-    def apply(
-            self,
-            patch: SatPatch
+    def add_clause(
+            self, clause: Clause,
+            append_to_formula: bool = True
     ) -> '_PySatSolver':
-        clauses = patch.clauses
-        self.formula.extend(clauses)
+        if append_to_formula:
+            self.formula.append(clause)
         if self._solver is not None:
-            self._solver.append_formula(clauses)
-
+            self._solver.add_clause(clause)
         return self
 
 

@@ -1,6 +1,6 @@
 from typing import Any, List, Dict, Tuple, Optional, NamedTuple
 
-from ..variables import Supplements
+from ..variables import Supplements, Clause, Clauses
 from ..encoding.patch import SatPatch
 
 KeyLimit = Tuple[
@@ -46,11 +46,29 @@ class _Solver:
     ) -> Report:
         raise NotImplementedError
 
+    def add_clause(
+            self,
+            clause: Clause,
+            append_to_formula: bool = True
+    ) -> '_Solver':
+        raise NotImplementedError
+
+    def append_formula(
+            self,
+            clauses: Clauses
+    ) -> '_Solver':
+        for clause in clauses:
+            self.add_clause(clause)
+
+        return self
+
     def apply(
             self,
             patch: SatPatch
     ) -> '_Solver':
-        raise NotImplementedError
+        return self.append_formula(
+            patch.clauses
+        )
 
 
 class Solver:
@@ -67,16 +85,25 @@ class Solver:
             extract_model: bool = True,
             use_timer: bool = True
     ) -> Report:
-        with self.get_instance(formula, use_timer) as solver:
-            return solver.solve(supplements, limit, extract_model)
+        with self.get_instance(
+                formula, use_timer
+        ) as solver:
+            return solver.solve(
+                supplements, limit,
+                extract_model
+            )
 
     def propagate(
             self, formula: Any,
             supplements: Supplements,
             use_timer: bool = True
     ) -> Report:
-        with self.get_instance(formula, use_timer) as solver:
-            return solver.propagate(supplements)
+        with self.get_instance(
+                formula, use_timer
+        ) as solver:
+            return solver.propagate(
+                supplements
+            )
 
     def __config__(self) -> Dict[str, Any]:
         raise NotImplementedError
