@@ -212,6 +212,8 @@ python3 main_rho_im.py [-h] [-s [SOLVERNAME]] [-nl [NOFEALIMIT]]
 | --timelimit        | -tl        | time limit for the SAT oracle when solving hard tasks                                                                                                                                                                                     |
 | --conflictlimit    | -cl        | limit on the number of conflicts for the SAT oracle when solving hard tasks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set |
 | --randomseed       | -rs        | random seed which is used to search for rho-backdoors                                                                                                                                                                                     |
+
+
 Example:
 ```shell
 python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -bds 10 -cl 20000
