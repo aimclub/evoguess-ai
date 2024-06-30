@@ -113,7 +113,7 @@ python3 main_rho.py [-h] [-s [SOLVERNAME]] [-nr [NOFEARUNS]]
 
 Example:
 ```shell
-python3 ./main_rho.py -f ./examples/data/lec_sort_PvS_8_3.cnf -s g3 -nr 40 -np 8 -bds 10 -tl 0 -cl 20000
+python3 ./main_rho.py -f ./examples/data/pvs_4_7.cnf -s g3 -nr 40 -np 8 -bds 10 -tl 0 -cl 20000
 ```
 Command above will launch EvoGuessAI in the mode of using 
 ρ-backdoors to solve one of the exemplary CNF 
@@ -212,7 +212,10 @@ python3 main_rho_im.py [-h] [-s [SOLVERNAME]] [-nl [NOFEALIMIT]]
 | --timelimit        | -tl        | time limit for the SAT oracle when solving hard tasks                                                                                                                                                                                     |
 | --conflictlimit    | -cl        | limit on the number of conflicts for the SAT oracle when solving hard tasks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set |
 | --randomseed       | -rs        | random seed which is used to search for rho-backdoors                                                                                                                                                                                     |
-
+Example:
+```shell
+python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -bds 10 -cl 20000
+```
 
 [//]: # (## IBS mode)
 
