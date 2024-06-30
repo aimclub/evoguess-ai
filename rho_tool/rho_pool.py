@@ -101,6 +101,17 @@ class RhoProcessState:
         return self._sub_solver
 
     def get_initial(self, size: int, rs_state) -> Backdoor:
+        if len(self.space.variables) > 2000:
+            var_count = len(self.space.variables)
+            indexes = set(rs_state.choice(
+                range(var_count), size
+            ))
+            vector = [
+                1 if i in indexes else 0 for
+                i in range(var_count)
+            ]
+            return self.space.get_by(vector)
+
         if self._var_weights is None:
             with Solver('m22', self.formula) as slv:
                 self._var_weights = {index: prod([
