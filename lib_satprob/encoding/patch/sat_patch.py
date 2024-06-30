@@ -1,7 +1,6 @@
 import json
 
-from os import path, remove
-from typing import Any, Dict, List
+from typing import Any, Dict
 from tempfile import NamedTemporaryFile
 
 from ..encoding import EncPatch
@@ -32,6 +31,10 @@ class SatPatch(EncPatch):
         return PATCHES[self._filename]
 
     @property
+    def filename(self) -> str:
+        return self._filename
+
+    @property
     def clauses(self) -> Clauses:
         return self._load()
 
@@ -43,9 +46,9 @@ class SatPatch(EncPatch):
         if other and isinstance(other, SatPatch):
             return self._filename == other._filename
 
-    def __del__(self):
-        if path.exists(self._filename):
-            remove(self._filename)
+    # def __del__(self):
+        # if path.exists(self._filename):
+        #     remove(self._filename)
 
 
 __all__ = [

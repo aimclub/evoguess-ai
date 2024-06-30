@@ -41,8 +41,10 @@ class Encoding:
         if key not in encoding_data:
             _formula = self._get_formula()
             encoding_data[key] = _formula
-        return encoding_data[key].copy() \
-            if copy else encoding_data[key]
+        # todo: realize native copy()
+        # return encoding_data[key].copy() \
+        return self._get_formula() if \
+            copy else encoding_data[key]
 
     def __config__(self) -> Dict[str, Any]:
         raise NotImplementedError

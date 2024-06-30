@@ -92,17 +92,13 @@ def prod_fn(
         tasks: List[Supplements],
         acc_tasks: List[Supplements]
 ) -> List[Supplements]:
-    solver = get_process_state().solver
-    cur_patch = get_process_state().patch
-    # todo: reload solver if patch changed
-    if patch and cur_patch != patch:
-        solver = solver.apply(patch)
-        get_process_state().patch = patch
+    get_process_state().apply_patch(patch)
+    sub_solver = get_process_state().sub_solver
     # cost = 0 if len(report.model) == 0 \
     #     else calc_cost(formula, report.model)
     return [
         task for task in prod_combine(acc_tasks, tasks)
-        if solver.propagate(task).status is not False
+        if sub_solver.propagate(task).status is not False
     ]
 
 
@@ -120,19 +116,15 @@ def prep_worker(
         return backdoor, easy, hard
 
 
-# def hard_worker(
-#         patch: SatPatch,
-#         task: Supplements,
-#         limit: KeyLimit
-# ) -> Tuple[Supplements, Report]:
-#     solver = get_process_state().solver
-#     cur_patch = get_process_state().patch
-#     # todo: reload solver if patch changed
-#     if patch and cur_patch != patch:
-#         solver = solver.apply(patch)
-#         get_process_state().patch = patch
-#
-#     return task, solver.solve(task, limit)
+def hard_worker_inc(
+        patch: SatPatch,
+        task: Supplements,
+        limit: KeyLimit
+) -> Tuple[Supplements, Report]:
+    get_process_state().apply_patch(patch)
+    solver = get_process_state().solver
+
+    return task, solver.solve(task, limit)
 
 
 def hard_worker(
@@ -197,7 +189,12 @@ class CombineT(Core):
 
     def process(self, patch: SatPatch, hard_order: List[Supplements],
                 executor: ProcessPoolExecutor) -> Report:
-        workers = executor._max_workers
+        workers = self.max_workers or executor._max_workers
+
+        if len(hard_order) == 0:
+            formula = self.problem.encoding.get_formula(patch=patch)
+            solver = self.problem.solver.get_instance(formula)
+            return solver.solve(([], []))
 
         [acc_hard_tasks, *hard_order] = hard_order
         var_set = set(map(abs, acc_hard_tasks[0][0]))
@@ -230,14 +227,17 @@ class CombineT(Core):
                 return Report(status, self.stats_sum, model)
 
         if len(acc_hard_tasks) > 0:
-            raise RuntimeError('Unexpected behavior')
+            self.sifting(patch, acc_hard_tasks, executor, True)
+            status = len(self.solutions) > 0
+            model = self.solutions if status else None
+            return Report(status, self.stats_sum, model)
 
     def launch(self, *backdoors: Backdoor) -> Report:
         workers = self.max_workers or os.cpu_count()
         executor = init_process_pool(self.problem, workers)
         rho_args = (executor, timed(rho_fn_ext), *backdoors)
         points, rho_fn_time = untime(chunked_map(*rho_args))
-        patch, hard_order = rho_preprocess(points, executor)
+        patch, hard_order = rho_preprocess(set(), points, executor)
 
         pre_stamp, derive_time = time_ms(), passed()
         self.logger.meta(self.problem, *points)
@@ -250,89 +250,6 @@ class CombineT(Core):
             )
         finally:
             del patch
-
-        # if os.path.exists('w_log.txt'):
-        #     os.remove('w_log.txt')
-        # start_stamp, files = now(), []
-        # # self.best_model = (sum(formula.wght), [])
-        # try:
-        #     all_hard_tasks = self._preprocess(*backdoors)
-        #     [acc_hard_tasks, *all_hard_tasks] = all_hard_tasks
-        #
-        #     patch = SatPatch(self.clauses) if \
-        #         len(self.clauses) > 0 else None
-        #
-        #     plot_data = [(
-        #         len(set(map(abs, acc_hard_tasks[0]))),
-        #         len(acc_hard_tasks), len(acc_hard_tasks)
-        #     )]
-        #
-        #     for i, hard_tasks in enumerate(all_hard_tasks):
-        #         next_acc_hard_tasks = []
-        #         prod_size = len(acc_hard_tasks) * len(hard_tasks)
-        #         # _print(acc_hard_tasks, 'x', hard_tasks)
-        #
-        #         for future in self.executor.submit_all(prod_worker, *((
-        #                 self.problem, acc_part_hard_tasks, hard_tasks, patch
-        #         ) for acc_part_hard_tasks in slice_into(
-        #             acc_hard_tasks, self.executor.max_workers
-        #         ))).as_complete():
-        #             prod_tasks, prod_time = future.result()
-        #             self.stats_sum['prod_time'] += prod_time
-        #             next_acc_hard_tasks.extend(prod_tasks)
-        #
-        #         var_set = sorted(set(map(abs, next_acc_hard_tasks[0])))
-        #         _print(f'var set ({len(var_set)}):',
-        #                ' '.join(map(str, var_set)))
-        #         _print('stats:', self.stats_sum)
-        #         _print(f'time ({self.executor.max_workers})',
-        #                now() - start_stamp)
-        #
-        #         _print(
-        #             f'reduced: {prod_size} -> {len(next_acc_hard_tasks)}',
-        #             f'({round(len(next_acc_hard_tasks) / prod_size, 2)})',
-        #         )
-        #         acc_hard_tasks = self.sifting(
-        #             patch, next_acc_hard_tasks
-        #         )
-        #
-        #         plot_data.append((
-        #             len(var_set), len(next_acc_hard_tasks), len(acc_hard_tasks)
-        #         ))
-        #
-        #         _len_next = len(next_acc_hard_tasks)
-        #         _print(
-        #             f'sifted: {_len_next} -> {len(acc_hard_tasks)}',
-        #             f'({round(len(acc_hard_tasks) / _len_next, 2)})'
-        #         )
-        #         if len(acc_hard_tasks) == 0:
-        #             _print(f'total bds: {i + 1}')
-        #             _print('total stats:', self.stats_sum)
-        #             _print(f'total time ({self.executor.max_workers})',
-        #                    now() - start_stamp)
-        #             _print(f'total var set ({len(var_set)}):',
-        #                    ' '.join(map(str, var_set)))
-        #             break
-        #
-        #     _print(self.stats_sum)
-        #     _print(self.best_model)
-        #     _print('parallel time:', now() - start_stamp)
-        #     _print('sequential time:', self.stats_sum['grow_time'] +
-        #            self.stats_sum['time'] + self.stats_sum['prod_time'])
-        #
-        #     _print('plot data')
-        #     _print(json.dumps(plot_data))
-        #     try:
-        #         solver_setts = self.problem.solver.settings
-        #         _print('solver:', solver_setts.sat_name)
-        #         _print(self.measure.key, self.budget.value())
-        #         _print(self.problem.encoding._get_formula_key())
-        #     except Exception:
-        #         pass
-        #
-        #     return self.stats_sum
-        # finally:
-        #     [os.remove(file) for file in files]
 
     def __config__(self) -> Dict[str, Any]:
         return {}

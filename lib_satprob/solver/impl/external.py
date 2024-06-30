@@ -29,7 +29,7 @@ def communicate(
     try:
         timer.start()
         return b''.join(iter(process.stdout.readline, b'')), \
-               b''.join(iter(process.stderr.readline, b''))
+            b''.join(iter(process.stderr.readline, b''))
     finally:
         if timer and timer.is_alive():
             timer.cancel()
@@ -83,7 +83,7 @@ class _ExternalSolver(_PySatSolver):
         if is_sat_formula(self.formula):
             str_supplements = '\n'.join([
                 f'{cl} 0' for cl in str_clauses
-            ]) + '\n'
+            ])
             formula_len = sum((
                 len(str_clauses),
                 len(self.formula.clauses)
@@ -92,7 +92,7 @@ class _ExternalSolver(_PySatSolver):
             str_supplements = '\n'.join([
                 f'{self.formula.topw} {cl} 0'
                 for cl in str_clauses
-            ]) + '\n'
+            ])
             formula_len = sum((
                 len(str_clauses),
                 len(self.formula.hard),
@@ -112,8 +112,14 @@ class _ExternalSolver(_PySatSolver):
                     self.stdin_file % in_file.name
                 )
         else:
-            source = self.formula.to_dimacs()
-            source += str_supplements
+            self.formula.comments = []
+            [header, source] = self.formula \
+                .to_dimacs().split('\n', 1)
+            header_parts = header.split(' ')
+            header_parts[3] = str(formula_len)
+            new_header = ' '.join(header_parts)
+            source = new_header + '\n' + source
+            source += f'\n{str_supplements}'
 
         if self.stdout_file is not None:
             with NamedTemporaryFile(
