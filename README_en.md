@@ -7,15 +7,14 @@
 
 # EvoGuessAI
 
-A component for finding decomposition sets and using them to solve SAT instances. 
-The search for decomposition sets is performed by optimising special 
-pseudo-boolean black-box functions that evaluate either the ρ-value 
-in the case of using EvoguessAI in ρ-backdoors mode, or the decomposition 
-hardness corresponding to the decomposition method used 
-and the set under consideration in the case of IBS mode. 
-The component uses metaheuristic algorithms, in particular 
+A component for finding decomposition sets and using them to solve SAT instances.
+The search for decomposition sets is performed by optimising special
+pseudo-boolean black-box functions that evaluate either the ρ-value
+in the case of using EvoguessAI in ρ-backdoors mode, or the decomposition
+hardness corresponding to the decomposition method used
+and the set under consideration in the case of IBS mode.
+The component uses metaheuristic algorithms, in particular
 evolutionary algorithms, to optimise the values of such functions.
-
 
 ## Installation
 
@@ -28,6 +27,7 @@ pip install -r requirements.txt
 [//]: # (To use EvoGuessAI in MPI mode, you also need to install:)
 
 [//]: # ()
+
 [//]: # (```shell script)
 
 [//]: # (pip install -r requirements-mpi.txt)
@@ -37,43 +37,44 @@ pip install -r requirements.txt
 ### Dependences
 
 Requirement packages:
+
 1. [numpy](https://numpy.org/) (>=1.21.6)
    > pip install numpy
 
-2. [python-sat](https://pysathq.github.io/) (~=1.8.dev4) – PySAT is a toolkit 
-that provides convenient functionality for using SAT oracles. 
+2. [python-sat](https://pysathq.github.io/) (~=1.8.dev4) – PySAT is a toolkit
+   that provides convenient functionality for using SAT oracles.
    > pip install python-sat
 
 Optional packages:
+
 1. [tqdm](https://tqdm.github.io/) – package for logging the process.
    > pip install tqdm
 
 ## ρ-Backdoors mode
 
-EvoGuessAI supports the use of ρ-backdoors to solve SAT in relation to 
+EvoGuessAI supports the use of ρ-backdoors to solve SAT in relation to
 СNF and MaxSAT in relation to WCNF.
 
-ρ-Backdoor, in short, is a backdoor that allows you to decompose 
-the original CNF into two subsets of subtasks. The first will consist of 
-subtasks that the SAT oracle solves for a certain limitation 
-by some measure (most often, time or number of conflicts), 
-the second of all other subtasks. 
+ρ-Backdoor, in short, is a backdoor that allows you to decompose
+the original CNF into two subsets of subtasks. The first will consist of
+subtasks that the SAT oracle solves for a certain limitation
+by some measure (most often, time or number of conflicts),
+the second of all other subtasks.
 The proportion of the first subset is (ρ), the second is (1-ρ).
 
-In practice (and in EvoGuessAI), such backdoors are sought to maximize ρ. 
-Accordingly, each backdoor will generate a small number of complex 
-subtasks (also called _hard tasks_). However, we can use the hard tasks 
+In practice (and in EvoGuessAI), such backdoors are sought to maximize ρ.
+Accordingly, each backdoor will generate a small number of complex
+subtasks (also called _hard tasks_). However, we can use the hard tasks
 received from different backdoors together.
 
-EvoGuessAI is able to build backdoors while maximizing the ρ value. 
-Then the iterative process of filtering out hard tasks is started. 
-At each iteration, the Cartesian product of hard tasks from different 
-ρ-backdoors is built and then it is filtered to find new hard tasks. 
-At some point, all the hard tasks begin to be solved for 
-some limit (in time or conflicts). If the ρ-backdoors for 
-building Cartesian products end earlier, then the limit 
-is disabled and all remaining tasks are completed as usual.
-
+EvoGuessAI is able to build backdoors while maximizing the ρ value.
+Then the iterative process of filtering out hard tasks is started.
+At each iteration, the Cartesian product of hard tasks from different
+ρ-backdoors is built and then it is filtered to find new hard tasks.
+At some point, all the hard tasks begin to be solved for
+some limit (in time or conflicts). If the ρ-backdoors for
+building Cartesian products end earlier, then the limit
+is disabled and all remaining hard tasks are solved as usual.
 
 ### Usage
 
@@ -85,7 +86,6 @@ python3 main_rho.py [-h] [-s [SOLVERNAME]] [-nr [NOFEARUNS]]
                    formula
 ```
 
-
 ### ρ-Backdoor's module command line parameters
 
 | Argument full name | Short name | Description                                                                                                                                                                                                                               |
@@ -94,38 +94,49 @@ python3 main_rho.py [-h] [-s [SOLVERNAME]] [-nr [NOFEARUNS]]
 | --solvername       | -s         | short name of the SAT solver used as the SAT oracle. Available names: g3 -- Glucose 3; cd, cd 15, cd19 -- different versions of Cadical (see PySAT docs)                                                                                  |
 | --nofearuns        | -nr        | the number of runs of the evolutionary algorithm for searching for ρ-backdoors. Each launch can result in the generation of several ρ-backdoors if they have the same ρ                                                                   |
 | --nofeaiters       | -ni        | the number of iterations that the evolutionary algorithm completes in one run                                                                                                                                                             |
-| --nofprocesses     | -np        | the number of available processes for multithreading                                                                                                                                                                                      |
+| --nofprocesses     | -np        | the number of processes allocated for EvoguessAI operation in multithreaded mode                                                                                                                                                          |
 | --backdoorsize     | -bds       | the size of the ρ-backdoors being searched                                                                                                                                                                                                |
 | --timelimit        | -tl        | time limit for the SAT oracle when solving hard tasks                                                                                                                                                                                     |
 | --conflictlimit    | -cl        | limit on the number of conflicts for the SAT oracle when solving hard tasks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set |
-| --randomseed       | -rs        | random seed which is used to search for rho-backdoors                                                                                                                                                                                     |
+| --randomseed       | -rs        | random seed which is used to search for ρ-backdoors                                                                                                                                                                                       |
 
 [//]: # (Мб стоит сид убать в адвансед параметры, всетаки это не особо "осознанный" параметр в плане изменения)
 
 [//]: # (Надо посомтреть форматы записи параметров и сделать по-красоте)
 
 [//]: # ()
+
 [//]: # (Стоит добавить функционал для SAT-задач.)
 
 [//]: # ()
+
 [//]: # (Можно добавить &#40;в документции&#41; доп параметры для advanced использования, которые будут уже не в командной строке, а внутри main_p. К примеру параметр перезапуска екзекьютора)
 
 
 Example:
+
 ```shell
 python3 ./main_rho.py -f ./examples/data/pvs_4_7.cnf -s g3 -nr 40 -np 8 -bds 10 -tl 0 -cl 20000
 ```
-Command above will launch EvoGuessAI in the mode of using 
-ρ-backdoors to solve one of the exemplary CNF 
-(LEC problem for the "pancake" and "selection" sorting 
-algorithms for eight 3-bit numbers). 8 processes will be used 
-in the solution. The evolutionary algorithm will be run 40 
-times, while looking for ρ-backdoors of length 10. Hard tasks 
+
+This script launch the corresponding pipeline **rho_solve.py**, which are
+located
+in
+the [pipeline](https://github.com/alpavlenko/evoguess-ai/tree/master/pipeline)
+module.
+
+Command above will launch EvoGuessAI in the mode of using
+ρ-backdoors to solve one of the exemplary CNF
+(LEC problem for the "pancake" and "selection" sorting
+algorithms for eight 3-bit numbers). 8 processes will be used
+in the solution. The evolutionary algorithm will be run 40
+times, while looking for ρ-backdoors of length 10. Hard tasks
 will be solved with a limit of 20,000 conflicts per task.
 
 Result with comments:
 
 [//]: # (TODO нужен нормальный пример)
+
 ```shell
 00:00:01 ---------------------- Running on 4 threads ----------------------
 00:00:01 -------------------------------------------------------------------
@@ -189,6 +200,9 @@ Result with comments:
 
 ## ρ-Backdoors mode (Island Model)
 
+The search for ρ-Backdoors using the island model uses the module
+[lib_metalg](https://github.com/alpavlenko/evoguess-ai/tree/master/lib_metalg)
+which contains the corresponding search algorithm.
 
 ### Usage
 
@@ -199,25 +213,32 @@ python3 main_rho_im.py [-h] [-s [SOLVERNAME]] [-nl [NOFEALIMIT]]
                       [-cl [CONFLICTLIMIT]] [-rs [RANDOMSEED]]
                       formula
 ```
+
 ### ρ-Backdoor's module (Island Model) command line parameters
 
 | Argument full name | Short name | Description                                                                                                                                                                                                                               |
 |--------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| formula            |            | file with input formula (CNF or WCNF format), is a positional parameter                                                                                                                                                                   |
+| formula            |            | file with input formula (CNF or WCNF format), is a required parameter                                                                                                                                                                     |
 | --solvername       | -s         | short name of the SAT solver used as the SAT oracle. Available names: g3 -- Glucose 3; cd, cd 15, cd19 -- different versions of Cadical (see PySAT docs)                                                                                  |
 | --nofealimit       | -nl        | the number of found ρ-backdoors after which the algorithm will stop searching.                                                                                                                                                            |
 | --nofeagroups      | -ni        | the number of groups with different ρ value that can exist simultaneously.                                                                                                                                                                |
-| --nofprocesses     | -np        | the number of available processes for multithreading                                                                                                                                                                                      |
+| --nofprocesses     | -np        | the number of processes allocated for EvoguessAI operation in multithreaded mode                                                                                                                                                          |
 | --backdoorsize     | -bds       | the size of the ρ-backdoors being searched                                                                                                                                                                                                |
 | --timelimit        | -tl        | time limit for the SAT oracle when solving hard tasks                                                                                                                                                                                     |
 | --conflictlimit    | -cl        | limit on the number of conflicts for the SAT oracle when solving hard tasks. At startup, only one of the options for restrictions is selected (the maximum set), respectively, either a time limit or a number of conflicts should be set |
-| --randomseed       | -rs        | random seed which is used to search for rho-backdoors                                                                                                                                                                                     |
-
+| --randomseed       | -rs        | random seed which is used to search for ρ-backdoors                                                                                                                                                                                       |
 
 Example:
+
 ```shell
 python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -bds 10 -cl 20000
 ```
+
+This script launch the corresponding pipeline **rho_solve_im.py**, which are
+located
+in
+the [pipeline](https://github.com/alpavlenko/evoguess-ai/tree/master/pipeline)
+module.
 
 [//]: # (## IBS mode)
 
@@ -225,9 +246,11 @@ python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -b
 [//]: # (### How to MPI use)
 
 [//]: # ()
+
 [//]: # (The EvoGuessAI can be run in MPI mode as follows:)
 
 [//]: # ()
+
 [//]: # (```shell script)
 
 [//]: # (mpiexec -n <workers> -perhost <perhost> python3 -m mpi4py.futures main.py)
@@ -235,6 +258,7 @@ python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -b
 [//]: # (```)
 
 [//]: # ()
+
 [//]: # (where **perhost** is MPI workers processes on one node, )
 
 [//]: # (and **workers** is a total MPI workers processes on all dedicated nodes.)
@@ -243,9 +267,11 @@ python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -b
 [//]: # (## Usage examples)
 
 [//]: # ()
+
 [//]: # (An example of [probabilistic backdoors searching]&#40;https://github.com/aimclub/evoguess-ai/blob/master/examples/pvs_search_example.py&#41; to solve the equivalence checking problem of two Boolean schemes that implement different algorithms, using the example of PvS 7x4 encoding &#40;Pancake vs Selection sort&#41;.)
 
 [//]: # ()
+
 [//]: # (```python)
 
 [//]: # (root_path = WorkPath&#40;'examples'&#41;)
@@ -257,6 +283,7 @@ python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -b
 [//]: # (logs_path = root_path.to_path&#40;'logs', 'pvs_4_7'&#41;)
 
 [//]: # ()
+
 [//]: # (problem = SatProblem&#40;)
 
 [//]: # (    encoding=CNF&#40;from_file=cnf_file&#41;,)
@@ -324,9 +351,11 @@ python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -b
 [//]: # (```)
 
 [//]: # ()
+
 [//]: # (Further, the corresponding problem of checking the equivalence of two Boolean schemes using the example of PvS 7x4 encoding can be [solved using the found backdoors]&#40;https://github.com/aimclub/evoguess-ai/blob/master/examples/pvs_solve_example.py&#41; as follows:)
 
 [//]: # ()
+
 [//]: # (```python)
 
 [//]: # (root_path = WorkPath&#40;'examples'&#41;)
@@ -356,22 +385,29 @@ python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -b
 [//]: # (```)
 
 [//]: # ()
+
 [//]: # (Other [examples]&#40;https://github.com/aimclub/evoguess-ai/tree/master/examples&#41; can be found in the corresponding project directory.)
 
 ## Supported by
 
-The study is supported by the [Research Center Strong Artificial Intelligence in Industry](<https://sai.itmo.ru/>) 
-of [ITMO University](https://en.itmo.ru/) as part of the plan of the center's program: Development and testing of an experimental prototype of a library of strong AI algorithms in terms of the Boolean satisfiability problem solving through heuristics of working with constraints and variables, searching for probabilistic trapdoors and inverse polynomial trapdoors.
+The study is supported by
+the [Research Center Strong Artificial Intelligence in Industry](<https://sai.itmo.ru/>)
+of [ITMO University](https://en.itmo.ru/) as part of the plan of the center's
+program: Development and testing of an experimental prototype of a library of
+strong AI algorithms in terms of the Boolean satisfiability problem solving
+through heuristics of working with constraints and variables, searching for
+probabilistic backdoors and inverse polynomial backdoors.
 
 ## Documentation
 
-Documentation for the main modes of the EvoguessAI usage is available 
-in the [Markdown](https://en.wikipedia.org/wiki/Markdown) file [`intro.md`](rho_docs_en/intro.md).
+Documentation for the main modes of the EvoguessAI usage is available
+in the [Markdown](https://en.wikipedia.org/wiki/Markdown)
+file [`intro.md`](rho_docs_en/intro.md).
 
 ## Low-level usage
 
-Also EvoguessAI supports its use at low level and as a library. 
-In this mode the user can use his own implementations of classes and functions. 
+Also EvoguessAI supports its use at *low level* and as a library.
+In this mode the user can use his own implementations of classes and functions.
 Documentation for this mode is available
-[here](https://evoguess-ai.readthedocs.io/) and includes installation 
+[here](https://evoguess-ai.readthedocs.io/) and includes installation
 instructions and base usage manual.
