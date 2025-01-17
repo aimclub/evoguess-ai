@@ -374,7 +374,7 @@ python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -b
 
 Документация по основным режимам использования EvoguessAI доступна в формате
 [Markdown](https://ru.wikipedia.org/wiki/Markdown) файла
-[`intro.md`](rho_docs_en/intro.md).
+[`intro.md`](.github/rho_docs_en/intro.md).
 
 ## Продвинутая документация
 
