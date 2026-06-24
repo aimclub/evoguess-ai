@@ -1,4 +1,4 @@
-tqdm~=4.66.4
-numpy~=1.21.6
+tqdm~=4.68.3
+numpy~=2.4.6
 pyeda~=0.29.0
-python-sat~=1.8.dev13
+python-sat~=1.9.dev4

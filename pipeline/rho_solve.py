@@ -66,7 +66,7 @@ def run_alg(
     algorithm = MuPlusLambda(
         MU_SIZE, LAMBDA_SIZE,
         selection=Roulette(so_seed),
-        mutation=FixSize(size, mo_seed)
+        mutation=FixSize(size, 1., mo_seed)
     )
 
     points, literals = {}, set()

@@ -58,7 +58,7 @@ def solve(
             mu_size=MU_SIZE,
             lambda_size=LAMBDA_SIZE,
             selection=Roulette(so_seed),
-            mutation=FixSize(bd_size, mo_seed),
+            mutation=FixSize(bd_size, 1., mo_seed),
             restart_cond=IterCond(restart_iter)
         )
         islands.append(algorithm)
