@@ -116,7 +116,7 @@ python3 main_rho.py [-h] [-s [SOLVERNAME]] [-nr [NOFEARUNS]]
 Example:
 
 ```shell
-python3 ./main_rho.py -f ./examples/data/pvs_4_7.cnf -s g3 -nr 40 -np 8 -bds 10 -tl 0 -cl 20000
+python3 main_rho.py ./examples/data/pvs_4_7.cnf -s g3 -nr 40 -np 8 -bds 10 -cl 20000
 ```
 
 This script launch the corresponding pipeline **rho_solve.py**, which are
@@ -231,7 +231,7 @@ python3 main_rho_im.py [-h] [-s [SOLVERNAME]] [-nl [NOFEALIMIT]]
 Example:
 
 ```shell
-python3 ./main_rho_im.py -f /examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -bds 10 -cl 20000
+python3 main_rho_im.py ./examples/data/pvs_4_7.cnf -s cd195 -nl 500 -ng 5 -bds 10 -cl 20000
 ```
 
 This script launch the corresponding pipeline **rho_solve_im.py**, which are
