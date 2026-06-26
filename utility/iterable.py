@@ -81,3 +81,28 @@ def split_by(
                 f'unexpected predicate type: \'{type(predicate).__name__}\'')
 
     return left, right
+
+def compact(_list: Iterable[int], s: str = ' ') -> str:
+    sorted_list = sorted(_list)
+    end_item = sorted_list[0]
+    st_item = sorted_list[0]
+    res: list[str] = []
+
+    def to_str() -> str:
+        if end_item == st_item + 1:
+            return f'{st_item}{s}{end_item}'
+        if end_item > st_item:
+            return f'{st_item}..{end_item}'
+        else:
+            return f'{end_item}'
+
+    for item in sorted_list[1:]:
+        if end_item + 1 == item:
+            end_item = item
+        else:
+            res.append(to_str())
+            end_item = item
+            st_item = item
+
+    res.append(to_str())
+    return s.join(res)

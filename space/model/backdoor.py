@@ -4,7 +4,7 @@ from typing import Optional, Iterator, List, Dict, Any
 
 from lib_satprob.variables import Variables
 from lib_satprob.variables.vars import Var, \
-    VarMap, get_var_dims, get_var_sups
+    VarMap, get_var_dims, get_var_sups, to_var_str
 
 from typings.searchable import Vector, Searchable, Supplements
 
@@ -49,8 +49,8 @@ class Backdoor(Searchable):
     def __len__(self) -> int:
         return len(self.variables())
 
-    def __str__(self) -> str:
-        return ' '.join(map(str, self.variables()))
+    def __str__(self):
+        return to_var_str(self.variables())
 
     def __repr__(self) -> str:
         return f'[{str(self)}]({len(self)})'

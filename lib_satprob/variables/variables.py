@@ -4,8 +4,8 @@ from threading import Lock
 from typing import Any, List, Dict, Optional
 
 from ._enum import Enumerable
-from .vars import Var, VarMap, \
-    var_from, get_var_dims, get_var_sups
+from .vars import Var, VarMap, var_from, \
+    get_var_dims, get_var_sups, to_var_str
 from ._utility import Supplements, prod
 
 vars_data = {}
@@ -89,7 +89,7 @@ class Variables(Enumerable):
         return f"[{str(self)}]({len(self)})"
 
     def __str__(self):
-        return ' '.join(map(str, self.variables()))
+        return to_var_str(self.variables())
 
     def __config__(self) -> Dict[str, Any]:
         return {

@@ -1,5 +1,6 @@
-from typing import Dict, Any, Optional
 from numpy.random import RandomState, randint
+from typing import Dict, Any, Optional
+from numpy import zeros
 
 from typings.searchable import Vector, ByteVector, Searchable
 
@@ -36,13 +37,12 @@ class Space:
         if self.by_vector is not None:
             return self.by_vector
         elif self.of_size is not None:
-            nums = set(self.random_state.randint(
-                0, vector_size, self.of_size
-            ))
-            return [
-                1 if i in nums else 0
-                for i in range(vector_size)
-            ]
+            mask = zeros(vector_size)
+            indexes = self.random_state.choice(
+                len(mask), self.of_size, False
+            )
+            mask[indexes] = 1
+            return list(mask)
 
     def __config__(self) -> Dict[str, Any]:
         raise NotImplementedError

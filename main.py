@@ -22,13 +22,15 @@ from core.module.comparator import MinValueMaxSize
 from utility.work_path import WorkPath
 
 if __name__ == '__main__':
-    root_path = WorkPath('examples')
-    data_path = root_path.to_path('data')
-    logs_path = root_path.to_path('logs')
-    solver_path = root_path.to_path('solvers')
+    examples_path = WorkPath('examples')
+    log_path = WorkPath('logs', 'pvs_4_7_test')
 
+    solvers_path = examples_path.to_path('solvers')
+    solver_file = solvers_path.to_file('kissat')
+
+    data_path = examples_path.to_path('data')
     cnf_file = data_path.to_file('pvs_4_7.cnf')
-    solver_file = solver_path.to_file('kissat', 'kissat-rel-3.0.0', 'build')
+
     solution = Optimize(
         space=BackdoorSet(
             variables=Range(start=1, length=28)
@@ -52,7 +54,7 @@ if __name__ == '__main__':
         ),
         comparator=MinValueMaxSize(),
         limitation=WallTime(from_string='00:10:00'),
-        logger=OptimizeLogger(logs_path.to_path('test47')),
+        logger=OptimizeLogger(log_path),
     ).launch()
 
     for point in solution:

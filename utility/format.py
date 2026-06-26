@@ -15,12 +15,12 @@ def sized(x: Sized):
 
 
 def timeh(value: int) -> str:
-    s = ''
-    for period in [3600, 60]:
-        part = value // period
-        s += f'{part:02d}:'
-        value %= period
-    return f'{s}{value:02d}'
+    hs = f'{value // 3600:03d}:'
+    value = value % 3600
+    ms = f'{value // 60:02d}:'
+    value = value % 60
+    ss = f'{value // 1:02d}'
+    return f'{hs}{ms}{ss}'
 
 
 def passed(since: int = STAMP) -> float:
@@ -31,15 +31,17 @@ def passedh(since: int = STAMP) -> str:
     return timeh(int(passed(since)))
 
 
-def printc(*lines: str, limit: int = 65):
+def printc(*lines: str, limit: int = 80):
     for size, line in map(sized, lines):
         if size == 0:
             print(passedh(), end=' ')
             print('-' * (limit + 2))
         else:
             print(passedh(), end=' ')
-            cnt = max(0, limit - size) // 2
-            print('-' * cnt, line, '-' * cnt)
+            lc = rc = max(0, limit - size) // 2
+            if (limit - size) % 2 == 1:
+                if rc: rc += 1
+            print('-' * lc, line, '-' * rc)
 
     sys.stdout.flush()
 

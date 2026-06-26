@@ -77,7 +77,7 @@ def solve(
     topology = [
         Migration(
             islands[i],
-            islands[i + 1 // len(islands)],
+            islands[(i + 1) % len(islands)],
             BestPoint(1), IterCond(100)
         ) for i in range(len(islands))
     ]

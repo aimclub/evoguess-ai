@@ -1,6 +1,7 @@
 from typing import Dict, Any, Iterable, Optional, List
 from itertools import chain
 
+from utility.iterable import compact, split_by
 from .._utility import Supplements, combine
 
 from .var import *
@@ -21,6 +22,13 @@ def var_from(config: Dict[str, Any]) -> Var:
     slug = config.pop('slug')
     return var_slugs[slug](**config)
 
+def is_index(_var: Var) -> bool:
+    return isinstance(_var, Index)
+
+def to_var_str(_vars: Iterable[Var]) -> str:
+    index_vars, other_var = split_by(_vars, is_index)
+    indexes = compact([v.index for v in index_vars])
+    return ' '.join([*map(str, other_var), indexes])
 
 def get_var_deps(_vars: Iterable[Var]) -> Iterable[AnyVar]:
     return set(chain(*(_var.deps for _var in _vars)))
@@ -51,6 +59,7 @@ __all__ = [
     'VarMap',
     # utils
     'var_from',
+    'to_var_str',
     'get_var_deps',
     'get_var_dims',
     'get_var_sups',

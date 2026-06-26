@@ -15,6 +15,7 @@ def serialize(point: 'Point') -> Dict[str, Any]:
     return {
         'estimation': point.estimation,
         'backdoor': b85encode(point.searchable.pack()).decode("utf-8"),
+        'vars': str(point.searchable)
     }
 
 
